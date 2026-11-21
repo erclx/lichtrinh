@@ -28,11 +28,12 @@
     "smoke:prod": "bun e2e/screenshot.ts --check-console-clean --require-base-url",
     "lint:fix": "oxlint --fix --max-warnings 0",
     "screenshot": "PREVIEW_PORT=$(bash scripts/worktree-port.sh 4173) && export PREVIEW_PORT && bash scripts/screenshot.sh",
+    "design:sync": "bash scripts/design-sync.sh",
     "readme-screenshot": "PREVIEW_PORT=$(bash scripts/worktree-port.sh 4173) && export PREVIEW_PORT && bash scripts/readme-screenshot.sh"
   },
   "dependencies": {
     "@base-ui/react": "^1.9.0",
-    "@fontsource-variable/geist": "^5.3.0",
+    "@fontsource-variable/nunito": "^5.3.0",
     "class-variance-authority": "^0.7.1",
     "cn": "^0.5.2",
     "drizzle-orm": "^0.45.4",

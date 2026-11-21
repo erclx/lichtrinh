@@ -2,8 +2,37 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
+    <script>
+      // Runs before the first paint so a dark device never flashes light. The change listener rewrites the attribute on every scheme flip, so a Settings override must stop it rather than only write data-theme.
+      ;(function () {
+        var scheme = window.matchMedia('(prefers-color-scheme: dark)')
+        function apply() {
+          document.documentElement.dataset.theme = scheme.matches
+            ? 'dark'
+            : 'light'
+        }
+        apply()
+        scheme.addEventListener('change', apply)
+      })()
+    </script>
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="icon" type="image/png" sizes="32x32" href="/icon-32x32.png" />
+    <link rel="icon" type="image/png" sizes="16x16" href="/icon-16x16.png" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/icon-180x180.png" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta property="og:title" content="Lịch trình" />
+    <meta property="og:type" content="website" />
+    <meta property="og:image" content="/og-image.png" />
+    <meta
+      name="theme-color"
+      content="#f8f8fc"
+      media="(prefers-color-scheme: light)"
+    />
+    <meta
+      name="theme-color"
+      content="#121220"
+      media="(prefers-color-scheme: dark)"
+    />
     <title>Lịch trình</title>
   </head>
   <body>

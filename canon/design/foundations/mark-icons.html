@@ -1,0 +1,872 @@
+<!doctype html>
+<html lang="en" data-lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width" />
+    <link rel="stylesheet" href="../assets/identity/fonts/fonts-cute.css" />
+    <style>
+      :root {
+        --bg: #f8f8fc;
+        --surface: #ffffff;
+        --text: #1f1d33;
+        --muted: #5c5a75;
+        --line: #dcdcea;
+      }
+      :root[data-theme='dark'] {
+        --bg: #121220;
+        --surface: #1b1b2c;
+        --text: #f1f0fb;
+        --muted: #b0aecb;
+        --line: #34344f;
+      }
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+      html[data-lang='en'] .vi,
+      html[data-lang='vi'] .en {
+        display: none;
+      }
+      body {
+        background: var(--bg);
+        color: var(--text);
+        font-family: Nunito, sans-serif;
+      }
+      .card {
+        width: 1200px;
+        height: 630px;
+        display: grid;
+        grid-template-columns: 360px 1fr;
+        align-items: center;
+        gap: 56px;
+        padding: 0 96px;
+        position: relative;
+        background: var(--bg);
+      }
+      .card .mark {
+        width: 360px;
+        height: 360px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      .card .m {
+        width: 100%;
+        height: 100%;
+      }
+      :root {
+        --mk: #1f1d33;
+      }
+      :root[data-theme='dark'] {
+        --mk: #f1f0fb;
+      }
+      .card .m [stroke='#1f1d33'] {
+        stroke: var(--mk);
+      }
+      .card .m [fill='#1f1d33'] {
+        fill: var(--mk);
+      }
+      .ondark .m [stroke='#1f1d33'] {
+        stroke: #f1f0fb;
+      }
+      .ondark .m [fill='#1f1d33'] {
+        fill: #f1f0fb;
+      }
+      .wm {
+        font-weight: 900;
+        font-size: 128px;
+        line-height: 1;
+        letter-spacing: -0.02em;
+      }
+      .tag {
+        font-weight: 700;
+        font-size: 40px;
+        line-height: 1.3;
+        color: var(--muted);
+        margin-top: 22px;
+        max-width: 620px;
+      }
+      .dots {
+        display: flex;
+        gap: 12px;
+        margin-top: 40px;
+      }
+      .dots i {
+        width: 56px;
+        height: 18px;
+        border-radius: 9px;
+      }
+      .seg {
+        position: absolute;
+        top: 20px;
+        right: 20px;
+        display: flex;
+        background: color-mix(in srgb, var(--line) 60%, transparent);
+        border-radius: 999px;
+        padding: 3px;
+      }
+      .seg button {
+        font:
+          800 15px Nunito,
+          sans-serif;
+        border: 0;
+        background: transparent;
+        color: var(--muted);
+        min-width: 44px;
+        height: 36px;
+        border-radius: 999px;
+        cursor: pointer;
+      }
+      .seg button[aria-pressed='true'] {
+        background: var(--surface);
+        color: var(--text);
+      }
+      .label {
+        margin: 16px;
+        padding: 12px 14px;
+        border: 2px dashed var(--line);
+        border-radius: 10px;
+        font:
+          14px/1.5 Inter,
+          sans-serif;
+        color: var(--muted);
+      }
+      .label b {
+        color: var(--text);
+        font-size: 16px;
+      }
+      .tiles {
+        display: flex;
+        gap: 28px;
+        align-items: flex-end;
+        padding: 8px 16px 20px;
+        flex-wrap: wrap;
+      }
+      .tile {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 8px;
+        font:
+          12px Inter,
+          sans-serif;
+        color: var(--muted);
+      }
+      .fav {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      .fav .m {
+        width: 100%;
+        height: 100%;
+      }
+      .app {
+        border-radius: 22%;
+        background: #f8f8fc;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 0 0 1px var(--line);
+      }
+      .app .m {
+        width: 72%;
+        height: 72%;
+      }
+      .onlight {
+        background: #ffffff;
+        padding: 10px;
+        border-radius: 8px;
+        box-shadow: 0 0 0 1px #dcdcea;
+      }
+      .ondark {
+        background: #121220;
+        padding: 10px;
+        border-radius: 8px;
+      }
+      .row {
+        display: flex;
+        gap: 12px;
+        align-items: center;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="label" lang="en">
+      <b>Arm 2: Agenda bars</b> · the mark at real icon sizes, beside its card
+      frame arm-2<br />Cost: Bars read as a list or a document as much as a
+      calendar. In return, they echo the day list on the Today screen, so the
+      icon shows what the app opens to.<br />Reference: the Today list rows
+    </div>
+    <div class="tiles">
+      <div class="tile">
+        <div class="row">
+          <div class="onlight">
+            <div class="fav" style="width: 16px; height: 16px">
+              <svg
+                class="m"
+                viewBox="0 0 64 64"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+                aria-hidden="true"
+              >
+                <rect
+                  x="8"
+                  y="12"
+                  width="48"
+                  height="46"
+                  rx="14"
+                  fill="#ffffff"
+                  stroke="#1f1d33"
+                  stroke-width="4"
+                />
+                <path
+                  d="M10 27h44v-3a10 10 0 0 0-10-10H20a10 10 0 0 0-10 10z"
+                  fill="#dcd8ff"
+                />
+                <path d="M8 27h48" stroke="#1f1d33" stroke-width="4" />
+                <rect
+                  x="19.5"
+                  y="5"
+                  width="6"
+                  height="14"
+                  rx="3"
+                  fill="#1f1d33"
+                />
+                <rect
+                  x="38.5"
+                  y="5"
+                  width="6"
+                  height="14"
+                  rx="3"
+                  fill="#1f1d33"
+                />
+                <rect
+                  x="17"
+                  y="33.5"
+                  width="30"
+                  height="4.6"
+                  rx="2.3"
+                  fill="#ffd9bf"
+                  stroke="#1f1d33"
+                  stroke-width="1.8"
+                />
+                <rect
+                  x="17"
+                  y="40.5"
+                  width="22"
+                  height="4.6"
+                  rx="2.3"
+                  fill="#ffcfe1"
+                  stroke="#1f1d33"
+                  stroke-width="1.8"
+                />
+                <rect
+                  x="17"
+                  y="47.5"
+                  width="26"
+                  height="4.6"
+                  rx="2.3"
+                  fill="#c9f1dd"
+                  stroke="#1f1d33"
+                  stroke-width="1.8"
+                />
+              </svg>
+            </div>
+          </div>
+          <div class="ondark">
+            <div class="fav" style="width: 16px; height: 16px">
+              <svg
+                class="m"
+                viewBox="0 0 64 64"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+                aria-hidden="true"
+              >
+                <rect
+                  x="8"
+                  y="12"
+                  width="48"
+                  height="46"
+                  rx="14"
+                  fill="#ffffff"
+                  stroke="#1f1d33"
+                  stroke-width="4"
+                />
+                <path
+                  d="M10 27h44v-3a10 10 0 0 0-10-10H20a10 10 0 0 0-10 10z"
+                  fill="#dcd8ff"
+                />
+                <path d="M8 27h48" stroke="#1f1d33" stroke-width="4" />
+                <rect
+                  x="19.5"
+                  y="5"
+                  width="6"
+                  height="14"
+                  rx="3"
+                  fill="#1f1d33"
+                />
+                <rect
+                  x="38.5"
+                  y="5"
+                  width="6"
+                  height="14"
+                  rx="3"
+                  fill="#1f1d33"
+                />
+                <rect
+                  x="17"
+                  y="33.5"
+                  width="30"
+                  height="4.6"
+                  rx="2.3"
+                  fill="#ffd9bf"
+                  stroke="#1f1d33"
+                  stroke-width="1.8"
+                />
+                <rect
+                  x="17"
+                  y="40.5"
+                  width="22"
+                  height="4.6"
+                  rx="2.3"
+                  fill="#ffcfe1"
+                  stroke="#1f1d33"
+                  stroke-width="1.8"
+                />
+                <rect
+                  x="17"
+                  y="47.5"
+                  width="26"
+                  height="4.6"
+                  rx="2.3"
+                  fill="#c9f1dd"
+                  stroke="#1f1d33"
+                  stroke-width="1.8"
+                />
+              </svg>
+            </div>
+          </div>
+        </div>
+        16px favicon
+      </div>
+      <div class="tile">
+        <div class="row">
+          <div class="onlight">
+            <div class="fav" style="width: 32px; height: 32px">
+              <svg
+                class="m"
+                viewBox="0 0 64 64"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+                aria-hidden="true"
+              >
+                <rect
+                  x="8"
+                  y="12"
+                  width="48"
+                  height="46"
+                  rx="14"
+                  fill="#ffffff"
+                  stroke="#1f1d33"
+                  stroke-width="4"
+                />
+                <path
+                  d="M10 27h44v-3a10 10 0 0 0-10-10H20a10 10 0 0 0-10 10z"
+                  fill="#dcd8ff"
+                />
+                <path d="M8 27h48" stroke="#1f1d33" stroke-width="4" />
+                <rect
+                  x="19.5"
+                  y="5"
+                  width="6"
+                  height="14"
+                  rx="3"
+                  fill="#1f1d33"
+                />
+                <rect
+                  x="38.5"
+                  y="5"
+                  width="6"
+                  height="14"
+                  rx="3"
+                  fill="#1f1d33"
+                />
+                <rect
+                  x="17"
+                  y="33.5"
+                  width="30"
+                  height="4.6"
+                  rx="2.3"
+                  fill="#ffd9bf"
+                  stroke="#1f1d33"
+                  stroke-width="1.8"
+                />
+                <rect
+                  x="17"
+                  y="40.5"
+                  width="22"
+                  height="4.6"
+                  rx="2.3"
+                  fill="#ffcfe1"
+                  stroke="#1f1d33"
+                  stroke-width="1.8"
+                />
+                <rect
+                  x="17"
+                  y="47.5"
+                  width="26"
+                  height="4.6"
+                  rx="2.3"
+                  fill="#c9f1dd"
+                  stroke="#1f1d33"
+                  stroke-width="1.8"
+                />
+              </svg>
+            </div>
+          </div>
+          <div class="ondark">
+            <div class="fav" style="width: 32px; height: 32px">
+              <svg
+                class="m"
+                viewBox="0 0 64 64"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+                aria-hidden="true"
+              >
+                <rect
+                  x="8"
+                  y="12"
+                  width="48"
+                  height="46"
+                  rx="14"
+                  fill="#ffffff"
+                  stroke="#1f1d33"
+                  stroke-width="4"
+                />
+                <path
+                  d="M10 27h44v-3a10 10 0 0 0-10-10H20a10 10 0 0 0-10 10z"
+                  fill="#dcd8ff"
+                />
+                <path d="M8 27h48" stroke="#1f1d33" stroke-width="4" />
+                <rect
+                  x="19.5"
+                  y="5"
+                  width="6"
+                  height="14"
+                  rx="3"
+                  fill="#1f1d33"
+                />
+                <rect
+                  x="38.5"
+                  y="5"
+                  width="6"
+                  height="14"
+                  rx="3"
+                  fill="#1f1d33"
+                />
+                <rect
+                  x="17"
+                  y="33.5"
+                  width="30"
+                  height="4.6"
+                  rx="2.3"
+                  fill="#ffd9bf"
+                  stroke="#1f1d33"
+                  stroke-width="1.8"
+                />
+                <rect
+                  x="17"
+                  y="40.5"
+                  width="22"
+                  height="4.6"
+                  rx="2.3"
+                  fill="#ffcfe1"
+                  stroke="#1f1d33"
+                  stroke-width="1.8"
+                />
+                <rect
+                  x="17"
+                  y="47.5"
+                  width="26"
+                  height="4.6"
+                  rx="2.3"
+                  fill="#c9f1dd"
+                  stroke="#1f1d33"
+                  stroke-width="1.8"
+                />
+              </svg>
+            </div>
+          </div>
+        </div>
+        32px favicon
+      </div>
+      <div class="tile">
+        <div class="row">
+          <div class="onlight">
+            <div class="fav" style="width: 48px; height: 48px">
+              <svg
+                class="m"
+                viewBox="0 0 64 64"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+                aria-hidden="true"
+              >
+                <rect
+                  x="8"
+                  y="12"
+                  width="48"
+                  height="46"
+                  rx="14"
+                  fill="#ffffff"
+                  stroke="#1f1d33"
+                  stroke-width="4"
+                />
+                <path
+                  d="M10 27h44v-3a10 10 0 0 0-10-10H20a10 10 0 0 0-10 10z"
+                  fill="#dcd8ff"
+                />
+                <path d="M8 27h48" stroke="#1f1d33" stroke-width="4" />
+                <rect
+                  x="19.5"
+                  y="5"
+                  width="6"
+                  height="14"
+                  rx="3"
+                  fill="#1f1d33"
+                />
+                <rect
+                  x="38.5"
+                  y="5"
+                  width="6"
+                  height="14"
+                  rx="3"
+                  fill="#1f1d33"
+                />
+                <rect
+                  x="17"
+                  y="33.5"
+                  width="30"
+                  height="4.6"
+                  rx="2.3"
+                  fill="#ffd9bf"
+                  stroke="#1f1d33"
+                  stroke-width="1.8"
+                />
+                <rect
+                  x="17"
+                  y="40.5"
+                  width="22"
+                  height="4.6"
+                  rx="2.3"
+                  fill="#ffcfe1"
+                  stroke="#1f1d33"
+                  stroke-width="1.8"
+                />
+                <rect
+                  x="17"
+                  y="47.5"
+                  width="26"
+                  height="4.6"
+                  rx="2.3"
+                  fill="#c9f1dd"
+                  stroke="#1f1d33"
+                  stroke-width="1.8"
+                />
+              </svg>
+            </div>
+          </div>
+          <div class="ondark">
+            <div class="fav" style="width: 48px; height: 48px">
+              <svg
+                class="m"
+                viewBox="0 0 64 64"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+                aria-hidden="true"
+              >
+                <rect
+                  x="8"
+                  y="12"
+                  width="48"
+                  height="46"
+                  rx="14"
+                  fill="#ffffff"
+                  stroke="#1f1d33"
+                  stroke-width="4"
+                />
+                <path
+                  d="M10 27h44v-3a10 10 0 0 0-10-10H20a10 10 0 0 0-10 10z"
+                  fill="#dcd8ff"
+                />
+                <path d="M8 27h48" stroke="#1f1d33" stroke-width="4" />
+                <rect
+                  x="19.5"
+                  y="5"
+                  width="6"
+                  height="14"
+                  rx="3"
+                  fill="#1f1d33"
+                />
+                <rect
+                  x="38.5"
+                  y="5"
+                  width="6"
+                  height="14"
+                  rx="3"
+                  fill="#1f1d33"
+                />
+                <rect
+                  x="17"
+                  y="33.5"
+                  width="30"
+                  height="4.6"
+                  rx="2.3"
+                  fill="#ffd9bf"
+                  stroke="#1f1d33"
+                  stroke-width="1.8"
+                />
+                <rect
+                  x="17"
+                  y="40.5"
+                  width="22"
+                  height="4.6"
+                  rx="2.3"
+                  fill="#ffcfe1"
+                  stroke="#1f1d33"
+                  stroke-width="1.8"
+                />
+                <rect
+                  x="17"
+                  y="47.5"
+                  width="26"
+                  height="4.6"
+                  rx="2.3"
+                  fill="#c9f1dd"
+                  stroke="#1f1d33"
+                  stroke-width="1.8"
+                />
+              </svg>
+            </div>
+          </div>
+        </div>
+        48px favicon
+      </div>
+    </div>
+    <div class="tiles">
+      <div class="tile">
+        <div class="app" style="width: 60px; height: 60px">
+          <svg
+            class="m"
+            viewBox="0 0 64 64"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
+            aria-hidden="true"
+          >
+            <rect
+              x="8"
+              y="12"
+              width="48"
+              height="46"
+              rx="14"
+              fill="#ffffff"
+              stroke="#1f1d33"
+              stroke-width="4"
+            />
+            <path
+              d="M10 27h44v-3a10 10 0 0 0-10-10H20a10 10 0 0 0-10 10z"
+              fill="#dcd8ff"
+            />
+            <path d="M8 27h48" stroke="#1f1d33" stroke-width="4" />
+            <rect x="19.5" y="5" width="6" height="14" rx="3" fill="#1f1d33" />
+            <rect x="38.5" y="5" width="6" height="14" rx="3" fill="#1f1d33" />
+            <rect
+              x="17"
+              y="33.5"
+              width="30"
+              height="4.6"
+              rx="2.3"
+              fill="#ffd9bf"
+              stroke="#1f1d33"
+              stroke-width="1.8"
+            />
+            <rect
+              x="17"
+              y="40.5"
+              width="22"
+              height="4.6"
+              rx="2.3"
+              fill="#ffcfe1"
+              stroke="#1f1d33"
+              stroke-width="1.8"
+            />
+            <rect
+              x="17"
+              y="47.5"
+              width="26"
+              height="4.6"
+              rx="2.3"
+              fill="#c9f1dd"
+              stroke="#1f1d33"
+              stroke-width="1.8"
+            />
+          </svg>
+        </div>
+        60px home screen
+      </div>
+      <div class="tile">
+        <div class="app" style="width: 120px; height: 120px">
+          <svg
+            class="m"
+            viewBox="0 0 64 64"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
+            aria-hidden="true"
+          >
+            <rect
+              x="8"
+              y="12"
+              width="48"
+              height="46"
+              rx="14"
+              fill="#ffffff"
+              stroke="#1f1d33"
+              stroke-width="4"
+            />
+            <path
+              d="M10 27h44v-3a10 10 0 0 0-10-10H20a10 10 0 0 0-10 10z"
+              fill="#dcd8ff"
+            />
+            <path d="M8 27h48" stroke="#1f1d33" stroke-width="4" />
+            <rect x="19.5" y="5" width="6" height="14" rx="3" fill="#1f1d33" />
+            <rect x="38.5" y="5" width="6" height="14" rx="3" fill="#1f1d33" />
+            <rect
+              x="17"
+              y="33.5"
+              width="30"
+              height="4.6"
+              rx="2.3"
+              fill="#ffd9bf"
+              stroke="#1f1d33"
+              stroke-width="1.8"
+            />
+            <rect
+              x="17"
+              y="40.5"
+              width="22"
+              height="4.6"
+              rx="2.3"
+              fill="#ffcfe1"
+              stroke="#1f1d33"
+              stroke-width="1.8"
+            />
+            <rect
+              x="17"
+              y="47.5"
+              width="26"
+              height="4.6"
+              rx="2.3"
+              fill="#c9f1dd"
+              stroke="#1f1d33"
+              stroke-width="1.8"
+            />
+          </svg>
+        </div>
+        120px home screen
+      </div>
+      <div class="tile">
+        <div class="app" style="width: 180px; height: 180px">
+          <svg
+            class="m"
+            viewBox="0 0 64 64"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
+            aria-hidden="true"
+          >
+            <rect
+              x="8"
+              y="12"
+              width="48"
+              height="46"
+              rx="14"
+              fill="#ffffff"
+              stroke="#1f1d33"
+              stroke-width="4"
+            />
+            <path
+              d="M10 27h44v-3a10 10 0 0 0-10-10H20a10 10 0 0 0-10 10z"
+              fill="#dcd8ff"
+            />
+            <path d="M8 27h48" stroke="#1f1d33" stroke-width="4" />
+            <rect x="19.5" y="5" width="6" height="14" rx="3" fill="#1f1d33" />
+            <rect x="38.5" y="5" width="6" height="14" rx="3" fill="#1f1d33" />
+            <rect
+              x="17"
+              y="33.5"
+              width="30"
+              height="4.6"
+              rx="2.3"
+              fill="#ffd9bf"
+              stroke="#1f1d33"
+              stroke-width="1.8"
+            />
+            <rect
+              x="17"
+              y="40.5"
+              width="22"
+              height="4.6"
+              rx="2.3"
+              fill="#ffcfe1"
+              stroke="#1f1d33"
+              stroke-width="1.8"
+            />
+            <rect
+              x="17"
+              y="47.5"
+              width="26"
+              height="4.6"
+              rx="2.3"
+              fill="#c9f1dd"
+              stroke="#1f1d33"
+              stroke-width="1.8"
+            />
+          </svg>
+        </div>
+        180px home screen
+      </div>
+    </div>
+    <script>
+      ;(function () {
+        var K = 'lt-lang',
+          d = document.documentElement
+        function g() {
+          try {
+            return localStorage.getItem(K)
+          } catch (e) {
+            return null
+          }
+        }
+        function a(l) {
+          d.setAttribute('data-lang', l === 'vi' ? 'vi' : 'en')
+          d.lang = l === 'vi' ? 'vi' : 'en'
+          document.querySelectorAll('.seg button').forEach(function (b) {
+            b.setAttribute('aria-pressed', b.dataset.l === d.lang)
+          })
+        }
+        a(g() || 'en')
+        addEventListener('storage', function (e) {
+          if (e.key === K) a(e.newValue)
+        })
+        document.addEventListener('click', function (e) {
+          var b = e.target.closest('.seg button')
+          if (!b) return
+          try {
+            localStorage.setItem(K, b.dataset.l)
+          } catch (x) {}
+          a(b.dataset.l)
+        })
+      })()
+    </script>
+  </body>
+</html>

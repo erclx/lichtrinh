@@ -4,5 +4,5 @@
   "singleQuote": true,
   "printWidth": 80,
   "sortPackageJson": false,
-  "ignorePatterns": ["worker/db/migrations/meta/"]
+  "ignorePatterns": ["worker/db/migrations/meta/", "canon/design/assets/"]
 }

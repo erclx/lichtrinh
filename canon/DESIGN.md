@@ -1,49 +1,94 @@
+---
+themes:
+  - ':root'
+  - ":root[data-theme='dark']"
+reviewed: 2026-11-21
+---
+
 # Design
 
-Authoring guidance: the design standard. Values live in `<your stylesheet>`, such as `src/styles/tokens.css` or a Tailwind `@theme` block. A project with none writes a stylesheet of its own and names it here.
+Values live in `src/index.css`, light on `:root` and dark on `:root[data-theme='dark']`, an attribute the head script in `index.html` sets from the device scheme. This record holds the intent.
 
 ## Overview
 
-One paragraph. Voice, tone, and the feeling a user should have. The same content a design intake form asks for.
+Calm, large, and plain for an older traveler reading on an iPhone. Near-black controls sit on a pale ground, the type is big, and soft pastels only ever say what kind of thing an entry is. Every screen exists in light and dark and follows the device.
 
 ## Colors
 
-Up to three rules a developer could get wrong.
+- A pastel names an entry's kind and nothing else, so a state, a button, or a selection never takes one.
+- A destructive action takes the foreground ink, so delete reads by its label and its confirm sheet rather than by red.
+- Muted text holds at least 7:1 against the ground in both themes, and stays above 4.5:1 on the muted fill.
 
-One row per role, naming its custom property. Intent is a short phrase a human can picture.
-
-| Role       | Property             | Intent                        |
-| ---------- | -------------------- | ----------------------------- |
-| background | `--color-background` | page canvas                   |
-| surface    | `--color-surface`    | cards, panels, raised blocks  |
-| text       | `--color-text`       | primary body text             |
-| muted      | `--color-muted`      | secondary text, captions      |
-| accent     | `--color-accent`     | links, primary action         |
-| success    | `--color-success`    | confirmations, positive state |
-| warning    | `--color-warning`    | cautions, pending state       |
-| error      | `--color-error`      | failures, destructive action  |
+| Role                 | Property                 | Intent                                         |
+| -------------------- | ------------------------ | ---------------------------------------------- |
+| background           | `--background`           | page ground                                    |
+| foreground           | `--foreground`           | body text and titles                           |
+| card                 | `--card`                 | raised surfaces such as cards and entry rows   |
+| card-foreground      | `--card-foreground`      | text on a card                                 |
+| popover              | `--popover`              | sheets, dialogs, and menus                     |
+| popover-foreground   | `--popover-foreground`   | text on a sheet, dialog, or menu               |
+| primary              | `--primary`              | every press-me control and the selected state  |
+| primary-foreground   | `--primary-foreground`   | text and icons on primary                      |
+| secondary            | `--secondary`            | unselected chips and week-strip days           |
+| secondary-foreground | `--secondary-foreground` | text on an unselected chip or day              |
+| muted                | `--muted`                | quiet fills and segmented tracks               |
+| muted-foreground     | `--muted-foreground`     | secondary text such as times and costs         |
+| accent               | `--accent`               | hover on a quiet control                       |
+| accent-foreground    | `--accent-foreground`    | text on a hovered quiet control                |
+| border               | `--border`               | dividers                                       |
+| input                | `--input`                | field edges                                    |
+| ring                 | `--ring`                 | the focus ring                                 |
+| destructive          | `--destructive`          | a destructive confirm, drawn in foreground ink |
+| now                  | `--now`                  | the happening-now card for an entry of no kind |
+| food                 | `--food`                 | food entries                                   |
+| food-ink             | `--food-ink`             | icon and label on food                         |
+| sights               | `--sights`               | sights entries                                 |
+| sights-ink           | `--sights-ink`           | icon and label on sights                       |
+| rest                 | `--rest`                 | rest entries                                   |
+| rest-ink             | `--rest-ink`             | icon and label on rest                         |
+| transport            | `--transport`            | transport entries                              |
+| transport-ink        | `--transport-ink`        | icon and label on transport                    |
+| activity             | `--activity`             | activity entries                               |
+| activity-ink         | `--activity-ink`         | icon and label on activity                     |
 
 ## Typography
 
-Up to three rules. How the roles divide between families, and any role that breaks the pattern.
+- Nunito sets everything, and weight separates the roles, with titles and control labels at 800.
+- The scale has five steps, body text sits on the base step, and nothing renders below the smallest.
+- One scale holds at every width, since landscape iPad takes the desktop layout and would otherwise shrink the traveler's type.
 
 ## Spacing
 
-One line. The base unit and how the scale steps.
+- Every control's hit area reaches `--spacing-target`, and a control drawn smaller pads out to it, as the header's language and settings controls do on phone.
+
+## Layout
+
+- Phone is under 480 wide, tablet runs from 480 to 1023, and desktop starts at 1024, landscape iPad included.
+- The middle column keeps a 40px gutter from each sidebar on desktop and 32px on tablet, whose nav keeps a label under each icon.
+
+Draw widths: 390, 834, 1440
 
 ## Shapes
 
-One row per role, naming its radius property.
+- Every one-line control is a pill, being the language toggle, the Add control, chips, and the Talk bar.
 
-| Role    | Property           | When used          |
-| ------- | ------------------ | ------------------ |
-| default | `--radius-default` | cards, inputs      |
-| pill    | `--radius-pill`    | tags, status chips |
+| Role  | Property       | When used                                   |
+| ----- | -------------- | ------------------------------------------- |
+| field | `--radius-lg`  | inputs, week-strip days, and small tiles    |
+| card  | `--radius-xl`  | cards, entry rows, and two-line buttons     |
+| sheet | `--radius-2xl` | sheets, dialogs, and the happening-now card |
+| pill  | `rounded-full` | every one-line control                      |
 
 ## Motion
 
-One line. State whether motion is used at all, and if so, the default duration and easing.
+- No motion is designed yet. A row adding one honors reduced motion and keeps the change under a quarter second.
 
 ## Iconography
 
-One line. Style (outline, filled, duotone), source library, and whether custom icons are allowed.
+- Every control icon is a drawn SVG on a 24 grid with round caps, never a typed glyph or an emoji.
+
+## Mark
+
+- The mark is a calendar page with three pastel agenda bars, served as `public/favicon.svg` and drawn in the app by `src/components/brand-mark.tsx`.
+- Its outline and rings follow the text color, while the page and the bars keep their fills in both themes.
+- It sits beside the wordmark in every header.

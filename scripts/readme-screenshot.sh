@@ -4,7 +4,7 @@ set -euo pipefail
 # Project-specific. Both are placeholders the project fills in, and the script
 # refuses to run until it does, since a shipped default would capture the wrong
 # part of the page in every project but the one it was written for.
-README_FILTER='' # case label to capture, such as header/1280
+README_FILTER='home/1280' # case label to capture, such as header/1280
 README_EVIDENCE_DIR='assets/evidence/readme'
 
 if [[ -z "$README_FILTER" ]]; then
