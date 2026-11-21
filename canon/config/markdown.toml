@@ -1,0 +1,10 @@
+[markdown]
+gated = [
+  "canon/context/",
+  "docs/",
+  ".claude/skills/",
+  "wiki/",
+  "README.md",
+  "CONTRIBUTING.md",
+  "CLAUDE.md",
+]

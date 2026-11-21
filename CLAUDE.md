@@ -1,0 +1,32 @@
+# Lichtrinh
+
+A shared trip calendar a non-technical traveler plans by talking to Claude in Vietnamese. The name is lịch trình, Vietnamese for itinerary.
+
+## Context
+
+- Before non-trivial work in a domain, read its entry under `canon/context/`. Find it from the index anchor below.
+
+@canon/REQUIREMENTS.md
+@canon/context/index.md
+
+## Commands
+
+- Run `bun run check` to verify and `bun run format` to fix before committing. The pre-push hook runs `check`, which writes nothing.
+
+## Key paths
+
+### Code
+
+The web app the traveler and the family open in a browser.
+
+- `src/`: the React front end, styled with Tailwind v4
+- `src/components/ui/`: the shadcn kit on Base UI, owned and edited in place, added with `bunx --bun shadcn@latest add <component>`
+- `src/lib/`: shared helpers, including `cn` for merging classes
+- `e2e/`: Playwright specs and the screenshot harness, with its cases in `e2e/capture/`
+
+### Content
+
+The product and design record every session reads.
+
+- `canon/REQUIREMENTS.md`: what the app does and for whom, its non-goals, and its constraints
+- `canon/DESIGN.md`: visual intent, pointing at the stylesheet that holds the values

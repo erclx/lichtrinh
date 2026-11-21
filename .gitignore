@@ -1,0 +1,64 @@
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+node_modules
+dist
+dist-ssr
+*.local
+
+# Editor directories and files
+.vscode/*
+!.vscode/extensions.json
+.idea
+.DS_Store
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+.env
+.env.*
+!.env.example
+
+# VSCode
+.vscode/
+
+# Claude
+.canon/
+.claude/worktrees/
+
+# Coverage
+coverage/
+.vitest/
+
+# Playwright
+test-results/
+playwright-report/
+blob-report/
+playwright/.cache/
+
+# Screenshots
+screenshots/
+
+# Personal data, never committed in this public repository
+voice/clips/
+*.m4a
+*.wav
+*.mp3
+*.webm
+
+# Local secrets and state for Cloudflare and the bridge
+.dev.vars
+.dev.vars.*
+.wrangler/
+*.sqlite
+*.sqlite3
+
+# Python bytecode
+__pycache__/

@@ -1,0 +1,56 @@
+---
+title: Setup
+description: Local dev workflow, scripts, and husky hooks
+---
+
+# Setup
+
+## Overview
+
+Owns how the project runs on a developer machine, being the toolchain install, the scripts that verify a change, and the git hooks that run them before a commit or a push leaves. CI calls the same scripts from a workflow, which is the CI entry's subject.
+
+Install [Bun](https://bun.sh) with `curl -fsSL https://bun.sh/install | bash` and run `bun install`, then use the package scripts below. They call the shell scripts in `scripts/`, which holds every one since none belongs outside it.
+
+## Layout
+
+### `scripts/`
+
+| Command          | Purpose                                                                                  |
+| ---------------- | ---------------------------------------------------------------------------------------- |
+| `bun run check`  | Gates locally and writes nothing. Fails on formatting drift until `bun run format` runs. |
+| `bun run format` | Auto-fix oxfmt formatting.                                                               |
+
+These run and test the app.
+
+| Command              | Purpose                                                                    |
+| -------------------- | -------------------------------------------------------------------------- |
+| `bun run dev`        | Serve the app on port 5173, plus the worktree offset                       |
+| `bun run test:run`   | Run the Vitest unit and component tests once                               |
+| `bun run test:e2e`   | Run the Playwright suite in chromium, firefox, and webkit                  |
+| `bun run screenshot` | Build, serve on port 4173, and capture each case in `e2e/capture/cases.ts` |
+
+### `voice/`
+
+Holds the Python project, synced from canon's python stack with `--skip base`, so husky, oxfmt, and commitlint stay at the root. It needs [uv](https://docs.astral.sh/uv/) and one `uv sync` inside `voice/`, since `bun run check` runs these too. Run them from inside `voice/`.
+
+| Command             | Purpose                                              |
+| ------------------- | ---------------------------------------------------- |
+| `bun run lint`      | Run `ruff check` and `ruff format --check`           |
+| `bun run lint:fix`  | Auto-fix with `ruff check --fix` then `ruff format`  |
+| `bun run typecheck` | Run `mypy` in strict mode                            |
+| `bun run test:run`  | Run `pytest -v`                                      |
+| `bun run test:cov`  | Run `pytest` with branch coverage and an HTML report |
+
+### `.husky/`
+
+Holds the git hooks that run the checks before a commit or a push leaves.
+
+- `pre-commit` runs `lint-staged` (oxfmt on staged files)
+- `commit-msg` runs `commitlint` against the conventional commit format
+- `pre-push` runs `bun run check`, and also gates on banned characters across every tracked markdown file except `CHANGELOG.md` when a markdown-bans audit tool is on PATH
+
+## Gotchas
+
+- A push fails on formatting drift until `bun run format` runs, since the `pre-push` hook writes nothing
+- The root `check` chains into `voice/scripts/verify.ts`, held through every sync by `canon tooling customize package.json:check`, since base overrides that script
+- `uv add` in `voice/` writes TOML that root oxfmt rejects, so run `bun run format` at the root after a dependency change

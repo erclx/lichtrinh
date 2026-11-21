@@ -1,0 +1,176 @@
+name: Verify
+
+on:
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: verify-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  static-checks:
+    name: 🔍 Static Checks
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Setup Node
+        uses: actions/setup-node@v7
+        with:
+          node-version: '22'
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Install Dependencies
+        run: bun install --frozen-lockfile
+
+      - name: Typecheck
+        run: bun run typecheck
+
+      - name: Lint
+        run: bun run lint
+
+      - name: Check Formatting
+        run: bun run check:format
+
+  unit-tests:
+    name: 🧪 Unit Tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Setup Node
+        uses: actions/setup-node@v7
+        with:
+          node-version: '22'
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Install Dependencies
+        run: bun install --frozen-lockfile
+
+      - name: Detect Browser Tests
+        id: browser
+        run: |
+          if jq -e '.scripts["test:browser"]' package.json >/dev/null; then
+            echo "enabled=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Cache Playwright Browsers
+        id: playwright-cache
+        if: steps.browser.outputs.enabled == 'true'
+        uses: actions/cache@v6
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-chromium-${{ runner.os }}-${{ hashFiles('**/package.json') }}
+
+      - name: Install Playwright Chromium
+        if: steps.browser.outputs.enabled == 'true' && steps.playwright-cache.outputs.cache-hit != 'true'
+        timeout-minutes: 5
+        run: bunx playwright install chromium
+
+      - name: Run Tests
+        run: bun run test:coverage
+
+      - name: Run Browser Tests
+        if: steps.browser.outputs.enabled == 'true'
+        run: bun run test:browser
+
+  build-verify:
+    name: 🏗️ Build
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Setup Node
+        uses: actions/setup-node@v7
+        with:
+          node-version: '22'
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Install Dependencies
+        run: bun install --frozen-lockfile
+
+      - name: Build
+        run: bun run build
+
+      - name: Upload Build Output
+        uses: actions/upload-artifact@v7
+        with:
+          name: build-output
+          path: dist/
+          retention-days: 1
+
+  e2e-tests:
+    name: 🎭 E2E Tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    needs: [static-checks, unit-tests, build-verify]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Setup Node
+        uses: actions/setup-node@v7
+        with:
+          node-version: '22'
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Install Dependencies
+        run: bun install --frozen-lockfile
+
+      - name: Download Build Output
+        uses: actions/download-artifact@v8
+        with:
+          name: build-output
+          path: dist/
+
+      - name: Cache Playwright Browsers
+        id: playwright-cache
+        uses: actions/cache@v6
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-chromium-${{ runner.os }}-${{ hashFiles('**/package.json') }}
+
+      - name: Install Playwright Chromium
+        if: steps.playwright-cache.outputs.cache-hit != 'true'
+        timeout-minutes: 5
+        run: bunx playwright install chromium
+
+      - name: Run E2E Tests
+        env:
+          DIST_PREBUILT: 'true'
+        run: bun run test:e2e --project=chromium
+
+      - name: Upload E2E Report
+        uses: actions/upload-artifact@v7
+        if: failure()
+        with:
+          name: playwright-report
+          path: playwright-report/
+          retention-days: 7

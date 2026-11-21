@@ -1,0 +1,16 @@
+[project]
+name = "voice"
+version = "0.1.0"
+description = "Speech recognition for the trip calendar, and the benchmark that picks its model"
+requires-python = ">=3.14"
+dependencies = []
+
+[project.scripts]
+voice = "voice:main"
+
+[build-system]
+requires = ["uv_build>=0.13.7,<0.14.0"]
+build-backend = "uv_build"
+
+[dependency-groups]
+dev = ["mypy>=2.4.1", "pytest>=9.2.0", "pytest-cov>=7.1.0", "ruff>=0.17.6"]
