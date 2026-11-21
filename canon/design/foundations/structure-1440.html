@@ -1,0 +1,625 @@
+<!doctype html>
+<html lang="en" data-lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width" />
+    <style>
+      :root {
+        --g0: #f4f4f3;
+        --g1: #ffffff;
+        --g2: #e4e4e2;
+        --g3: #cfcfcc;
+        --g4: #3f3f3c;
+        --fg: #1d1d1b;
+        --mute: #5d5d59;
+        --on4: #fafaf9;
+        --rule: #d9d9d6;
+      }
+      :root[data-theme='dark'] {
+        --g0: #161615;
+        --g1: #20201f;
+        --g2: #2c2c2a;
+        --g3: #3b3b39;
+        --g4: #d6d6d2;
+        --fg: #f1f1ee;
+        --mute: #a9a9a4;
+        --on4: #161615;
+        --rule: #363634;
+      }
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+      html[data-lang='en'] .vi,
+      html[data-lang='vi'] .en {
+        display: none;
+      }
+      body {
+        background: var(--g0);
+        color: var(--fg);
+        font-family: Inter, sans-serif;
+        font-size: 18px;
+        line-height: 1.4;
+      }
+      .label {
+        margin: 16px;
+        padding: 12px 14px;
+        border: 2px dashed var(--g3);
+        border-radius: 8px;
+        font-size: 14px;
+        line-height: 1.45;
+        color: var(--mute);
+      }
+      .label b {
+        color: var(--fg);
+        font-size: 16px;
+      }
+      .top {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 8px 16px;
+        background: var(--g1);
+        border-bottom: 1px solid var(--rule);
+        gap: 12px;
+      }
+      .brand {
+        font-weight: 700;
+        font-size: 17px;
+      }
+      .seg {
+        display: flex;
+        background: var(--g2);
+        border-radius: 10px;
+        padding: 3px;
+      }
+      .seg button {
+        font: inherit;
+        font-size: 16px;
+        font-weight: 700;
+        border: 0;
+        background: transparent;
+        color: var(--mute);
+        min-width: 52px;
+        height: 44px;
+        border-radius: 8px;
+        cursor: pointer;
+      }
+      .seg button[aria-pressed='true'] {
+        background: var(--g1);
+        color: var(--fg);
+        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.12);
+      }
+      .scr {
+        font-size: 13px;
+        font-weight: 700;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        color: var(--mute);
+        padding: 20px 16px 8px;
+        border-top: 6px solid var(--g3);
+        margin-top: 24px;
+      }
+      .scr:first-of-type {
+        margin-top: 0;
+        border-top: 0;
+      }
+      .h1 {
+        font-size: 26px;
+        font-weight: 700;
+        padding: 16px 16px 4px;
+      }
+      .sub {
+        font-size: 16px;
+        color: var(--mute);
+        padding: 0 16px 12px;
+      }
+      .btn {
+        min-height: 56px;
+        border-radius: 12px;
+        background: var(--g2);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 18px;
+        font-weight: 700;
+        padding: 0 18px;
+      }
+      .btn.dark {
+        background: var(--g4);
+        color: var(--on4);
+      }
+      .sw {
+        display: flex;
+        margin: 8px 16px;
+        background: var(--g2);
+        border-radius: 12px;
+        padding: 4px;
+      }
+      .sw div {
+        flex: 1;
+        height: 48px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 17px;
+        font-weight: 600;
+        border-radius: 9px;
+        color: var(--mute);
+      }
+      .sw .on {
+        background: var(--g1);
+        color: var(--fg);
+        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.12);
+      }
+      .chips {
+        display: flex;
+        gap: 8px;
+        padding: 8px 16px;
+        overflow: hidden;
+        flex-wrap: nowrap;
+      }
+      .chip {
+        flex: none;
+        height: 48px;
+        padding: 0 16px;
+        border-radius: 24px;
+        background: var(--g2);
+        display: flex;
+        align-items: center;
+        font-size: 17px;
+        font-weight: 600;
+        white-space: nowrap;
+      }
+      .chip.on {
+        background: var(--g4);
+        color: var(--on4);
+      }
+      .trip {
+        margin: 10px 16px;
+        background: var(--g1);
+        border-radius: 16px;
+        padding: 18px;
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+      }
+      .trip .n {
+        font-size: 21px;
+        font-weight: 700;
+      }
+      .trip .d {
+        font-size: 16px;
+        color: var(--mute);
+      }
+      .trip .row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-top: 6px;
+        font-size: 16px;
+      }
+      .trip.cur {
+        outline: 3px solid var(--g4);
+      }
+      .tag {
+        display: inline-block;
+        font-size: 14px;
+        font-weight: 700;
+        padding: 3px 10px;
+        border-radius: 6px;
+        background: var(--g3);
+      }
+      .sec {
+        font-size: 18px;
+        font-weight: 700;
+        padding: 18px 16px 4px;
+      }
+      .fpo {
+        border: 2px dashed var(--g3);
+        border-radius: 12px;
+        color: var(--mute);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        font-size: 15px;
+        padding: 16px;
+        margin: 8px 16px;
+        background: repeating-linear-gradient(
+          45deg,
+          transparent 0 10px,
+          color-mix(in srgb, var(--g3) 25%, transparent) 10px 20px
+        );
+      }
+      .dh {
+        display: flex;
+        justify-content: space-between;
+        align-items: baseline;
+        padding: 16px 16px 4px;
+      }
+      .dh b {
+        font-size: 19px;
+      }
+      .dh span {
+        font-size: 15px;
+        color: var(--mute);
+      }
+      .gapr {
+        margin: 8px 16px;
+        min-height: 52px;
+        border-radius: 12px;
+        background: var(--g2);
+        display: flex;
+        align-items: center;
+        padding: 0 16px;
+        font-size: 16px;
+        color: var(--mute);
+      }
+      .tabs {
+        display: flex;
+        background: var(--g1);
+        border-top: 1px solid var(--rule);
+      }
+      .tabs div {
+        flex: 1;
+        height: 68px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        font-size: 15px;
+        font-weight: 600;
+        color: var(--mute);
+        gap: 2px;
+      }
+      .tabs i {
+        width: 26px;
+        height: 26px;
+        border-radius: 7px;
+        background: var(--g3);
+        display: block;
+      }
+      .tabs .on {
+        color: var(--fg);
+      }
+      .tabs .on i {
+        background: var(--g4);
+      }
+      .talkbar {
+        padding: 12px 16px;
+        background: var(--g1);
+        border-top: 1px solid var(--rule);
+      }
+      .talk {
+        height: 64px;
+        border-radius: 14px;
+        background: var(--g4);
+        color: var(--on4);
+        font-size: 20px;
+        font-weight: 700;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      .mon {
+        margin: 8px 16px;
+        background: var(--g1);
+        border-radius: 14px;
+        padding: 10px;
+      }
+      .mh {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 4px 4px 10px;
+      }
+      .mh b {
+        font-size: 20px;
+      }
+      .mb {
+        width: 48px;
+        height: 48px;
+        border-radius: 10px;
+        background: var(--g2);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 700;
+        font-size: 22px;
+      }
+      .wdh {
+        display: grid;
+        grid-template-columns: repeat(7, 1fr);
+        text-align: center;
+        font-size: 14px;
+        color: var(--mute);
+        font-weight: 600;
+        padding-bottom: 4px;
+      }
+      .mg {
+        display: grid;
+        grid-template-columns: repeat(7, 1fr);
+        gap: 2px;
+      }
+      .mg div {
+        height: 52px;
+        display: flex;
+        align-items: flex-start;
+        justify-content: center;
+        padding-top: 6px;
+        font-size: 18px;
+        font-weight: 600;
+        position: relative;
+        border-radius: 8px;
+      }
+      .mg .o {
+        color: var(--g3);
+      }
+      .mg .t {
+        background: repeating-linear-gradient(
+          45deg,
+          var(--g2) 0 6px,
+          var(--g3) 6px 12px
+        );
+      }
+      .mg .t2 {
+        background: var(--g2);
+      }
+      .mg .td {
+        outline: 3px solid var(--g4);
+        outline-offset: -3px;
+      }
+      .leg {
+        font-size: 15px;
+        color: var(--mute);
+        padding: 8px 6px 2px;
+        display: flex;
+        gap: 14px;
+        flex-wrap: wrap;
+      }
+      .leg i {
+        display: inline-block;
+        width: 16px;
+        height: 16px;
+        border-radius: 4px;
+        vertical-align: -3px;
+        margin-right: 6px;
+        background: repeating-linear-gradient(
+          45deg,
+          var(--g2) 0 4px,
+          var(--g3) 4px 8px
+        );
+      }
+      .leg i.b {
+        background: var(--g2);
+      }
+      .tile {
+        margin: 8px 16px;
+        background: var(--g1);
+        border-radius: 14px;
+        padding: 14px;
+      }
+      .tile h4 {
+        font-size: 15px;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        color: var(--mute);
+        margin-bottom: 6px;
+      }
+      .car {
+        display: flex;
+        gap: 8px;
+        overflow: hidden;
+      }
+      .car div {
+        flex: none;
+        width: 150px;
+        height: 90px;
+        border-radius: 10px;
+        background: var(--g2);
+        padding: 10px;
+        font-size: 14px;
+        font-weight: 600;
+      }
+      .back {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 12px 16px;
+      }
+      .back .mb {
+        flex: none;
+      }
+      /* desktop */
+      .desk {
+        display: grid;
+        grid-template-columns: 260px minmax(0, 1fr) 380px;
+        min-height: 860px;
+      }
+      .nav {
+        background: var(--g1);
+        border-right: 1px solid var(--rule);
+        padding: 16px 12px;
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+      }
+      .ni {
+        min-height: 56px;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 0 14px;
+        border-radius: 10px;
+        font-size: 18px;
+        font-weight: 600;
+      }
+      .ni i {
+        width: 24px;
+        height: 24px;
+        border-radius: 6px;
+        background: var(--g3);
+      }
+      .ni.on {
+        background: var(--g2);
+      }
+      .ni.on i {
+        background: var(--g4);
+      }
+      .nsec {
+        font-size: 14px;
+        font-weight: 700;
+        color: var(--mute);
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        padding: 16px 14px 6px;
+      }
+      .ck {
+        min-height: 48px;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 0 14px;
+        font-size: 17px;
+      }
+      .ck i {
+        width: 22px;
+        height: 22px;
+        border-radius: 5px;
+        border: 2px solid var(--g4);
+      }
+      .ck.on i {
+        background: var(--g4);
+      }
+      .mid {
+        padding: 8px 24px 24px;
+        min-width: 0;
+      }
+      .side {
+        background: var(--g1);
+        border-left: 1px solid var(--rule);
+        padding: 20px;
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+      }
+      .side h3 {
+        font-size: 20px;
+      }
+      .grid3 {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 0;
+      }
+      .grid3 .trip {
+        margin: 8px;
+      }
+      .dmon .mg div {
+        height: 110px;
+        justify-content: flex-start;
+        padding: 8px 10px;
+      }
+      .drow {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 0;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="label" lang="en">
+      <b>Arm 3: Today home and tabs</b> · 1440px · grey-boxed · home screen<br />Cost:
+      Three tabs to learn, and planning a future day always starts with a tab
+      switch. In return, the first screen answers "what is today?" without a
+      single tap, and Calendar holds month, week, and day.<br />Reference: iOS
+      tab bar convention; nhs-uk 390-s01 one task per screen
+    </div>
+    <div class="top">
+      <div class="brand">Lịch trình</div>
+      <div class="seg" role="group" aria-label="Language / Ngôn ngữ">
+        <button data-l="vi">VI</button><button data-l="en">EN</button>
+      </div>
+    </div>
+    <div class="desk">
+      <div class="nav">
+        <div class="ni on">
+          <i></i><span class="vi">Hôm nay</span><span class="en">Today</span>
+        </div>
+        <div class="ni">
+          <i></i><span class="vi">Chuyến đi</span><span class="en">Trips</span>
+        </div>
+        <div class="ni">
+          <i></i><span class="vi">Lịch</span><span class="en">Calendar</span>
+        </div>
+      </div>
+      <div class="mid">
+        <div class="h1">
+          <span class="vi">Hôm nay, Thứ Năm 15/5</span
+          ><span class="en">Today, Thursday 15 May</span>
+        </div>
+        <div class="sub">
+          <span class="vi">Chuyến về Sông Mây · Ngày 3 / 8</span
+          ><span class="en">Trip to Sông Mây · day 3 of 8</span>
+        </div>
+        <div class="fpo" style="min-height: 480px">
+          <span
+            >FPO · <span class="vi">các hoạt động hôm nay (chọn sau)</span
+            ><span class="en">today's entries (decided later)</span></span
+          >
+        </div>
+        <div class="gapr">
+          <span class="vi">Ngày mai · Thứ Sáu 16/5 · 4 hoạt động</span
+          ><span class="en">Tomorrow · Fri 16 May · 4 entries</span>
+        </div>
+      </div>
+      <div class="side">
+        <h3>
+          <span class="vi">Trò chuyện với trợ lý</span
+          ><span class="en">Chat with the assistant</span>
+        </h3>
+        <div class="fpo" style="flex: 1; margin: 0">
+          FPO · <span class="vi">khung trò chuyện, thiết kế sau</span
+          ><span class="en">the chat panel, designed later</span>
+        </div>
+        <div class="talk">
+          🎤&nbsp;<span class="vi">Nói với trợ lý</span
+          ><span class="en">Talk to the assistant</span>
+        </div>
+      </div>
+    </div>
+    <script>
+      ;(function () {
+        var K = 'lt-lang',
+          d = document.documentElement
+        function g() {
+          try {
+            return localStorage.getItem(K)
+          } catch (e) {
+            return null
+          }
+        }
+        function a(l) {
+          d.setAttribute('data-lang', l === 'vi' ? 'vi' : 'en')
+          d.lang = l === 'vi' ? 'vi' : 'en'
+          document.querySelectorAll('.seg button').forEach(function (b) {
+            b.setAttribute('aria-pressed', b.dataset.l === d.lang)
+          })
+        }
+        a(g() || 'en')
+        addEventListener('storage', function (e) {
+          if (e.key === K) a(e.newValue)
+        })
+        document.addEventListener('click', function (e) {
+          var b = e.target.closest('.seg button')
+          if (!b) return
+          try {
+            localStorage.setItem(K, b.dataset.l)
+          } catch (x) {}
+          a(b.dataset.l)
+        })
+      })()
+    </script>
+  </body>
+</html>

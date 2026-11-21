@@ -1,0 +1,925 @@
+<!doctype html>
+<html lang="en" data-lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width" />
+    <link rel="stylesheet" href="../assets/visual-direction/fonts/fonts.css" />
+    <link
+      rel="stylesheet"
+      href="../assets/visual-direction/fonts/fonts-cute.css"
+    />
+    <style>
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+      html[data-lang='en'] .vi,
+      html[data-lang='vi'] .en {
+        display: none;
+      }
+      body {
+        background: var(--bg);
+        color: var(--text);
+        font-family: var(--body), sans-serif;
+        font-size: 21px;
+        line-height: 1.4;
+        font-variant-numeric: tabular-nums;
+      }
+      .label {
+        margin: 16px;
+        padding: 12px 14px;
+        border: 2px dashed var(--line);
+        border-radius: 10px;
+        font:
+          14px/1.5 Inter,
+          sans-serif;
+        color: var(--muted);
+        background: var(--bg);
+        position: relative;
+        z-index: 2;
+      }
+      .label b {
+        color: var(--text);
+        font-size: 16px;
+      }
+      .top {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 10px 16px;
+        position: relative;
+      }
+      .brand {
+        font-family: var(--disp), sans-serif;
+        font-weight: 800;
+        font-size: 22px;
+      }
+      .seg {
+        display: flex;
+        border-radius: 999px;
+        padding: 4px;
+        background: var(--fill);
+      }
+      .seg button {
+        font: inherit;
+        font-family: var(--body), sans-serif;
+        font-size: 18px;
+        font-weight: 800;
+        border: 0;
+        background: transparent;
+        color: var(--muted);
+        min-width: 60px;
+        height: 56px;
+        border-radius: 999px;
+        cursor: pointer;
+      }
+      .seg button[aria-pressed='true'] {
+        background: var(--selBg);
+        color: var(--selFg);
+      }
+      .head {
+        padding: 4px 16px 12px;
+        position: relative;
+      }
+      .kick {
+        font-size: 18px;
+        font-weight: 700;
+        color: var(--muted);
+      }
+      .h-title {
+        font-family: var(--disp), sans-serif;
+        font-weight: 800;
+        font-size: 34px;
+        line-height: 1.15;
+      }
+      .meta {
+        font-size: 18px;
+        color: var(--muted);
+        margin-top: 4px;
+      }
+      .meta b {
+        color: var(--text);
+      }
+      .wk {
+        display: flex;
+        gap: 8px;
+        padding: 6px 16px 14px;
+        overflow: hidden;
+        position: relative;
+      }
+      .wd {
+        flex: none;
+        width: 58px;
+        height: 76px;
+        border-radius: var(--chipR);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        background: var(--chip);
+        font-size: 15px;
+        font-weight: 700;
+        color: var(--muted);
+      }
+      .wd b {
+        font-size: 22px;
+        color: var(--text);
+        font-weight: 800;
+      }
+      .wd.on {
+        background: var(--selBg);
+        color: var(--selFg);
+      }
+      .wd.on b {
+        color: var(--selFg);
+      }
+      .day {
+        list-style: none;
+        padding: 4px 16px;
+      }
+      .e {
+        display: grid;
+        grid-template-columns: 76px 1fr;
+        gap: 12px;
+        padding: 12px 0;
+        align-items: start;
+      }
+      .e .t {
+        font-weight: 800;
+        font-size: 22px;
+        line-height: 1.2;
+      }
+      .e .t small {
+        display: block;
+        font-weight: 600;
+        font-size: 18px;
+        color: var(--muted);
+        margin-top: 2px;
+      }
+      .e .n {
+        font-weight: 700;
+        font-size: 22px;
+        line-height: 1.3;
+      }
+      .e .m {
+        font-size: 18px;
+        color: var(--muted);
+        margin-top: 2px;
+      }
+      .e .k {
+        font-size: 18px;
+        font-weight: 800;
+        margin-bottom: 2px;
+      }
+      .e.done .n {
+        font-size: 18px;
+        color: var(--muted);
+        font-weight: 600;
+      }
+      .e.now .n {
+        font-size: 27px;
+        font-family: var(--disp), sans-serif;
+        font-weight: 800;
+      }
+      .i {
+        width: 28px;
+        height: 28px;
+      }
+      .ic {
+        display: none;
+      }
+      .ck {
+        display: none;
+      }
+      .food {
+        --c: var(--food);
+        --ci: var(--foodI);
+      }
+      .sights {
+        --c: var(--sights);
+        --ci: var(--sightsI);
+      }
+      .rest {
+        --c: var(--rest);
+        --ci: var(--restI);
+      }
+      .transit {
+        --c: var(--transit);
+        --ci: var(--transitI);
+      }
+      .act {
+        --c: var(--act);
+        --ci: var(--actI);
+      }
+      .acts {
+        padding: 12px 16px;
+      }
+      .add {
+        height: 64px;
+        border-radius: var(--btnR);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 22px;
+        font-weight: 800;
+        border: 2.5px dashed var(--line);
+        color: var(--text);
+      }
+      .talkbar {
+        padding: 10px 16px 14px;
+      }
+      .talk {
+        height: 72px;
+        border-radius: var(--btnR);
+        background: var(--action);
+        color: var(--onAction);
+        font-size: 22px;
+        font-weight: 800;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+      }
+      .tabs {
+        display: flex;
+        padding: 8px 12px 14px;
+        gap: 8px;
+        background: var(--bg);
+      }
+      .tabs div {
+        flex: 1;
+        height: 76px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        font-size: 17px;
+        font-weight: 800;
+        color: var(--muted);
+        gap: 4px;
+        border-radius: 22px;
+      }
+      .tabs svg {
+        width: 28px;
+        height: 28px;
+      }
+      .tabs .on {
+        color: var(--selFg);
+        background: var(--selBg);
+      }
+      .desk {
+        display: grid;
+        grid-template-columns: 260px minmax(0, 1fr) 380px;
+        min-height: 900px;
+      }
+      .nav {
+        padding: 16px 12px;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+      }
+      .ni {
+        min-height: 64px;
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        padding: 0 18px;
+        border-radius: 22px;
+        font-size: 21px;
+        font-weight: 800;
+        color: var(--muted);
+      }
+      .ni svg {
+        width: 26px;
+        height: 26px;
+      }
+      .ni.on {
+        color: var(--selFg);
+        background: var(--selBg);
+      }
+      .mid {
+        min-width: 0;
+      }
+      .midin {
+        max-width: 760px;
+        margin: 0 auto;
+        padding-top: 8px;
+      }
+      .side {
+        padding: 20px;
+        display: flex;
+        flex-direction: column;
+        gap: 14px;
+      }
+      .side h3 {
+        font-family: var(--disp), sans-serif;
+        font-size: 24px;
+        font-weight: 800;
+      }
+      .fpo {
+        flex: 1;
+        border: 2.5px dashed var(--line);
+        border-radius: 24px;
+        color: var(--muted);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        font-size: 16px;
+        padding: 16px;
+      }
+    </style>
+    <style>
+      :root {
+        --disp: 'Nunito';
+        --body: 'Nunito';
+        --bg: #f8f8fc;
+        --surface: #ffffff;
+        --fill: #ececf6;
+        --chip: #ffffff;
+        --line: #dcdcea;
+        --text: #1f1d33;
+        --muted: #5c5a75;
+        --action: #1f1d33;
+        --onAction: #ffffff;
+        --selBg: #1f1d33;
+        --selFg: #ffffff;
+        --btnR: 24px;
+        --chipR: 18px;
+        --cloud: #e9e4ff;
+        --food: #ffd9bf;
+        --foodI: #7a3b12;
+        --sights: #ffcfe1;
+        --sightsI: #8a1f4f;
+        --rest: #dcd8ff;
+        --restI: #3e338f;
+        --transit: #cfe8ff;
+        --transitI: #134c7a;
+        --act: #c9f1dd;
+        --actI: #145a3a;
+      }
+      :root[data-theme='dark'] {
+        --bg: #121220;
+        --surface: #1b1b2c;
+        --fill: #26263b;
+        --chip: #1f1f31;
+        --line: #34344f;
+        --text: #f1f0fb;
+        --muted: #b0aecb;
+        --action: #f1f0fb;
+        --onAction: #121220;
+        --selBg: #f1f0fb;
+        --selFg: #121220;
+        --cloud: #302a58;
+        --food: #5b3a26;
+        --foodI: #ffd2b3;
+        --sights: #5a2c40;
+        --sightsI: #ffc4da;
+        --rest: #3a355e;
+        --restI: #d6d1ff;
+        --transit: #23415a;
+        --transitI: #c4e2ff;
+        --act: #22483a;
+        --actI: #bff0d6;
+      }
+      .h-title {
+        font-weight: 900;
+      }
+      .e {
+        grid-template-columns: 52px 1fr 76px;
+        gap: 14px;
+        padding: 12px 0;
+        border-bottom: 1.5px solid var(--line);
+        align-items: center;
+      }
+      .ic {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 52px;
+        height: 52px;
+        border-radius: 16px;
+        background: var(--c);
+        color: var(--ci);
+      }
+      .e .t {
+        order: 3;
+        text-align: right;
+        font-size: 20px;
+      }
+      .e .t small {
+        font-size: 17px;
+      }
+      .e.now {
+        grid-template-columns: 1fr;
+        background: var(--cloud);
+        border-radius: 28px;
+        padding: 20px;
+        border: 0;
+        margin: 8px 0;
+      }
+      .e.now .ic,
+      .e.now .t {
+        display: none;
+      }
+      .e.now .k {
+        color: var(--action);
+      }
+      .bar {
+        height: 10px;
+        border-radius: 5px;
+        background: color-mix(in srgb, var(--surface) 60%, transparent);
+        margin-top: 12px;
+        overflow: hidden;
+      }
+      .bar i {
+        display: block;
+        height: 100%;
+        width: 50%;
+        background: var(--action);
+        border-radius: 5px;
+      }
+      .e.done .ic {
+        opacity: 0.5;
+        width: 40px;
+        height: 40px;
+      }
+      .e.done {
+        grid-template-columns: 40px 1fr 76px;
+      }
+
+      .e.now {
+        background: var(--c);
+      }
+      .e.now .k {
+        color: var(--ci);
+      }
+      .bar {
+        background: color-mix(in srgb, var(--surface) 70%, transparent);
+      }
+      .bar i {
+        background: var(--ci);
+      }
+    </style>
+  </head>
+  <body>
+    <div class="label" lang="en">
+      <b>Arm 2: Near-black button</b> · 390px · composition and size held<br /><b
+        >Type</b
+      >
+      Nunito, with a heavy 900 headline<br /><b>Palette</b> near-black for the
+      main button, chosen day, and tab; color only on the pastels<br /><b
+        >Signature</b
+      >
+      calm rows like arm 4, but the now card takes its entry's own color (pink
+      for the flower market), so color always means the kind of thing, never a
+      state<br />Cost: The talk button stops being the brightest thing, so it is
+      found by size and place rather than by color. In return, the now card is
+      the only color hotspot, one dark tone does every "press me" job, and white
+      on near-black reads at about 16:1.<br />Reference: operator shots 02, 04,
+      05 (black primary buttons)
+    </div>
+    <div class="top">
+      <div class="brand" style="display: flex; align-items: center; gap: 10px">
+        <svg
+          viewBox="0 0 64 64"
+          fill="none"
+          xmlns="http://www.w3.org/2000/svg"
+          width="34"
+          height="34"
+          aria-hidden="true"
+          style="flex: none"
+        >
+          <rect
+            x="8"
+            y="12"
+            width="48"
+            height="46"
+            rx="14"
+            fill="#ffffff"
+            style="stroke: var(--text)"
+            stroke-width="4"
+          />
+          <path
+            d="M10 27h44v-3a10 10 0 0 0-10-10H20a10 10 0 0 0-10 10z"
+            fill="#dcd8ff"
+          />
+          <path d="M8 27h48" style="stroke: var(--text)" stroke-width="4" />
+          <rect
+            x="19.5"
+            y="5"
+            width="6"
+            height="14"
+            rx="3"
+            style="fill: var(--text)"
+          />
+          <rect
+            x="38.5"
+            y="5"
+            width="6"
+            height="14"
+            rx="3"
+            style="fill: var(--text)"
+          />
+          <rect
+            x="17"
+            y="33.5"
+            width="30"
+            height="4.6"
+            rx="2.3"
+            fill="#ffd9bf"
+            style="stroke: var(--text)"
+            stroke-width="1.8"
+          />
+          <rect
+            x="17"
+            y="40.5"
+            width="22"
+            height="4.6"
+            rx="2.3"
+            fill="#ffcfe1"
+            style="stroke: var(--text)"
+            stroke-width="1.8"
+          />
+          <rect
+            x="17"
+            y="47.5"
+            width="26"
+            height="4.6"
+            rx="2.3"
+            fill="#c9f1dd"
+            style="stroke: var(--text)"
+            stroke-width="1.8"
+          /></svg
+        ><span>Lịch trình</span>
+      </div>
+      <div class="seg" role="group" aria-label="Language / Ngôn ngữ">
+        <button data-l="vi">VI</button><button data-l="en">EN</button>
+      </div>
+    </div>
+    <div class="head">
+      <div class="kick">
+        <span class="vi">Hôm nay</span><span class="en">Today</span>
+      </div>
+      <div class="h-title">
+        <span class="vi">Thứ Năm, 15/5</span
+        ><span class="en">Thursday 15 May</span>
+      </div>
+      <div class="meta">
+        <span class="vi">Chuyến về Sông Mây · Ngày 3 / 8</span
+        ><span class="en">Trip to Sông Mây · day 3 of 8</span>
+      </div>
+      <div class="meta">
+        <span class="vi">Dự tính hôm nay</span
+        ><span class="en">Estimated today</span>: <b>1.640.000 ₫</b> ·
+        <span class="vi">khoảng</span><span class="en">about</span> 64 USD
+      </div>
+    </div>
+    <div class="wk">
+      <div class="wd">
+        <span class="vi">T3</span><span class="en">Tue</span><b>13</b>
+      </div>
+      <div class="wd">
+        <span class="vi">T4</span><span class="en">Wed</span><b>14</b>
+      </div>
+      <div class="wd on">
+        <span class="vi">T5</span><span class="en">Thu</span><b>15</b>
+      </div>
+      <div class="wd">
+        <span class="vi">T6</span><span class="en">Fri</span><b>16</b>
+      </div>
+      <div class="wd">
+        <span class="vi">T7</span><span class="en">Sat</span><b>17</b>
+      </div>
+      <div class="wd">
+        <span class="vi">CN</span><span class="en">Sun</span><b>18</b>
+      </div>
+      <div class="wd">
+        <span class="vi">T2</span><span class="en">Mon</span><b>19</b>
+      </div>
+      <div class="wd">
+        <span class="vi">T3</span><span class="en">Tue</span><b>20</b>
+      </div>
+    </div>
+    <ol class="day">
+      <li class="e done food">
+        <div class="t">07:00</div>
+        <div class="ic">
+          <svg
+            class="i"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            aria-hidden="true"
+          >
+            <path d="M3.5 11.5h17a8.5 8.5 0 0 1-17 0z" />
+            <path
+              d="M8.5 7.5c0-1.6 1.2-1.6 1.2-3.3M12.3 7.5c0-1.6 1.2-1.6 1.2-3.3M16 7.5c0-1.6 1.2-1.6 1.2-3.3"
+            />
+          </svg>
+        </div>
+        <div class="b">
+          <div class="n">
+            ✓ <span class="vi">Ăn sáng phở gần khách sạn</span
+            ><span class="en">Pho breakfast near the hotel</span>
+          </div>
+        </div>
+        <div class="ck"></div>
+      </li>
+      <li class="e now sights">
+        <div class="t">09:00<small>11:30</small></div>
+        <div class="ic">
+          <svg
+            class="i"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            aria-hidden="true"
+          >
+            <circle cx="12" cy="6.5" r="2.8" />
+            <circle cx="16.8" cy="10" r="2.8" />
+            <circle cx="15" cy="15.4" r="2.8" />
+            <circle cx="9" cy="15.4" r="2.8" />
+            <circle cx="7.2" cy="10" r="2.8" />
+            <circle cx="12" cy="11.2" r="1.6" fill="currentColor" />
+          </svg>
+        </div>
+        <div class="b">
+          <div class="k">
+            <span class="vi">Đang diễn ra · còn 1 tiếng 15 phút</span
+            ><span class="en">Happening now · 1 h 15 min left</span>
+          </div>
+          <div class="n">
+            <span class="vi">Đi chợ hoa Sông Mây</span
+            ><span class="en">Sông Mây flower market</span>
+          </div>
+          <div class="m">09:00–11:30 · 200.000 ₫</div>
+          <div class="bar"><i></i></div>
+        </div>
+        <div class="ck"></div>
+      </li>
+      <li class="e food">
+        <div class="t">12:00<small>13:00</small></div>
+        <div class="ic">
+          <svg
+            class="i"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            aria-hidden="true"
+          >
+            <path d="M3.5 11.5h17a8.5 8.5 0 0 1-17 0z" />
+            <path
+              d="M8.5 7.5c0-1.6 1.2-1.6 1.2-3.3M12.3 7.5c0-1.6 1.2-1.6 1.2-3.3M16 7.5c0-1.6 1.2-1.6 1.2-3.3"
+            />
+          </svg>
+        </div>
+        <div class="b">
+          <div class="n">
+            <span class="vi">Ăn trưa cùng gia đình</span
+            ><span class="en">Lunch with the family</span>
+          </div>
+          <div class="m">
+            <span class="vi">1 tiếng</span><span class="en">1 h</span> · 350.000
+            ₫
+          </div>
+        </div>
+        <div class="ck"></div>
+      </li>
+      <li class="e rest">
+        <div class="t">14:00<small>16:00</small></div>
+        <div class="ic">
+          <svg
+            class="i"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            aria-hidden="true"
+          >
+            <path d="M3 19v-9M3 15h18v4M21 15v-2.5a3 3 0 0 0-3-3h-7.5V15" />
+            <circle cx="6.8" cy="12" r="1.9" />
+          </svg>
+        </div>
+        <div class="b">
+          <div class="n">
+            <span class="vi">Nghỉ trưa ở khách sạn</span
+            ><span class="en">Rest at the hotel</span>
+          </div>
+          <div class="m">
+            <span class="vi">2 tiếng</span><span class="en">2 h</span>
+          </div>
+        </div>
+        <div class="ck"></div>
+      </li>
+      <li class="e transit">
+        <div class="t">16:30<small>16:45</small></div>
+        <div class="ic">
+          <svg
+            class="i"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            aria-hidden="true"
+          >
+            <path d="M4.5 16.5h15v-4.2l-2.2-5.3H6.7l-2.2 5.3z" />
+            <path d="M4.5 12.3h15" />
+            <circle cx="8" cy="17.5" r="1.7" />
+            <circle cx="16" cy="17.5" r="1.7" />
+          </svg>
+        </div>
+        <div class="b">
+          <div class="n">
+            <span class="vi">Gọi xe ra bến thuyền</span
+            ><span class="en">Taxi to the boat pier</span>
+          </div>
+          <div class="m">
+            <span class="vi">15 phút</span><span class="en">15 min</span> ·
+            60.000 ₫
+          </div>
+        </div>
+        <div class="ck"></div>
+      </li>
+      <li class="e act">
+        <div class="t">17:00<small>19:00</small></div>
+        <div class="ic">
+          <svg
+            class="i"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            aria-hidden="true"
+          >
+            <path d="M3 15.5h18l-3.2 4.5H6.2z" />
+            <path d="M12 15.5V4l6.5 9.5H12" />
+          </svg>
+        </div>
+        <div class="b">
+          <div class="n">
+            <span class="vi">Đi thuyền ngắm hoàng hôn</span
+            ><span class="en">Sunset boat trip</span>
+          </div>
+          <div class="m">
+            <span class="vi">2 tiếng</span><span class="en">2 h</span> · 450.000
+            ₫
+          </div>
+        </div>
+        <div class="ck"></div>
+      </li>
+      <li class="e food">
+        <div class="t">19:30<small>21:00</small></div>
+        <div class="ic">
+          <svg
+            class="i"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            aria-hidden="true"
+          >
+            <path d="M3.5 11.5h17a8.5 8.5 0 0 1-17 0z" />
+            <path
+              d="M8.5 7.5c0-1.6 1.2-1.6 1.2-3.3M12.3 7.5c0-1.6 1.2-1.6 1.2-3.3M16 7.5c0-1.6 1.2-1.6 1.2-3.3"
+            />
+          </svg>
+        </div>
+        <div class="b">
+          <div class="n">
+            <span class="vi">Ăn tối ở nhà hàng Mây Xanh</span
+            ><span class="en">Dinner at Mây Xanh restaurant</span>
+          </div>
+          <div class="m">
+            <span class="vi">1 tiếng 30 phút</span
+            ><span class="en">1 h 30 min</span> · 500.000 ₫
+          </div>
+        </div>
+        <div class="ck"></div>
+      </li>
+    </ol>
+    <div class="acts">
+      <div class="add">
+        <span
+          >＋ <span class="vi">Thêm hoạt động</span
+          ><span class="en">Add an activity</span></span
+        >
+      </div>
+    </div>
+    <div class="talkbar">
+      <div class="talk">
+        <svg
+          viewBox="0 0 24 24"
+          width="28"
+          height="28"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2.4"
+          stroke-linecap="round"
+          aria-hidden="true"
+        >
+          <rect x="8.5" y="2.5" width="7" height="12" rx="3.5" />
+          <path d="M5 11a7 7 0 0 0 14 0M12 18v3.5" /></svg
+        ><span
+          ><span class="vi">Nói với trợ lý</span
+          ><span class="en">Talk to the assistant</span></span
+        >
+      </div>
+    </div>
+    <div class="tabs">
+      <div class="on">
+        <svg
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2.2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        >
+          <circle cx="12" cy="12" r="4.5" />
+          <path
+            d="M12 2.5v2M12 19.5v2M2.5 12h2M19.5 12h2M5.3 5.3l1.4 1.4M17.3 17.3l1.4 1.4M5.3 18.7l1.4-1.4M17.3 6.7l1.4-1.4"
+          /></svg
+        ><span class="vi">Hôm nay</span><span class="en">Today</span>
+      </div>
+      <div class="">
+        <svg
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2.2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        >
+          <rect x="4" y="7" width="16" height="13" rx="3" />
+          <path
+            d="M9 7V5.5A1.5 1.5 0 0 1 10.5 4h3A1.5 1.5 0 0 1 15 5.5V7M4 12h16"
+          /></svg
+        ><span class="vi">Chuyến đi</span><span class="en">Trips</span>
+      </div>
+      <div class="">
+        <svg
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2.2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        >
+          <rect x="3.5" y="5" width="17" height="15" rx="3.5" />
+          <path d="M3.5 10h17M8 3v4M16 3v4" /></svg
+        ><span class="vi">Lịch</span><span class="en">Calendar</span>
+      </div>
+    </div>
+    <script>
+      ;(function () {
+        var K = 'lt-lang',
+          d = document.documentElement
+        function g() {
+          try {
+            return localStorage.getItem(K)
+          } catch (e) {
+            return null
+          }
+        }
+        function a(l) {
+          d.setAttribute('data-lang', l === 'vi' ? 'vi' : 'en')
+          d.lang = l === 'vi' ? 'vi' : 'en'
+          document.querySelectorAll('.seg button').forEach(function (b) {
+            b.setAttribute('aria-pressed', b.dataset.l === d.lang)
+          })
+        }
+        a(g() || 'en')
+        addEventListener('storage', function (e) {
+          if (e.key === K) a(e.newValue)
+        })
+        document.addEventListener('click', function (e) {
+          var b = e.target.closest('.seg button')
+          if (!b) return
+          try {
+            localStorage.setItem(K, b.dataset.l)
+          } catch (x) {}
+          a(b.dataset.l)
+        })
+      })()
+    </script>
+  </body>
+</html>
