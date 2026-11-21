@@ -7,8 +7,9 @@ export const apiErrorCode = z.enum([
 ])
 export type ApiErrorCode = z.infer<typeof apiErrorCode>
 
-// Every failure the API answers carries this shape, so a caller branches on
-// `code` and shows `message` to a person.
+// Every failure the API answers carries this shape. A caller maps `code` to a
+// translation key for anything a person sees, since `message` is English text
+// for developers and never copy for the traveler.
 export const apiError = z.strictObject({
   error: z.strictObject({
     code: apiErrorCode,
