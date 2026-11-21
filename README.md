@@ -2,6 +2,11 @@
 
 A shared trip calendar for a parent who plans by talking. She speaks or types to Claude in Vietnamese, and Claude fills in the calendar while the rest of the family signs in to see the same plan and edit it. Lịch trình is Vietnamese for itinerary.
 
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="assets/evidence/readme/dark.png" />
+  <img alt="The Lịch trình home page, with the calendar mark beside the wordmark" src="assets/evidence/readme/light.png" />
+</picture>
+
 ## Why
 
 My mom is traveling to Vietnam. Calendar apps ask her to learn them first. This one asks her to say what she wants to do and when, in her own language, with or without diacritics.

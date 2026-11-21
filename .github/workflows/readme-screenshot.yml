@@ -11,7 +11,10 @@ on:
       # The three entries below the placeholder keep the job firing on this
       # file's own installation, which is what lets the first step refuse an
       # unfilled template instead of the job never running.
-      - 'REPLACE_WITH_PROJECT_PATHS'
+      - 'src/**'
+      - 'index.html'
+      - 'public/**'
+      - 'e2e/capture/**'
       - 'scripts/readme-screenshot.sh'
       - 'scripts/lib/preview-server.sh'
       - '.github/workflows/readme-screenshot.yml'
