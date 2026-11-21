@@ -28,6 +28,7 @@
     "smoke:prod": "bun e2e/screenshot.ts --check-console-clean --require-base-url",
     "lint:fix": "oxlint --fix --max-warnings 0",
     "screenshot": "PREVIEW_PORT=$(bash scripts/worktree-port.sh 4173) && export PREVIEW_PORT && bash scripts/screenshot.sh",
+    "design:sync": "bash scripts/design-sync.sh",
     "readme-screenshot": "PREVIEW_PORT=$(bash scripts/worktree-port.sh 4173) && export PREVIEW_PORT && bash scripts/readme-screenshot.sh"
   },
   "dependencies": {
