@@ -1,0 +1,21 @@
+{
+  "$schema": "./node_modules/wrangler/config-schema.json",
+  "name": "lichtrinh",
+  "compatibility_date": "2026-11-17",
+  "main": "./worker/index.ts",
+  "assets": {
+    "not_found_handling": "single-page-application",
+    // Only the API reaches the Worker first, so every other path, client
+    // routes included, answers the app shell.
+    "run_worker_first": ["/api/*"],
+  },
+  "d1_databases": [
+    {
+      // No database id, so local development creates the database under
+      // .wrangler/ and the deploy row binds the real one.
+      "binding": "DB",
+      "database_name": "lichtrinh",
+      "migrations_dir": "worker/db/migrations",
+    },
+  ],
+}

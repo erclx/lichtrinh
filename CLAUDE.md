@@ -24,6 +24,14 @@ The web app the traveler and the family open in a browser.
 - `src/lib/`: shared helpers, including `cn` for merging classes
 - `e2e/`: Playwright specs and the screenshot harness, with its cases in `e2e/capture/`
 
+### Server and tooling
+
+The API behind the app, the shapes both sides share, and the voice tooling.
+
+- `worker/`: the Cloudflare Worker serving the app and the Hono API under `/api`, with its D1 schema, migrations, and rollbacks in `worker/db/`
+- `shared/`: zod schemas the app, the API, and the assistant's tools all parse with, imported as `@shared/*`
+- `voice/`: the Python project measuring speech recognition candidates, run from inside its folder
+
 ### Content
 
 The product and design record every session reads.
