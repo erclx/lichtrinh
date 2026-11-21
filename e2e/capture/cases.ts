@@ -10,4 +10,13 @@ export const CASES: CaptureCase[] = [
     route: '/',
     evidence: true,
   },
+  {
+    section: 'home',
+    theme: 'dark',
+    route: '/',
+    evidence: true,
+    setup: async (page) => {
+      await page.emulateMedia({ colorScheme: 'dark' })
+    },
+  },
 ]
