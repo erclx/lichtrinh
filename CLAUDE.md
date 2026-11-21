@@ -17,15 +17,20 @@ A shared trip calendar a non-technical traveler plans by talking to Claude in Vi
 
 ### Code
 
-The web app the traveler and the family open in a browser, the API behind it, and the voice tooling.
+The web app the traveler and the family open in a browser.
 
 - `src/`: the React front end, styled with Tailwind v4
 - `src/components/ui/`: the shadcn kit on Base UI, owned and edited in place, added with `bunx --bun shadcn@latest add <component>`
 - `src/lib/`: shared helpers, including `cn` for merging classes
+- `e2e/`: Playwright specs and the screenshot harness, with its cases in `e2e/capture/`
+
+### Server and tooling
+
+The API behind the app, the shapes both sides share, and the voice tooling.
+
 - `worker/`: the Cloudflare Worker serving the app and the Hono API under `/api`, with its D1 schema, migrations, and rollbacks in `worker/db/`
 - `shared/`: zod schemas the app, the API, and the assistant's tools all parse with, imported as `@shared/*`
 - `voice/`: the Python project measuring speech recognition candidates, run from inside its folder
-- `e2e/`: Playwright specs and the screenshot harness, with its cases in `e2e/capture/`
 
 ### Content
 
