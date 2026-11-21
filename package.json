@@ -13,6 +13,8 @@
     "check:format": "oxfmt --check .",
     "format": "oxfmt .",
     "typecheck": "tsc --noEmit && tsc --noEmit -p worker/tsconfig.json",
+    "db:generate": "drizzle-kit generate",
+    "db:migrate": "wrangler d1 migrations apply DB --local",
     "types:worker": "wrangler types worker/worker-configuration.d.ts",
     "test": "vitest",
     "test:run": "vitest run --reporter=verbose",

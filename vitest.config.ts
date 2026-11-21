@@ -1,4 +1,6 @@
-import { cloudflareTest } from '@cloudflare/vitest-plugin'
+import path from 'node:path'
+
+import { cloudflareTest, readD1Migrations } from '@cloudflare/vitest-plugin'
 import { defineConfig, mergeConfig } from 'vitest/config'
 
 import viteConfig from './vite.config.ts'
@@ -42,13 +44,24 @@ export default mergeConfig(
         {
           extends: true,
           plugins: [
-            cloudflareTest({
+            cloudflareTest(async () => ({
               wrangler: { configPath: './wrangler.jsonc' },
-            }),
+              miniflare: {
+                bindings: {
+                  TEST_MIGRATIONS: await readD1Migrations(
+                    path.join(import.meta.dirname, 'worker/db/migrations'),
+                  ),
+                  TEST_ROLLBACKS: await readD1Migrations(
+                    path.join(import.meta.dirname, 'worker/db/rollbacks'),
+                  ),
+                },
+              },
+            })),
           ],
           test: {
             name: 'worker',
             include: ['worker/**/*.spec.ts'],
+            setupFiles: ['worker/test/apply-migrations.ts'],
           },
         },
       ],
