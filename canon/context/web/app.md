@@ -7,7 +7,7 @@ description: The React front end, its Tailwind styling and shadcn kit, and where
 
 ## Overview
 
-Owns the browser app the traveler and the family open, from `index.html` and `src/` down to the shared UI kit. The Cloudflare Worker API, the bridge to Claude, and the voice service are not built yet, and each takes its own entry when it lands.
+Owns the browser app the traveler and the family open, from `index.html` and `src/` down to the shared UI kit. The Worker serving it and the API are the subject of `canon/context/web/api.md`. The bridge to Claude and the voice service are not built yet, and each takes its own entry when it lands.
 
 ## Layout
 
