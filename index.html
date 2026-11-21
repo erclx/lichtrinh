@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <script>
-      // Runs before the first paint so a dark device never flashes light. The Settings override writes the same attribute.
+      // Runs before the first paint so a dark device never flashes light. The change listener rewrites the attribute on every scheme flip, so a Settings override must stop it rather than only write data-theme.
       ;(function () {
         var scheme = window.matchMedia('(prefers-color-scheme: dark)')
         function apply() {
