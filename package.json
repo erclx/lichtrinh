@@ -12,7 +12,7 @@
     "check": "bun scripts/verify.ts && cd voice && VERIFY_NESTED=true bun scripts/verify.ts",
     "check:format": "oxfmt --check .",
     "format": "oxfmt .",
-    "typecheck": "tsc --noEmit && tsc --noEmit -p worker/tsconfig.json",
+    "typecheck": "bun run types:worker && tsc --noEmit && tsc --noEmit -p worker/tsconfig.json",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "wrangler d1 migrations apply DB --local",
     "types:worker": "wrangler types worker/worker-configuration.d.ts",

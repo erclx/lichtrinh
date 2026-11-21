@@ -4,8 +4,5 @@
   "singleQuote": true,
   "printWidth": 80,
   "sortPackageJson": false,
-  "ignorePatterns": [
-    "worker/worker-configuration.d.ts",
-    "worker/db/migrations/meta/"
-  ]
+  "ignorePatterns": ["worker/db/migrations/meta/"]
 }
