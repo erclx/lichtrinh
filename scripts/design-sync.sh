@@ -1,8 +1,6 @@
 #!/usr/bin/env bash
-# Writes the accepted board frames that canon/design/frames.json maps into
-# canon/design/. Pass --check to write nothing and exit 14 on any drift.
-#
-# The board is gitignored and lives at the main worktree root alone, so a
+# Writes the board frames canon/design/frames.json maps, or with --check exits
+# 14 on drift. The gitignored board lives at the main worktree root alone, so a
 # linked worktree reads it from there.
 set -euo pipefail
 
