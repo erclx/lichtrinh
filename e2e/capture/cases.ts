@@ -25,6 +25,23 @@ async function asAdmin(page: Page) {
   }
 }
 
+// The preview carries no bridge secret, so no socket can bring the workspace
+// PC online. The status read is answered here instead, at a fixed time of day
+// so the frame holds still between runs.
+async function assistantOnline(page: Page) {
+  const answeredAt = new Date()
+  answeredAt.setHours(10, 14, 0, 0)
+  await page.route('**/api/assistant/status', (route) =>
+    route.fulfill({
+      json: {
+        online: true,
+        lastAnsweredAt: answeredAt.toISOString(),
+        model: 'lichtrinh-assistant',
+      },
+    }),
+  )
+}
+
 export const CASES: CaptureCase[] = [
   { section: 'home', theme: 'default', route: '/', evidence: true },
   { section: 'home', theme: 'dark', route: '/', evidence: true, setup: dark },
@@ -114,6 +131,44 @@ export const CASES: CaptureCase[] = [
     section: 'settings',
     theme: 'dark',
     route: '/settings',
+    evidence: true,
+    setup: async (page) => {
+      await dark(page)
+      await asAdmin(page)
+    },
+  },
+  {
+    section: 'assistant',
+    theme: 'default',
+    route: '/admin/assistant',
+    evidence: true,
+    setup: async (page) => {
+      await assistantOnline(page)
+      await asAdmin(page)
+    },
+  },
+  {
+    section: 'assistant',
+    theme: 'dark',
+    route: '/admin/assistant',
+    evidence: true,
+    setup: async (page) => {
+      await dark(page)
+      await assistantOnline(page)
+      await asAdmin(page)
+    },
+  },
+  {
+    section: 'assistant-offline',
+    theme: 'default',
+    route: '/admin/assistant',
+    evidence: true,
+    setup: asAdmin,
+  },
+  {
+    section: 'assistant-offline',
+    theme: 'dark',
+    route: '/admin/assistant',
     evidence: true,
     setup: async (page) => {
       await dark(page)
