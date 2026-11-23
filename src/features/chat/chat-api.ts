@@ -1,7 +1,8 @@
 import { assistantStatus } from '@shared/assistant.ts'
 import { chatList, chatRead, chatThread } from '@shared/chats.ts'
 import { contactSettings } from '@shared/settings.ts'
-import { useQuery } from '@tanstack/react-query'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { useState } from 'react'
 
 import { refreshMs } from '@/calendar-data/query-client'
 import { isReplySaved } from '@/features/chat/turn'
@@ -18,9 +19,10 @@ export const chatKeys = {
   contact: () => ['chat', 'contact'] as const,
 }
 
+/** The account's chats, most recently active first, whichever order arrives. */
 export async function listChats() {
   const { chats } = await apiFetch('/chats', { schema: chatList })
-  return chats
+  return chats.toSorted((a, b) => b.updatedAt.localeCompare(a.updatedAt))
 }
 
 /** Takes the id from the caller, so a retry after a lost answer adds no second. */
@@ -75,6 +77,39 @@ export function useThread(id: string, unsavedSend: string | null = null) {
         ? savingMs
         : refreshMs,
   })
+}
+
+/**
+ * Starts a chat under an id kept until it lands, so a press retried after
+ * a lost answer reaches the chat the first press made.
+ */
+export function useStartChat() {
+  const client = useQueryClient()
+  const [id, setId] = useState(() => crypto.randomUUID())
+  return useMutation({
+    mutationFn: () => createChat(id),
+    onSuccess: () => {
+      setId(crypto.randomUUID())
+      void client.invalidateQueries({ queryKey: chatKeys.list() })
+    },
+  })
+}
+
+/**
+ * The chat the Talk bar and the dock open: the most recent one, or a new
+ * one when the account has none, per the plan's first question.
+ */
+export function useOpenLatestChat() {
+  const client = useQueryClient()
+  const start = useStartChat()
+  const open = async (): Promise<string> => {
+    const [latest] = await client.fetchQuery({
+      queryKey: chatKeys.list(),
+      queryFn: listChats,
+    })
+    return latest?.id ?? (await start.mutateAsync()).id
+  }
+  return { open, start }
 }
 
 export function useContact() {

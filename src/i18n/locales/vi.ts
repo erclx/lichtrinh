@@ -285,6 +285,7 @@ export const vi = {
     listLoadFailed: 'Chưa tải được các cuộc trò chuyện.',
     threadLoadFailed: 'Chưa tải được cuộc trò chuyện này.',
     newChatFailed: 'Chưa bắt đầu được cuộc trò chuyện mới. Thử lại nhé.',
+    noTrip: 'Hãy tạo một chuyến đi trước, rồi trợ lý sẽ giúp lên kế hoạch.',
     allChats: 'Tất cả cuộc trò chuyện',
     panelTitle: 'Trò chuyện với trợ lý',
     talk: 'Nói chuyện với trợ lý',

@@ -289,6 +289,7 @@ export const en = {
     listLoadFailed: "Couldn't load your chats.",
     threadLoadFailed: "Couldn't load this chat.",
     newChatFailed: "Couldn't start a new chat. Try again.",
+    noTrip: 'Make a trip first, then the assistant can help plan it.',
     allChats: 'All chats',
     panelTitle: 'Chat with the assistant',
     talk: 'Talk to the assistant',
