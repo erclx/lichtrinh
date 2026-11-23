@@ -32,7 +32,7 @@ bun scripts/seed.ts
 bun run dev
 ```
 
-The seed migrates the local database and adds two invented accounts to sign in with, whose passwords sit in `scripts/seed.ts`, plus two invented trips in 2031 with their entries and costs. `bun run check` runs the same checks as the pre-push hook. `CONTRIBUTING.md` covers the rest.
+The seed migrates the local database and adds two invented accounts to sign in with, whose passwords sit in `scripts/seed.ts`, plus two invented trips in 2031 with their entries, costs, and chats. `bun run check` runs the same checks as the pre-push hook. `CONTRIBUTING.md` covers the rest.
 
 ## Usage
 
