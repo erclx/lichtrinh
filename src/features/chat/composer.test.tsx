@@ -13,7 +13,7 @@ import { aFakeStream, FakeMediaRecorder, type FakeTrack } from '@/test/media'
 interface Options {
   running?: boolean
   offline?: boolean
-  voiceOffline?: boolean
+  voiceOnline?: boolean | null
   empty?: boolean
   accepted?: boolean
 }
@@ -21,26 +21,34 @@ interface Options {
 function renderComposer({
   running = false,
   offline = false,
-  voiceOffline = false,
+  voiceOnline = null,
   empty = false,
   accepted = true,
 }: Options = {}) {
   const onSend = vi.fn(async (_text: string, _voice?: VoiceSend) => accepted)
   const onStop = vi.fn()
-  render(
-    <QueryClientProvider client={new QueryClient()}>
+  const client = new QueryClient()
+  const composer = (voice: boolean | null) => (
+    <QueryClientProvider client={client}>
       <Composer
         running={running}
         offline={offline}
-        voiceOffline={voiceOffline}
+        voiceOnline={voice}
         empty={empty}
         contactName={null}
         onSend={onSend}
         onStop={onStop}
       />
-    </QueryClientProvider>,
+    </QueryClientProvider>
   )
-  return { onSend, onStop, box: screen.getByLabelText('Message the assistant') }
+  const { rerender } = render(composer(voiceOnline))
+  return {
+    onSend,
+    onStop,
+    box: screen.getByLabelText('Message the assistant'),
+    /** Answers a later status read with this voice state. */
+    readVoice: (voice: boolean | null) => rerender(composer(voice)),
+  }
 }
 
 const clipId = '5c7d1e2f-3a4b-4c5d-8e9f-0a1b2c3d4e5f'
@@ -294,6 +302,30 @@ describe('Composer with the mic', () => {
     )
   })
 
+  it('clears voice off once a status read says voice is back', async () => {
+    const user = userEvent.setup()
+    fakeApi({
+      'POST /assistant/warm': () => json(null, 202),
+      [clipPath]: () => failure('voice_unavailable', 503),
+    })
+    const { readVoice } = renderComposer()
+    await user.click(screen.getByRole('button', { name: 'Talk' }))
+    await user.click(
+      await screen.findByRole('button', { name: 'Stop and write it down' }),
+    )
+    await screen.findByRole('heading', { name: 'Voice is offline' })
+
+    readVoice(true)
+
+    expect(
+      screen.queryByRole('heading', { name: 'Voice is offline' }),
+    ).toBeNull()
+    expect(screen.getByRole('button', { name: 'Talk' })).toHaveAttribute(
+      'aria-disabled',
+      'false',
+    )
+  })
+
   it('says how to allow the mic when it is refused', async () => {
     const user = userEvent.setup()
     fakeApi({ 'POST /assistant/warm': () => json(null, 202) })
@@ -340,7 +372,7 @@ describe('Composer with the mic', () => {
 
   it('draws the mic off with its reason and still sends typed text while voice is off', async () => {
     const user = userEvent.setup()
-    const { onSend, box } = renderComposer({ voiceOffline: true })
+    const { onSend, box } = renderComposer({ voiceOnline: false })
 
     const mic = screen.getByRole('button', { name: 'Talk' })
     expect(mic).toHaveAttribute('aria-disabled', 'true')
@@ -369,5 +401,15 @@ describe('Composer with the mic', () => {
 
     expect(box).toHaveValue('Move dinner to 8 pm')
     expect(onSend).not.toHaveBeenCalled()
+  })
+
+  it('leaves out the hint and the samples while voice is off', () => {
+    renderComposer({ empty: true, voiceOnline: false })
+
+    expect(
+      screen.getByRole('heading', { name: 'Voice is offline' }),
+    ).toBeInTheDocument()
+    expect(screen.queryByText(/Tap the mic to talk/)).toBeNull()
+    expect(screen.queryByRole('list', { name: 'Sample requests' })).toBeNull()
   })
 })

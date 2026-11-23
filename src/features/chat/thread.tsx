@@ -161,7 +161,7 @@ export function Thread({ chatId, layout }: ThreadProps) {
         <Composer
           running={running}
           offline={offline}
-          voiceOffline={voiceOnline === false}
+          voiceOnline={voiceOnline}
           empty={!thread.isPending && items.length === 0}
           contactName={contact.data ?? null}
           onSend={send}

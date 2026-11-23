@@ -26,8 +26,11 @@ interface ComposerProps {
   running: boolean
   /** The workspace PC is off, which the offline card above explains. */
   offline: boolean
-  /** The assistant answers but voice does not, so the mic is drawn off. */
-  voiceOffline: boolean
+  /**
+   * Whether voice answers, from the status read. False draws the mic off,
+   * and null, from an API reporting no voice, leaves it on.
+   */
+  voiceOnline: boolean | null
   /** The thread holds nothing yet, so the hint and the samples show. */
   empty: boolean
   /** Whom the voice-off card asks, or null for the admin. */
@@ -55,7 +58,7 @@ const SAMPLES = [
 export function Composer({
   running,
   offline,
-  voiceOffline,
+  voiceOnline,
   empty,
   contactName,
   onSend,
@@ -129,16 +132,19 @@ export function Composer({
       ? t('chat.workingPlaceholder')
       : t('chat.messagePlaceholder')
 
-  const showSamples =
-    empty && !offline && text === '' && talk.state.phase !== 'review'
+  // A failed clip shows voice off until a status read says otherwise.
+  const voiceOff =
+    !offline &&
+    (voiceOnline === false ||
+      (voiceOnline === null && talk.state.phase === 'off'))
+  const guide = empty && !offline && !voiceOff
+  const showSamples = guide && text === '' && talk.state.phase !== 'review'
 
   return (
     <div className="flex flex-col gap-3">
-      {!offline && (voiceOffline || talk.state.phase === 'off') && (
-        <VoiceOffCard contactName={contactName} />
-      )}
+      {voiceOff && <VoiceOffCard contactName={contactName} />}
       {talk.state.phase === 'denied' && <MicDeniedCard />}
-      <Notice state={talk.state} empty={empty} offline={offline} />
+      <Notice state={talk.state} hint={guide} />
       {showSamples && (
         <ul aria-label={t('talk.samplesLabel')} className="flex flex-col gap-2">
           {SAMPLES.map((key) => (
@@ -176,7 +182,7 @@ export function Composer({
                 'field-sizing-content max-h-40 min-h-target min-w-0 flex-1 resize-none rounded-lg border-2 border-input bg-card px-4 py-[15px] text-base text-card-foreground outline-none placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 disabled:opacity-60',
               )}
             />
-            <MicButton off={offline || voiceOffline} onTap={tapMic} />
+            <MicButton off={offline || voiceOnline === false} onTap={tapMic} />
             {running ? (
               <button
                 type="button"
@@ -214,15 +220,7 @@ export function Composer({
   )
 }
 
-function Notice({
-  state,
-  empty,
-  offline,
-}: {
-  state: TalkState
-  empty: boolean
-  offline: boolean
-}) {
+function Notice({ state, hint }: { state: TalkState; hint: boolean }) {
   const { t } = useTranslation()
 
   if (state.phase === 'review') {
@@ -235,7 +233,7 @@ function Notice({
   }
   if (state.phase === 'retry') return <TalkLine>{t('talk.retry')}</TalkLine>
   if (state.phase === 'failed') return <TalkLine>{t('talk.failed')}</TalkLine>
-  if (state.phase === 'ready' && empty && !offline) {
+  if (state.phase === 'ready' && hint) {
     return <TalkLine>{t('talk.hint')}</TalkLine>
   }
   return null
