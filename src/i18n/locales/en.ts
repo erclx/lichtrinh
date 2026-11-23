@@ -50,6 +50,28 @@ export const en = {
     pausedBody:
       'Too many wrong passwords. Wait a few minutes and try again, or message the admin.',
   },
+  nav: {
+    label: 'Main',
+    today: 'Today',
+    trips: 'Trips',
+    calendar: 'Calendar',
+    accounts: 'Accounts',
+    settings: 'Settings',
+    hide: 'Hide sidebar',
+    show: 'Show sidebar',
+  },
+  shell: {
+    back: 'Back',
+    placeholder: 'This page is on its way.',
+    notFoundTitle: 'Page not found',
+    notFoundBody: "There's nothing at this address.",
+    goToday: 'Go to Today',
+    unreachableTitle: "Can't connect",
+    unreachableBody:
+      'Check the internet and try again. If it still fails, message the admin.',
+    retry: 'Try again',
+    loading: 'Loading',
+  },
   errors: {
     network: "Can't connect. Check the internet and try again.",
     generic: 'Something went wrong. Try again in a few minutes.',

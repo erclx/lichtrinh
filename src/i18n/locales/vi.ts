@@ -49,6 +49,28 @@ export const vi = {
     pausedBody:
       'Sai mật khẩu nhiều lần. Đợi ít phút rồi thử lại, hoặc nhắn quản trị viên.',
   },
+  nav: {
+    label: 'Chính',
+    today: 'Hôm nay',
+    trips: 'Chuyến đi',
+    calendar: 'Lịch',
+    accounts: 'Tài khoản',
+    settings: 'Cài đặt',
+    hide: 'Ẩn thanh bên',
+    show: 'Hiện thanh bên',
+  },
+  shell: {
+    back: 'Quay lại',
+    placeholder: 'Trang này sắp có.',
+    notFoundTitle: 'Không tìm thấy trang',
+    notFoundBody: 'Không có gì ở địa chỉ này.',
+    goToday: 'Về Hôm nay',
+    unreachableTitle: 'Không kết nối được',
+    unreachableBody:
+      'Kiểm tra mạng rồi thử lại. Nếu vẫn không được, nhắn cho quản trị viên.',
+    retry: 'Thử lại',
+    loading: 'Đang tải',
+  },
   errors: {
     network: 'Không kết nối được. Kiểm tra mạng rồi thử lại.',
     generic: 'Có lỗi xảy ra. Thử lại sau ít phút.',
