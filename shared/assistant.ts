@@ -24,3 +24,7 @@ export const assistantStatus = z.strictObject({
   model: assistantModel,
 })
 export type AssistantStatus = z.infer<typeof assistantStatus>
+
+/** The admin's write to the alias every turn runs on, answered back as saved. */
+export const assistantSettings = z.strictObject({ model: assistantModel })
+export type AssistantSettings = z.infer<typeof assistantSettings>
