@@ -8,6 +8,10 @@ import viteConfig from './vite.config.ts'
 export default mergeConfig(
   viteConfig,
   defineConfig({
+    // Its own prebundle, since the merged config would otherwise share
+    // `node_modules/.vite` with the dev server, and a check run during a
+    // review drive would rewrite the deps under the running preview.
+    cacheDir: 'node_modules/.vite-vitest',
     test: {
       passWithNoTests: true,
       exclude: [
