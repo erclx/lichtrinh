@@ -1,5 +1,5 @@
 import type { Language, Role } from '@shared/auth.ts'
-import { username as usernameRule } from '@shared/users.ts'
+import { createUserRequest, username as usernameRule } from '@shared/users.ts'
 import { type FormEvent, useId, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link, useNavigate } from 'react-router'
@@ -11,11 +11,21 @@ import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group'
 import { createAccount } from '@/features/accounts/accounts-api'
 import { PasswordOnce } from '@/features/accounts/password-once'
 import { ApiFailure } from '@/lib/api'
+import { useSession } from '@/session/session-context'
 import { PageHeader } from '@/shell/page-header'
 
 interface FieldErrors {
-  displayName?: 'required'
+  displayName?: 'required' | 'tooLong'
   username?: 'invalid' | 'taken'
+}
+
+// The API's own rule, so the form refuses what the API would answer with
+// validation_failed.
+function displayNameError(name: string): FieldErrors['displayName'] {
+  if (name === '') return 'required'
+  return createUserRequest.shape.displayName.safeParse(name).success
+    ? undefined
+    : 'tooLong'
 }
 
 const labelClass = 'text-sm leading-none font-extrabold'
@@ -23,6 +33,7 @@ const labelClass = 'text-sm leading-none font-extrabold'
 export function CreateAccountPage() {
   const { t } = useTranslation()
   const navigate = useNavigate()
+  const { user: self } = useSession()
   const ids = useId()
   const [displayName, setDisplayName] = useState('')
   const [username, setUsername] = useState('')
@@ -40,13 +51,15 @@ export function CreateAccountPage() {
   const usernameRef = useRef<HTMLInputElement>(null)
 
   const parsedUsername = usernameRule.safeParse(username)
+  const takenName = parsedUsername.success ? parsedUsername.data : username
+  const takenByOther = takenName !== self?.username
 
   async function onSubmit(event: FormEvent) {
     event.preventDefault()
     if (pending) return
     const name = displayName.trim()
     const next: FieldErrors = {
-      displayName: name === '' ? 'required' : undefined,
+      displayName: displayNameError(name),
       username: parsedUsername.success ? undefined : 'invalid',
     }
     setErrors(next)
@@ -113,7 +126,7 @@ export function CreateAccountPage() {
             value={displayName}
             onChange={(event) => {
               setDisplayName(event.target.value)
-              if (event.target.value.trim() !== '') {
+              if (displayNameError(event.target.value.trim()) === undefined) {
                 setErrors((current) => ({ ...current, displayName: undefined }))
               }
             }}
@@ -124,7 +137,11 @@ export function CreateAccountPage() {
           />
           {errors.displayName !== undefined && (
             <p id={`${ids}-name-error`} className="text-sm">
-              {t('accounts.displayNameRequired')}
+              {t(
+                errors.displayName === 'tooLong'
+                  ? 'accounts.displayNameTooLong'
+                  : 'accounts.displayNameRequired',
+              )}
             </p>
           )}
         </div>
@@ -161,18 +178,20 @@ export function CreateAccountPage() {
           )}
           {errors.username === 'taken' && (
             <p id={`${ids}-username-error`} className="text-sm">
-              {t('accounts.usernameTaken')}{' '}
-              <Link
-                to="/admin/accounts"
-                state={{
-                  resetUsername: parsedUsername.success
-                    ? parsedUsername.data
-                    : username,
-                }}
-                className="font-extrabold underline underline-offset-4"
-              >
-                {t('accounts.resetThatAccount')}
-              </Link>
+              {t('accounts.usernameTaken')}
+              {/* The admin's own row offers no reset, so its name gets no link. */}
+              {takenByOther && (
+                <>
+                  {' '}
+                  <Link
+                    to="/admin/accounts"
+                    state={{ resetUsername: takenName }}
+                    className="font-extrabold underline underline-offset-4"
+                  >
+                    {t('accounts.resetThatAccount')}
+                  </Link>
+                </>
+              )}
             </p>
           )}
         </div>

@@ -162,6 +162,49 @@ describe('CreateAccountPage', () => {
     expect(JSON.stringify(router.state.location)).not.toContain('mape')
   })
 
+  it('refuses a display name past 60 characters unsent', async () => {
+    const user = userEvent.setup()
+    const api = fakeApi({ 'GET /auth/me': () => json(admin) })
+    renderCreate()
+
+    await user.type(
+      await screen.findByLabelText('Display name'),
+      'a'.repeat(61),
+    )
+    await user.type(screen.getByLabelText('Username'), 'mai')
+    await user.click(
+      screen.getByRole('button', { name: 'Create and get the password' }),
+    )
+
+    expect(
+      screen.getByText('Keep the display name to 60 characters.'),
+    ).toBeInTheDocument()
+    expect(screen.getByLabelText('Display name')).toHaveFocus()
+    expect(api.requests.some(({ method }) => method === 'POST')).toBe(false)
+  })
+
+  it('offers no reset link when the taken username is the admin’s own', async () => {
+    const user = userEvent.setup()
+    fakeApi({
+      'GET /auth/me': () => json(admin),
+      'POST /admin/users': () => failure('username_taken', 409),
+    })
+    renderCreate()
+
+    await user.type(await screen.findByLabelText('Display name'), 'Admin two')
+    await user.type(screen.getByLabelText('Username'), 'admin')
+    await user.click(
+      screen.getByRole('button', { name: 'Create and get the password' }),
+    )
+
+    expect(
+      await screen.findByText('That username is taken.'),
+    ).toBeInTheDocument()
+    expect(
+      screen.queryByRole('link', { name: 'Reset that account instead' }),
+    ).not.toBeInTheDocument()
+  })
+
   it('shows a taken username under Username with a link to reset it', async () => {
     const user = userEvent.setup()
     fakeApi({

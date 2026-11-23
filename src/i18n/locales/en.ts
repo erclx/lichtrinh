@@ -93,6 +93,7 @@ export const en = {
     createTitle: 'New account',
     displayName: 'Display name',
     displayNameRequired: 'Enter a display name.',
+    displayNameTooLong: 'Keep the display name to 60 characters.',
     username: 'Username',
     usernameHint: 'Lowercase, no tones.',
     usernameInvalid:

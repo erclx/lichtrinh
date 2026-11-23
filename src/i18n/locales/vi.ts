@@ -92,6 +92,7 @@ export const vi = {
     createTitle: 'Tạo tài khoản',
     displayName: 'Tên hiển thị',
     displayNameRequired: 'Nhập tên hiển thị.',
+    displayNameTooLong: 'Tên hiển thị tối đa 60 ký tự.',
     username: 'Tên đăng nhập',
     usernameHint: 'Chữ thường, không dấu.',
     usernameInvalid: 'Dùng 2 đến 32 chữ thường hoặc số, không dấu, không cách.',
