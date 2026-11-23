@@ -13,7 +13,7 @@ My mom is traveling to Vietnam. Calendar apps ask her to learn them first. This 
 
 ## How it fits together
 
-- A web app installed to the iPhone home screen, in Vietnamese and English
+- A web app that opens in the browser, in Vietnamese and English
 - A shared calendar with trips, entries, estimated costs, and a budget, editable by hand
 - A chat with an assistant that changes the calendar through four calendar tools alone, with Undo on every change
 - The assistant's local model and Vietnamese speech recognition run on my own computer, so the app costs nothing to run
