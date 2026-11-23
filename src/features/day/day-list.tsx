@@ -23,6 +23,8 @@ interface DayListProps {
   addTo: string
 }
 
+// Each row link sets draggable false, since a mouse drag on a link starts
+// the browser's own link drag, which cancels the swipe before it claims.
 const rowLink =
   'outline-none focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:ring-offset-2 focus-visible:ring-offset-background'
 
@@ -73,6 +75,7 @@ export function DayList({ rows, currency, addTo }: DayListProps) {
                 {state === 'done' && (
                   <Link
                     to={to}
+                    draggable={false}
                     className={cn(
                       'grid min-h-target grid-cols-[40px_1fr_auto] items-center gap-3 rounded-xl px-2 py-1.5 text-muted-foreground',
                       rowLink,
@@ -104,6 +107,7 @@ export function DayList({ rows, currency, addTo }: DayListProps) {
                 {state === 'now' && (
                   <Link
                     to={to}
+                    draggable={false}
                     className={cn(
                       'flex flex-col gap-1.5 rounded-2xl p-5',
                       entry.kind === null
@@ -143,6 +147,7 @@ export function DayList({ rows, currency, addTo }: DayListProps) {
                 {state === 'upcoming' && (
                   <Link
                     to={to}
+                    draggable={false}
                     className={cn(
                       'grid min-h-target grid-cols-[48px_1fr_auto] items-center gap-3 rounded-xl px-2 py-2',
                       rowLink,
