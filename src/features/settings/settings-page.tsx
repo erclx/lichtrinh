@@ -11,8 +11,11 @@ import {
   ChevronIcon,
   GlobeIcon,
   SignOutIcon,
+  ThemeIcon,
 } from '@/shell/icons'
 import { PageHeader } from '@/shell/page-header'
+
+import { AppearanceToggle } from './appearance-toggle'
 
 // The divider sits on the list item, so a pressable row's rounded focus ring
 // never bends it.
@@ -23,7 +26,7 @@ const rowIcon =
 const pressable =
   'w-full rounded-xl text-left outline-none focus-visible:ring-3 focus-visible:ring-ring/50'
 
-/** Later rows add their own rows here, such as Appearance and the tutorial. */
+/** Later rows add their own rows here, such as the tutorial. */
 export function SettingsPage() {
   const { t } = useTranslation()
   const navigate = useNavigate()
@@ -65,6 +68,15 @@ export function SettingsPage() {
           <LanguageToggle
             onChange={(language) => void saveLanguage(language)}
           />
+        </li>
+        <li className={cn(row, divider, 'flex-wrap')}>
+          <span aria-hidden="true" className={rowIcon}>
+            <ThemeIcon className="size-6" />
+          </span>
+          <span className="flex-1 text-base font-extrabold">
+            {t('settings.appearance')}
+          </span>
+          <AppearanceToggle />
         </li>
         {user?.role === 'admin' && (
           <li className={divider}>

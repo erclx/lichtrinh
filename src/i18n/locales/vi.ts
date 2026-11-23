@@ -121,6 +121,10 @@ export const vi = {
   settings: {
     title: 'Cài đặt',
     language: 'Ngôn ngữ',
+    appearance: 'Giao diện',
+    appearanceAuto: 'Tự động',
+    appearanceLight: 'Sáng',
+    appearanceDark: 'Tối',
     manageAccounts: 'Quản lý tài khoản',
     signOut: 'Đăng xuất',
     signingOut: 'Đang đăng xuất…',

@@ -124,6 +124,10 @@ export const en = {
   settings: {
     title: 'Settings',
     language: 'Language',
+    appearance: 'Appearance',
+    appearanceAuto: 'Auto',
+    appearanceLight: 'Light',
+    appearanceDark: 'Dark',
     manageAccounts: 'Manage accounts',
     signOut: 'Sign out',
     signingOut: 'Signing out…',
