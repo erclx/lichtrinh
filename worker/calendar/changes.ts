@@ -262,6 +262,8 @@ async function settledUndo(
   return undefined
 }
 
+// Moves back only the entries the change carried that still sit in the zone
+// it moved them to, so an entry given its own zone since stays put.
 function undoTrip(
   db: Db,
   actor: Actor,
@@ -278,8 +280,6 @@ function undoTrip(
       .where(and(eq(trips.id, id), eq(trips.version, state.version))),
   )
   const fromZone = state.current?.timeZone
-  // Moves back only the entries the change carried that still sit in the
-  // zone it moved them to, so an entry given its own zone since stays put.
   const rezone =
     fromZone !== undefined && restore !== null && fromZone !== restore.timeZone
       ? and(

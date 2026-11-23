@@ -57,10 +57,9 @@ function offsetAt(instant: number, timeZone: string) {
   return wallAsUtc(wallClock(whole, timeZone)) - whole
 }
 
-// Resolves the way Temporal's `compatible` option does: a clock time in an
-// overlap takes the earlier instant, and one in a gap moves forward by the
-// gap's length. A zone never changes offset twice within two days, so the
-// offsets a day either side are the only two candidates.
+// Resolves as Temporal's `compatible` does: an overlap takes the earlier
+// instant and a gap moves forward by its length. No zone shifts twice in two
+// days, so the offsets a day either side are the only candidates.
 function instantOf(clock: LocalClock, timeZone: string) {
   const wall = wallAsUtc(clock)
   const offsetBefore = offsetAt(wall - DAY_MS, timeZone)

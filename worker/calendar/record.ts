@@ -67,10 +67,8 @@ export function deferForeignKeys(db: Db) {
 type Stored = SQL | string | number | null
 
 /**
- * An insert of one row that lands only while `condition` holds. Values are
- * laid out in the table's own column order, which an insert-select needs,
- * and a column left out is null. It goes through the insert builder because
- * drizzle's D1 batch cannot bind a raw statement's parameters.
+ * One row inserted only while `condition` holds, laid out in table column
+ * order with a missing column null. Drizzle's D1 batch binds no raw SQL.
  */
 export function insertWhen<T extends SQLiteTable>(
   db: Db,
@@ -88,11 +86,9 @@ export function insertWhen<T extends SQLiteTable>(
 }
 
 /**
- * The statement that opens every calendar write batch. It inserts the change
- * row only while `condition` holds, so the version, range, and id checks run
- * inside the same transaction as the write. Every later statement in the
- * batch carries `recorded()` for this change, so a refused check leaves no
- * write and no orphan change behind.
+ * Opens every calendar write batch, inserting the change row only while
+ * `condition` holds. Later statements carry `recorded()`, so a refused check
+ * leaves no write and no orphan change.
  */
 export function recordChange(
   db: Db,

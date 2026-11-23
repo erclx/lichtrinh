@@ -186,6 +186,8 @@ async function replayCreate(
   return { trip: toTrip(row), changeId: created.id }
 }
 
+// A zone change reads the entries it carries inside the batch, so the change
+// row names exactly the entries the rewrite moves.
 export async function updateTrip(
   db: Db,
   actor: Actor,
@@ -210,8 +212,6 @@ export async function updateTrip(
   const datesMoved =
     after.startsOn !== before.startsOn || after.endsOn !== before.endsOn
   const zoneMoved = after.timeZone !== before.timeZone
-  // The entries a zone change carries along, read inside the batch so the
-  // change row names exactly the entries the rewrite below moves.
   const inOldZone = and(
     eq(entries.tripId, id),
     eq(entries.timeZone, before.timeZone),
