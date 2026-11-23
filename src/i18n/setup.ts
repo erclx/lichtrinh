@@ -27,15 +27,21 @@ void i18n.use(initReactI18next).init({
 
 document.documentElement.lang = initial
 
-// Registered after init, so only a later change is remembered and an
-// untouched device keeps following the account and the build default.
 i18n.on('languageChanged', (language) => {
-  if (!isLanguage(language)) return
-  document.documentElement.lang = language
-  storeLanguage(language)
+  if (isLanguage(language)) document.documentElement.lang = language
 })
 
-/** The one seam the toggle, and later the signed-in account, switch through. */
-export function changeLanguage(language: Language) {
+/**
+ * Applies a language without remembering it, the seam a signed-in account's
+ * language goes through. Storing it there would make the device outrank the
+ * account on every later visit.
+ */
+export function applyLanguage(language: Language) {
   return i18n.changeLanguage(language)
+}
+
+/** Applies a language a person picked and remembers it on the device. */
+export async function chooseLanguage(language: Language) {
+  storeLanguage(language)
+  await applyLanguage(language)
 }

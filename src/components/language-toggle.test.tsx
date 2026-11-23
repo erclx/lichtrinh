@@ -5,10 +5,10 @@ import userEvent from '@testing-library/user-event'
 
 import { LanguageToggle } from '@/components/language-toggle'
 import { readStoredLanguage } from '@/i18n/language'
-import { changeLanguage } from '@/i18n/setup'
+import { applyLanguage } from '@/i18n/setup'
 
 beforeEach(async () => {
-  await changeLanguage('en')
+  await applyLanguage('en')
   localStorage.clear()
 })
 
@@ -58,6 +58,16 @@ describe('LanguageToggle', () => {
     await user.click(screen.getByRole('button', { name: /Tiếng Việt/ }))
 
     expect(readStoredLanguage()).toBe('vi')
+  })
+
+  it('reports the language pressed to its caller', async () => {
+    const user = userEvent.setup()
+    const pressed: string[] = []
+    render(<LanguageToggle onChange={(language) => pressed.push(language)} />)
+
+    await user.click(screen.getByRole('button', { name: /Tiếng Việt/ }))
+
+    expect(pressed).toEqual(['vi'])
   })
 
   it('keeps the group findable in Vietnamese by its bilingual label', async () => {
