@@ -78,9 +78,12 @@ class Runner:
         return worker.model
 
     async def warm(self, model: Model) -> float:
-        """Loads `model` and returns the seconds it took, zero if it was loaded."""
+        """Loads `model` and returns the seconds it took, zero if it was loaded.
+        Either way the idle clock restarts, since a warm means a clip is coming."""
         async with self._lock:
-            return await self._ensure(model)
+            seconds = await self._ensure(model)
+            self._last_used = self._clock()
+            return seconds
 
     async def transcribe(self, model: Model, samples: Samples) -> Transcript:
         async with self._lock:

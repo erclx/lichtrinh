@@ -148,6 +148,21 @@ async def test_keeps_the_model_until_the_idle_timeout(
     assert runner.loaded == QWEN
 
 
+async def test_a_warm_on_the_loaded_model_restarts_the_idle_clock(
+    make_runner: Callable[..., Runner], clock: Clock
+) -> None:
+    runner = make_runner()
+    await runner.transcribe(QWEN, clip())
+    clock.now += 899
+    await runner.warm(QWEN)
+    clock.now += 1
+
+    unloaded = await runner.unload_if_idle()
+
+    assert not unloaded
+    assert runner.loaded == QWEN
+
+
 async def test_unloads_once_idle_and_frees_the_card(
     make_runner: Callable[..., Runner], clock: Clock, card: Path
 ) -> None:
