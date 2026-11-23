@@ -27,7 +27,7 @@ Holds sign-in and the guard every route sits behind. The app runs the body limit
 - `guard.ts` lets a signed-out caller reach `GET /api/health` and `POST /api/auth/sign-in` alone, so a new route, an unknown path included, answers `401 unauthenticated` until signed in
 - `guard.ts` puts `user` and `sessionId` on the Hono context, which later routes read, and `requireAdmin` answers `403 forbidden` on `/api/admin/*`
 - `session.ts` issues a 180-day `__Host-session` cookie, stores only the SHA-256 of its token, and slides the expiry at most once a day
-- `attempts.ts` counts failed sign-ins in one upsert each, refusing past 10 per username or 50 per address within 15 minutes
+- `attempts.ts` refuses past 10 failures per username or 50 per `CF-Connecting-IP` in 15 minutes. Only the edge sets that header, so a local spec counting failures passes its own.
 - `password.ts` verifies PBKDF2 hashes from `shared/password-hash.ts`, whose exception to the installed hash rule is `.claude/rules/project/code/passwords.md`
 
 ### `worker/db/`
@@ -40,7 +40,7 @@ Holds the Drizzle schema, the client a route gets its database from, the migrati
 
 ### `shared/`
 
-Holds the schemas the app, the API, and later the assistant's tools all import as `@shared/*`. The import direction between it, `src/`, and `worker/` is `.claude/rules/project/code/imports.md`.
+Holds the schemas the app, the API, and later the assistant's tools all import as `@shared/*`, plus the password hash and generator the Worker and the admin command share. The import direction between it, `src/`, and `worker/` is `.claude/rules/project/code/imports.md`.
 
 - The root typecheck has no Worker types, so a binding type written here fails `bun run typecheck`
 
@@ -49,7 +49,7 @@ Holds the schemas the app, the API, and later the assistant's tools all import a
 The Worker's two smaller folders each carry one job.
 
 - `worker/routes/`: one Hono router per API area, being health, sessions under `/api/auth/`, accounts under `/api/admin/users`, and the contact name under `/api/settings`
-- `worker/test/`: the setup file migrating the database before each worker spec file, the test-only binding types, and builders for invented accounts and signed-in requests
+- `worker/test/`: the migrating setup file, the test-only binding types, and builders for invented accounts and requests. `bare()` sends the Origin header `csrf()` needs on a bodiless POST.
 
 ## Gotchas
 
@@ -57,10 +57,3 @@ The Worker's two smaller folders each carry one job.
 - Storage resets per spec file rather than per test, so a case that writes or rolls back hands its state to the next case in that file
 - `vitest.config.ts` merges `vite.config.ts`, so `cloudflare()` loads in both test projects. Suspect it first when `bun run test:run` hangs after a plugin upgrade.
 - Coverage runs on V8, which Cloudflare's known-issues page calls unsupported. Switch to Istanbul and exclude `worker/db/migrations/` if CI reports `worker/` at zero.
-
-### Signed-in specs
-
-A spec reaching past the guard sends what a browser would, and two headers trip a spec that does not.
-
-- `csrf()` reads a bodiless POST with no Origin header as a form post, so a spec sends one through `bare()` in `worker/test/requests.ts`
-- Only Cloudflare's edge sets `CF-Connecting-IP`, so every local sign-in shares one address count, and a spec counting failures passes its own address
