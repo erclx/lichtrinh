@@ -43,7 +43,7 @@ Holds app-wide sign-in state, the role `src/i18n/` holds for language, so a feat
 
 Holds the frame around every signed-in page, built against `canon/design/shell/`.
 
-- `app-shell.tsx` owns the `main` landmark, the gutters, and the breakpoints, phone under 480, tablet to 1023, and desktop from 1024
+- `app-shell.tsx` owns the `main` landmark, the gutters, and the breakpoints, phone under 480, tablet to 1023, and desktop from 1024, plus the chat places `canon/context/web/chat.md` describes
 - `nav.tsx` draws the hideable desktop sidebar, the labeled tablet rail, and the phone tabs, which leave out admin entries
 - A new place is one entry in `destinations.ts`, never markup in `nav.tsx`, and `placement: 'header'` puts it on the top bar's one button
 - A page renders its own `page-header.tsx` and content, while `placeholder-page.tsx` holds Calendar until its row replaces the element
@@ -95,7 +95,7 @@ The folders below each carry one small job.
 - `src/hooks/`: shared hooks, being `useMediaQuery`, which reads every query as unmatched in the test DOM, and `useNow`, renewed every 30 seconds
 - `public/`: the favicon, the PNG icons from 16 to 512, and the light and dark social cards, while the web manifest is not written yet
 - `src/lib/`: shared helpers, being `cn`, `month-cells.ts`, `trip-days.ts` for a trip's dates, and `api.ts`, whose `apiFetch` parses through a `shared/` schema and throws `ApiFailure`
-- `src/test/`: the Vitest setup, `fake-api.ts` standing in for the API behind `fetch`, invented trip and entry builders, and `render-route.tsx`, which mounts the routes inside every provider
+- `src/test/`: the Vitest setup, `fake-api.ts` standing in for the API behind `fetch`, invented trip, entry, and chat builders, and `render-route.tsx`, which mounts the routes inside every provider
 - `e2e/`: the Playwright specs and the screenshot harness, with its cases in `e2e/capture/cases.ts` and committed frames in `e2e/evidence/`
 
 ## Gotchas
