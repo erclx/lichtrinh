@@ -220,7 +220,7 @@ function endAfter(date: string, start: string, end: string) {
   return end < start ? shiftClock(sameDay, 24 * 60) : sameDay
 }
 
-function toolEntry(entry: Entry, digits: number): ToolEntry {
+export function toolEntry(entry: Entry, digits: number): ToolEntry {
   return {
     id: entry.id,
     title: entry.title,

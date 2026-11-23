@@ -13,6 +13,7 @@ import {
   requestBridgeSocket,
   TEST_BRIDGE_SECRET,
 } from '../test/bridge.ts'
+import { chatterWithChat, sendMessage } from '../test/chats.ts'
 import { bare } from '../test/requests.ts'
 import { signedIn } from '../test/users.ts'
 
@@ -196,5 +197,16 @@ describe('POST /api/assistant/warm', () => {
 
     expect(res.status).toBe(403)
     expect(await errorCode(res)).toBe('forbidden')
+  })
+})
+
+describe('a send with the workspace PC off', () => {
+  it('answers 503 assistant_unavailable with no bridge socket', async () => {
+    const { cookie, chat } = await chatterWithChat()
+
+    const res = await sendMessage(cookie, chat.id)
+
+    expect(res.status).toBe(503)
+    expect(await errorCode(res)).toBe('assistant_unavailable')
   })
 })

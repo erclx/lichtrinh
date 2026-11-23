@@ -134,7 +134,11 @@ export async function threadOf(db: Db, chatId: string) {
 /** The last `count` messages of the chat, oldest first, for a turn's prompt. */
 export async function recentMessages(db: Db, chatId: string, count: number) {
   const rows = await db
-    .select({ role: chatMessages.role, text: chatMessages.text })
+    .select({
+      id: chatMessages.id,
+      role: chatMessages.role,
+      text: chatMessages.text,
+    })
     .from(chatMessages)
     .where(eq(chatMessages.chatId, chatId))
     .orderBy(desc(chatMessages.createdAt), sql`rowid desc`)

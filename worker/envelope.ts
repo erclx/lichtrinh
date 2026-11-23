@@ -52,6 +52,12 @@ export function refuse(c: Context, code: Refusal) {
   return c.json(fail(code, message), status)
 }
 
+/** The same refusal as a bare response, for code holding no Hono context. */
+export function refusalResponse(code: Refusal) {
+  const [status, message] = REFUSALS[code]
+  return Response.json(fail(code, message), { status })
+}
+
 /**
  * The query string parsed by the schema. Throws an exception the app answers
  * as `400 validation_failed` for a query that fails it.

@@ -1,11 +1,15 @@
 import { chatList, chatRead, chatThread } from '@shared/chats.ts'
 import { apiError } from '@shared/errors.ts'
 import { env } from 'cloudflare:workers'
-import { describe, expect, it } from 'vitest'
+import { eq } from 'drizzle-orm'
+import { afterEach, describe, expect, it } from 'vitest'
 
 import { app } from '../app.ts'
 import { createDb } from '../db/client.ts'
-import { trips } from '../db/schema.ts'
+import { trips, users } from '../db/schema.ts'
+import type { FakeBridge } from '../test/bridge.ts'
+import { connectBridge } from '../test/bridge.ts'
+import { chatterWithChat, readEvents, sendMessage } from '../test/chats.ts'
 import { bare, json } from '../test/requests.ts'
 import { addTrip } from '../test/trips.ts'
 import { signedIn } from '../test/users.ts'
@@ -139,5 +143,120 @@ describe('GET /api/chats/:id', () => {
 
     expect(res.status).toBe(404)
     expect(await errorCode(res)).toBe('not_found')
+  })
+})
+
+describe('POST /api/chats/:id/messages', () => {
+  const open: FakeBridge[] = []
+
+  afterEach(async () => {
+    await Promise.all(open.splice(0).map((bridge) => bridge.close()))
+  })
+
+  /** Runs one turn the fake bridge answers with `reply`. */
+  async function answeredSend(
+    cookie: string,
+    chatId: string,
+    body: { id: string; text: string },
+  ) {
+    const bridge = await connectBridge()
+    open.push(bridge)
+    const res = await sendMessage(cookie, chatId, body)
+    const turn = await bridge.next()
+    if (turn.type !== 'turn') throw new Error(`Expected turn, got ${turn.type}`)
+    bridge.send({ type: 'final', turnId: turn.turnId, text: 'Invented reply' })
+    await readEvents(res)
+    return bridge
+  }
+
+  it('answers a retried send with the saved reply and runs no second turn', async () => {
+    const { cookie, chat } = await chatterWithChat()
+    const body = { id: crypto.randomUUID(), text: 'Invented ask' }
+    await answeredSend(cookie, chat.id, body)
+
+    const retry = await sendMessage(cookie, chat.id, body)
+
+    expect(retry.status).toBe(200)
+    expect(await readEvents(retry)).toEqual([
+      expect.objectContaining({
+        type: 'done',
+        message: expect.objectContaining({ text: 'Invented reply' }),
+      }),
+    ])
+    const thread = chatThread.parse(
+      await (await getThread(cookie, chat.id)).json(),
+    )
+    expect(thread.messages).toHaveLength(2)
+  })
+
+  it('refuses a reused message id carrying another text', async () => {
+    const { cookie, chat } = await chatterWithChat()
+    const id = crypto.randomUUID()
+    await answeredSend(cookie, chat.id, { id, text: 'Invented ask' })
+
+    const res = await sendMessage(cookie, chat.id, { id, text: 'Another ask' })
+
+    expect(res.status).toBe(409)
+    expect(await errorCode(res)).toBe('id_conflict')
+  })
+
+  it('refuses a message id already used in another chat', async () => {
+    const { cookie, chat } = await chatterWithChat()
+    const other = await addChat(cookie)
+    const body = { id: crypto.randomUUID(), text: 'Invented ask' }
+    await answeredSend(cookie, chat.id, body)
+
+    const res = await sendMessage(cookie, other.id, body)
+
+    expect(res.status).toBe(409)
+    expect(await errorCode(res)).toBe('id_conflict')
+  })
+
+  it('refuses the next send once the admin turns chat off', async () => {
+    const { cookie, chat, user } = await chatterWithChat()
+    await answeredSend(cookie, chat.id, {
+      id: crypto.randomUUID(),
+      text: 'Invented ask',
+    })
+    await createDb(env.DB)
+      .update(users)
+      .set({ canChat: false })
+      .where(eq(users.id, user.id))
+
+    const res = await sendMessage(cookie, chat.id)
+
+    expect(res.status).toBe(403)
+    expect(await errorCode(res)).toBe('forbidden')
+  })
+
+  it('answers not_found for a send to another account chat', async () => {
+    const { chat } = await chatterWithChat()
+    const other = await chatter()
+
+    const res = await sendMessage(other.cookie, chat.id)
+
+    expect(res.status).toBe(404)
+    expect(await errorCode(res)).toBe('not_found')
+  })
+
+  it('answers no_trip once the chat trip is deleted', async () => {
+    const { cookie, chat } = await chatterWithChat()
+    await createDb(env.DB)
+      .update(trips)
+      .set({ deletedAt: new Date() })
+      .where(eq(trips.id, chat.tripId))
+
+    const res = await sendMessage(cookie, chat.id)
+
+    expect(res.status).toBe(409)
+    expect(await errorCode(res)).toBe('no_trip')
+  })
+
+  it('refuses an empty message', async () => {
+    const { cookie, chat } = await chatterWithChat()
+
+    const res = await sendMessage(cookie, chat.id, { text: '   ' })
+
+    expect(res.status).toBe(400)
   })
 })
