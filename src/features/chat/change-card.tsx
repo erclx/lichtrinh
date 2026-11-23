@@ -120,7 +120,7 @@ export function ChangeCard({ change }: { change: Change }) {
       {/* Undo drops under the entry when the bubble is too narrow for both,
           rather than squeezing the time into a column of fragments. */}
       <div className="flex flex-wrap items-center justify-end gap-3">
-        <div className="flex min-w-0 grow basis-48 items-center gap-3">
+        <div className="flex min-w-0 grow basis-40 items-center gap-3">
           <span className="flex size-12 shrink-0 items-center justify-center rounded-md bg-background text-foreground">
             <KindGlyph kind={shown.kind} className="size-7" />
           </span>
