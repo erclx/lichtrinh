@@ -49,6 +49,7 @@ api = ["worker/", "wrangler.jsonc", "drizzle.config.ts"]
 shared = ["shared/"]
 e2e = ["e2e/"]
 voice = ["voice/"]
+bridge = ["bridge/"]
 design = ["canon/design/"]
 cli = ["cli/"]
 
