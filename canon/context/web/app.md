@@ -53,7 +53,7 @@ Holds the frame around every signed-in page, built against `canon/design/shell/`
 Holds one folder per screen feature, each importing the session and the shell but never another feature.
 
 - `sign-in/` is the card a signed-out visitor sees, with no shell around it
-- `accounts/` is the admin's list, create, reset confirm, and the password shown once, which lives in component state alone
+- `accounts/` is the admin's list, the create and edit pages sharing `account-fields.tsx`, the reset confirm, and the password shown once, which lives in component state alone
 - `settings/` holds Language, Appearance, Manage accounts for the admin, and Sign out, and later rows add their own rows
 - `settings/appearance.ts` keeps the device's Auto, Light, or Dark under `lichtrinh.theme`, the key and values the head script repeats since it cannot import the module
 
