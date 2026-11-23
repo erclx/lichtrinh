@@ -154,7 +154,7 @@ export function WeekRows({
             aria-label={t('calendar.tripSpan', { trip: trip.name, dates })}
             className={cn(
               'flex flex-col gap-1.5 rounded-[26px] bg-muted px-2 pt-2 pb-1.5',
-              continues && 'rounded-b-lg',
+              continues && 'rounded-b-[8px]',
             )}
           >
             <div className="flex flex-wrap justify-between gap-x-2 px-2.5 pt-0.5 text-base font-bold text-muted-foreground">
