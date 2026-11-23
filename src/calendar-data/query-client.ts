@@ -1,6 +1,7 @@
 import { QueryClient } from '@tanstack/react-query'
 
 import { ApiFailure } from '@/lib/api'
+import { calendarCacheMaxAge } from '@/offline/persist'
 
 /** How often an open screen asks again, so one person sees another's change. */
 export const refreshMs = 30_000
@@ -19,6 +20,9 @@ export function createQueryClient() {
     defaultOptions: {
       queries: {
         staleTime: 5_000,
+        // Kept in memory as long as on the device, or a read nobody is
+        // watching drops from the save before its week is up.
+        gcTime: calendarCacheMaxAge,
         refetchOnWindowFocus: true,
         refetchInterval: refreshMs,
         refetchIntervalInBackground: false,

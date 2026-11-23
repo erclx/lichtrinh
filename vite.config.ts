@@ -1,6 +1,7 @@
 import { cloudflare } from '@cloudflare/vite-plugin'
 import tailwindcss from '@tailwindcss/vite'
 import react from '@vitejs/plugin-react'
+import { readFileSync } from 'fs'
 import path from 'path'
 import { defineConfig } from 'vite'
 
@@ -19,7 +20,19 @@ const cloudflareOptions =
         },
       }
 
+// The released version, so a plan saved on the device by another version is
+// dropped rather than read in a shape this build may not expect.
+const appVersion: string = JSON.parse(
+  readFileSync(
+    path.join(import.meta.dirname, '.release-please-manifest.json'),
+    'utf8',
+  ),
+)['.']
+
 export default defineConfig({
+  define: {
+    __APP_VERSION__: JSON.stringify(appVersion),
+  },
   plugins: [react(), tailwindcss(), cloudflare(cloudflareOptions)],
   resolve: {
     alias: {
