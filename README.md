@@ -3,8 +3,8 @@
 A shared trip calendar for a parent who plans by talking. She speaks or types to Claude in Vietnamese, and Claude fills in the calendar while the rest of the family signs in to see the same plan and edit it. Lịch trình is Vietnamese for itinerary.
 
 <picture>
-  <source media="(prefers-color-scheme: dark)" srcset="assets/evidence/readme/dark.png" />
-  <img alt="The Lịch trình sign-in card, with the calendar mark above the name" src="assets/evidence/readme/light.png" />
+  <source media="(prefers-color-scheme: dark)" srcset="e2e/evidence/readme/dark.png" />
+  <img alt="The Lịch trình sign-in card, with the calendar mark above the name" src="e2e/evidence/readme/light.png" />
 </picture>
 
 ## Why

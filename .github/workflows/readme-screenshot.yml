@@ -89,7 +89,7 @@ jobs:
       - name: Check For Changes
         id: diff
         run: |
-          if git status --porcelain assets/evidence/readme | grep -q .; then
+          if git status --porcelain e2e/evidence/readme | grep -q .; then
             echo "changed=true" >> "$GITHUB_OUTPUT"
           else
             echo "changed=false" >> "$GITHUB_OUTPUT"
@@ -109,6 +109,6 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add assets/evidence/readme
+          git add e2e/evidence/readme
           git commit -m "chore(readme): refresh README screenshot"
           git push origin "HEAD:${{ github.head_ref }}"
