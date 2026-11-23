@@ -1,6 +1,7 @@
 import '@/i18n/setup'
 
-import { act, screen } from '@testing-library/react'
+import { act, screen, within } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
 
 import { applyLanguage } from '@/i18n/setup'
 import { anEntry, aTrip } from '@/test/calendar'
@@ -27,6 +28,48 @@ beforeEach(async () => {
 
 afterEach(() => {
   vi.unstubAllGlobals()
+})
+
+describe('deleting from the entry page', () => {
+  it('opens the day with Undo once the delete holds', async () => {
+    let deleted = false
+    const api = fakeApi({
+      'GET /auth/me': () => json(aUser()),
+      'GET /entries/entry-market': () =>
+        deleted ? failure('not_found', 404) : json({ entry: market }),
+      'GET /trips/trip-river': () =>
+        json({ trip: aTrip(), entries: deleted ? [] : [market] }),
+      'DELETE /entries/entry-market': () => {
+        deleted = true
+        return json({ changeId: 'change-delete' })
+      },
+    })
+    const user = userEvent.setup()
+    const { router } = renderRoute('/entries/entry-market')
+
+    await user.click(
+      await screen.findByRole('button', { name: 'Delete this activity' }),
+    )
+    const sheet = await screen.findByRole('alertdialog')
+    await user.click(within(sheet).getByRole('button', { name: 'Delete' }))
+
+    expect(
+      await screen.findByText('Deleted “Flower market”'),
+    ).toBeInTheDocument()
+    expect(router.state.location.pathname).toBe(
+      '/trips/trip-river/days/2031-05-15',
+    )
+    // A re-read answers not_found, which can render before the move lands.
+    const afterDelete = api.requests.slice(
+      api.requests.findIndex(({ method }) => method === 'DELETE'),
+    )
+    expect(
+      afterDelete.some(
+        ({ method, path }) =>
+          method === 'GET' && path === '/entries/entry-market',
+      ),
+    ).toBe(false)
+  })
 })
 
 describe('an entry someone else deleted', () => {
