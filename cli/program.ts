@@ -1,6 +1,7 @@
 import { Command, CommanderError } from 'commander'
 
 import packageJson from '../package.json' with { type: 'json' }
+import { registerDb } from './commands/db'
 
 export interface CliIo {
   stdout: (text: string) => void
@@ -30,9 +31,9 @@ export interface ProgramContext {
 /** Hands one command to the task runner in the checkout a verb acts on. */
 export type RunInCheckout = (command: readonly string[]) => Promise<void>
 
-export function createProgram(io: CliIo, _run: RunInCheckout): Command {
+export function createProgram(io: CliIo, run: RunInCheckout): Command {
   // Commander copies these settings onto each subcommand, so they come first.
-  return new Command('lichtrinh')
+  const program = new Command('lichtrinh')
     .description("Run the product's services from any folder")
     .version(packageJson.version)
     .exitOverride()
@@ -40,6 +41,8 @@ export function createProgram(io: CliIo, _run: RunInCheckout): Command {
       writeOut: (text) => io.stdout(text),
       writeErr: (text) => io.stderr(text),
     })
+  registerDb(program, run)
+  return program
 }
 
 /** Runs one command line and returns the exit code the process should end with. */

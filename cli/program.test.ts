@@ -33,6 +33,26 @@ describe('runCli', () => {
     expect(run.stdout().trim()).toBe(packageJson.version)
   })
 
+  it('lists the db group and no development verb in --help', async () => {
+    const run = capture()
+
+    const exitCode = await runCli(['--help'], run.context)
+
+    expect(exitCode).toBe(0)
+    expect(run.stdout()).toMatch(/^\s+db\b/m)
+    expect(run.stdout()).not.toMatch(/^\s+(dev|preview|test|check)\b/m)
+  })
+
+  it('says which checkout it acts on when it falls back to its own', async () => {
+    const run = capture({
+      findCheckout: () => ({ root: '/opt/lichtrinh', fallback: true }),
+    })
+
+    await runCli(['db', 'status'], run.context)
+
+    expect(run.stderr()).toContain('/opt/lichtrinh')
+  })
+
   it('exits non-zero and names an unknown verb', async () => {
     const run = capture()
 
