@@ -29,15 +29,20 @@ export function readConfig(
   if (app.protocol === 'http:' && !LOOPBACK.has(app.hostname)) {
     throw new Error('LICHTRINH_URL must use https outside this machine')
   }
-  const ollama = new URL(env.OLLAMA_URL || 'http://127.0.0.1:11434')
-  if (!LOOPBACK.has(ollama.hostname)) {
-    throw new Error('OLLAMA_URL must point at this machine')
-  }
   const connect = new URL('/api/bridge/connect', app)
   connect.protocol = app.protocol === 'https:' ? 'wss:' : 'ws:'
   return {
     connectUrl: connect.toString(),
     secret: env.BRIDGE_SECRET ?? '',
-    ollamaUrl: ollama.origin,
+    ollamaUrl: readOllamaUrl(env),
   }
+}
+
+/** Ollama's address, which has to be this machine. */
+export function readOllamaUrl(env: Record<string, string | undefined>) {
+  const ollama = new URL(env.OLLAMA_URL || 'http://127.0.0.1:11434')
+  if (!LOOPBACK.has(ollama.hostname)) {
+    throw new Error('OLLAMA_URL must point at this machine')
+  }
+  return ollama.origin
 }
