@@ -8,9 +8,13 @@ const statusMs = 30_000
 /**
  * Whether the workspace PC can answer, read on open and every 30 seconds
  * while the page is visible, and asked once to load the model when it first
- * reads online. Null until the first read lands.
+ * reads online. Null until the first read lands. `voiceOnline` stays null
+ * from an API that reports no voice, so the mic stays on there.
  */
-export function useAssistantStatus(): { online: boolean | null } {
+export function useAssistantStatus(): {
+  online: boolean | null
+  voiceOnline: boolean | null
+} {
   const status = useQuery({
     queryKey: chatKeys.status(),
     queryFn: readStatus,
@@ -27,5 +31,5 @@ export function useAssistantStatus(): { online: boolean | null } {
     warm().catch(() => undefined)
   }, [online])
 
-  return { online }
+  return { online, voiceOnline: status.data?.voice?.online ?? null }
 }
