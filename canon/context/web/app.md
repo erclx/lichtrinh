@@ -25,9 +25,9 @@ Holds the translation layer every screen reads its copy through, on i18next and 
 
 - `locales/en.ts` is the shape source, and `locales/vi.ts` satisfies the `Messages` type `resources.ts` derives from it, so a key in one alone fails `tsc`
 - `language.ts` picks the opening language, a device choice first, then the account's, then Vietnamese in production and English in development, and never the browser's
-- `setup.ts` starts the instance synchronously before the first render and keeps `<html lang>` in step
-- `chooseLanguage` stores a press under `lichtrinh.language`, while `applyLanguage` switches without storing, for an account's language
+- `setup.ts` starts the instance before the first render and keeps `<html lang>` in step, and its `chooseLanguage` stores a press while `applyLanguage` never does
 - `i18next.d.ts` types every `t()` key against `en.ts`, and `resources.test.ts` checks both modules hold the same keys with none empty
+- `format.ts` holds the `Intl` date formatters, each taking the language, and formats a `YYYY-MM-DD` day in UTC so the device zone never moves it
 
 ### `src/components/ui/`
 
@@ -35,6 +35,21 @@ Holds the shadcn kit on Base UI with the Nova preset, owned and edited in place.
 
 - Add a component with `bunx --bun shadcn@latest add <component>`, which reads `components.json`
 - A generated component imports `cn` from the `cn` package directly, while project code imports it from `@/lib/utils`
+
+### `src/components/`
+
+Holds the app's own components, being the mark, the language toggle, and the hand-built pickers the screens consume unchanged.
+
+- `picker-sheet.tsx` opens a drawer under 480px and a dialog from there up, under one title and close control
+- `sheet-list.tsx` is the one select, with radio rows and an optional filter that ignores diacritics
+- `date-range-sheet.tsx` renders a trip's From and To fields and the Trip dates sheet that sets both
+
+### `src/features/`
+
+Holds one folder per screen area, its rules and controls landing before its screens do.
+
+- `entries/lengths.ts` holds the half-hour start times, the six lengths, and the end a length makes
+- `day/swipe-row.tsx` reveals a row's Delete on a left drag under 1024px, never the only route to it
 
 ### `canon/design/`
 
@@ -47,9 +62,9 @@ Holds the accepted board frames a screen builds against, one group folder per ap
 
 The folders below each carry one small job.
 
-- `src/components/`: the app's own components, being the inline `brand-mark.tsx` and the VI and EN `language-toggle.tsx`, with the shadcn kit under `ui/`
+- `src/hooks/`: shared hooks, being `useMediaQuery`, which reads every query as unmatched in the test DOM
 - `public/`: the favicon, the PNG icons from 16 to 512, and the light and dark social cards, while the web manifest is not written yet
-- `src/lib/`: shared helpers, being `cn` re-exported from the `cn` package
+- `src/lib/`: shared helpers, being `cn` re-exported from the `cn` package and `month-cells.ts`, the Monday-first month the range sheet and the calendar both lay out
 - `src/test/`: the Vitest setup file the test config loads
 - `e2e/`: the Playwright specs and the screenshot harness, with its cases in `e2e/capture/cases.ts` and committed frames in `e2e/evidence/`
 

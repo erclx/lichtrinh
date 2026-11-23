@@ -5611,6 +5611,9 @@
             S.sheet = 'add'
           } else if (a === 'edel') {
             S.sheet = 'del'
+          } else if (a === 'swdel') {
+            S.eid = +el.dataset.id
+            S.sheet = 'del'
           } else if (a === 'edelok') {
             var x2 = ENT.filter(function (e) {
               return e.id === S.eid
@@ -5720,6 +5723,510 @@
           render()
         })
         render()
+      })()
+
+      /* select: arm 2, sheet list (picked on picks/select-open) */
+      ;(function () {
+        var st = document.createElement('style')
+        st.textContent =
+          'select.in{appearance:none;-webkit-appearance:none;cursor:pointer;padding-right:44px;background-image:url("data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 24 24%27 fill=%27none%27 stroke=%27%238a889e%27 stroke-width=%272.4%27 stroke-linecap=%27round%27 stroke-linejoin=%27round%27%3E%3Cpath d=%27M6 9l6 6 6-6%27/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 14px center;background-size:22px}' +
+          '.ltsel-scrim{position:fixed;inset:0;z-index:900;background:rgb(31 29 51 / .45);display:flex;align-items:flex-end;justify-content:center}' +
+          ':root[data-theme=dark] .ltsel-scrim{background:rgb(0 0 0 / .6)}' +
+          '.ltsel{width:100%;max-height:72%;display:flex;flex-direction:column;background:var(--surface);color:var(--text);border-radius:28px 28px 0 0;padding:10px 16px 16px;box-shadow:0 16px 40px rgb(31 29 51 / .16)}' +
+          '.ltsel-grip{width:56px;height:6px;border-radius:3px;background:var(--line);margin:0 auto 10px;flex:none}' +
+          '.ltsel-h{display:flex;justify-content:space-between;align-items:center;padding:4px 8px 10px;font-size:27px;line-height:1.2;font-weight:900;flex:none}' +
+          '.ltsel-x{width:56px;height:56px;border-radius:999px;border:0;background:var(--fill);color:var(--text);display:flex;align-items:center;justify-content:center;cursor:pointer}' +
+          '.ltsel-list{overflow-y:auto;overscroll-behavior:contain}' +
+          '.ltsel-o{width:100%;min-height:64px;border:0;border-radius:999px;background:transparent;color:inherit;font:inherit;font-size:21px;display:flex;align-items:center;justify-content:space-between;padding:0 20px;text-align:left;cursor:pointer}' +
+          '.ltsel-o:hover{background:var(--fill)}.ltsel-o[aria-selected=true]{background:var(--selBg);color:var(--selFg);font-weight:800}' +
+          '.ltsel-o:focus-visible,.ltsel-x:focus-visible{outline:3px solid var(--text);outline-offset:2px}' +
+          '@media (min-width:480px){.ltsel-scrim{align-items:center}.ltsel{width:440px;max-height:80%;border-radius:28px;padding:20px 16px 16px}.ltsel-grip{display:none}}'
+        document.head.appendChild(st)
+        var CHK =
+          '<svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>'
+        var XI =
+          '<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>'
+        var open = null
+        function close() {
+          if (!open) return
+          var s = open.sel
+          open.el.remove()
+          open = null
+          if (s && s.isConnected) s.focus()
+        }
+        function show(sel) {
+          if (open) close()
+          var lab = sel.previousElementSibling,
+            title = lab && lab.classList.contains('fl') ? lab.innerHTML : ''
+          var vi = document.documentElement.lang === 'vi'
+          var sc = document.createElement('div')
+          sc.className = 'ltsel-scrim'
+          var h =
+            '<div class="ltsel" role="dialog" aria-modal="true"><div class="ltsel-grip"></div><div class="ltsel-h"><span>' +
+            title +
+            '</span><button class="ltsel-x" type="button" aria-label="' +
+            (vi ? 'Đóng' : 'Close') +
+            '">' +
+            XI +
+            '</button></div><div class="ltsel-list" role="listbox">'
+          ;[].forEach.call(sel.options, function (o, i) {
+            var on = i === sel.selectedIndex
+            h +=
+              '<button type="button" class="ltsel-o" role="option" aria-selected="' +
+              on +
+              '" data-i="' +
+              i +
+              '"><span>' +
+              o.textContent +
+              '</span>' +
+              (on ? CHK : '') +
+              '</button>'
+          })
+          sc.innerHTML = h + '</div></div>'
+          document.body.appendChild(sc)
+          open = { el: sc, sel: sel }
+          var cur =
+            sc.querySelector('[aria-selected=true]') ||
+            sc.querySelector('.ltsel-o')
+          if (cur) {
+            cur.scrollIntoView({ block: 'center' })
+            cur.focus({ preventScroll: true })
+          }
+          sc.addEventListener('click', function (e) {
+            var o = e.target.closest('.ltsel-o')
+            if (o) {
+              sel.selectedIndex = +o.dataset.i
+              sel.dispatchEvent(new Event('input', { bubbles: true }))
+              sel.dispatchEvent(new Event('change', { bubbles: true }))
+              close()
+              return
+            }
+            if (e.target === sc || e.target.closest('.ltsel-x')) close()
+          })
+          sc.addEventListener('keydown', function (e) {
+            if (e.key === 'Escape') {
+              e.stopPropagation()
+              close()
+              return
+            }
+            if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+              var os = [].slice.call(sc.querySelectorAll('.ltsel-o')),
+                k =
+                  os.indexOf(document.activeElement) +
+                  (e.key === 'ArrowDown' ? 1 : -1)
+              if (os[k]) {
+                os[k].focus()
+              }
+              e.preventDefault()
+            }
+          })
+        }
+        document.addEventListener(
+          'mousedown',
+          function (e) {
+            var s = e.target.closest && e.target.closest('select.in')
+            if (s) {
+              e.preventDefault()
+              s.focus()
+              show(s)
+            }
+          },
+          true,
+        )
+        document.addEventListener(
+          'keydown',
+          function (e) {
+            var s = e.target
+            if (
+              s &&
+              s.matches &&
+              s.matches('select.in') &&
+              (e.key === 'Enter' ||
+                e.key === ' ' ||
+                e.key === 'ArrowDown' ||
+                e.key === 'ArrowUp')
+            ) {
+              e.preventDefault()
+              show(s)
+            }
+          },
+          true,
+        )
+      })()
+
+      /* dates: arm 2, range sheet (picked on picks/date-open) */
+      ;(function () {
+        var st = document.createElement('style')
+        st.textContent =
+          'input[type=date].in{cursor:pointer}input[type=date].in::-webkit-calendar-picker-indicator{display:none}' +
+          '.ltcal-h{display:flex;align-items:center;justify-content:space-between;padding:4px 4px 8px;flex:none}.ltcal-h b{font-size:22px;font-weight:800}' +
+          '.ltcal-nav{display:flex;gap:8px}.ltcal-rb{width:56px;height:56px;border-radius:999px;border:0;background:var(--fill);color:var(--text);display:flex;align-items:center;justify-content:center;cursor:pointer}' +
+          '.ltcal-dow,.ltcal-days{display:grid;grid-template-columns:repeat(7,1fr);text-align:center}.ltcal-dow span{font-size:18px;font-weight:800;color:var(--muted);padding:6px 0}' +
+          '.ltcal-d{outline:none;height:48px;border:0;background:none;color:inherit;font:inherit;font-size:21px;padding:0;display:flex;align-items:center;justify-content:center;position:relative;cursor:pointer}' +
+          '.ltcal-d span{width:48px;height:48px;border-radius:999px;display:flex;align-items:center;justify-content:center;position:relative;z-index:1}' +
+          '.ltcal-d.out{visibility:hidden}.ltcal-d.sel span{background:var(--selBg);color:var(--selFg);font-weight:800}.ltcal-d.today span{box-shadow:inset 0 0 0 2px var(--text)}' +
+          '.ltcal-d.band:before{content:"";position:absolute;inset:0;background:var(--fill)}.ltcal-d.b0:before{left:50%}.ltcal-d.b1:before{right:50%}.ltcal-d.b0.b1:before{display:none}' +
+          '.ltcal-d:focus-visible span,.ltcal-rb:focus-visible,.ltcal-done:focus-visible{outline:3px solid var(--text);outline-offset:2px}' +
+          '.ltcal-sum{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:12px 4px 0;font-size:18px;color:var(--muted);flex:none}.ltcal-sum b{color:var(--text)}' +
+          '.ltcal-done{height:56px;padding:0 24px;border-radius:999px;border:0;background:var(--action);color:var(--onAction);font:inherit;font-size:19px;font-weight:800;cursor:pointer}.ltcal-done:disabled{opacity:.45;cursor:default}'
+        document.head.appendChild(st)
+        var XI =
+          '<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>'
+        function chev(d) {
+          return (
+            '<svg viewBox="0 0 10 18" width="10" height="18" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="' +
+            d +
+            '"/></svg>'
+          )
+        }
+        function p2(n) {
+          return (n < 10 ? '0' : '') + n
+        }
+        function key(y, m, d) {
+          return y + '-' + p2(m + 1) + '-' + p2(d)
+        }
+        var open = null
+        function close() {
+          if (!open) return
+          var b = open.back
+          open.el.remove()
+          open = null
+          if (b && b.isConnected) b.focus()
+        }
+        function show(inp) {
+          if (open) close()
+          var row = inp.closest('.row2'),
+            ins = row ? row.querySelectorAll('input[type=date]') : [inp]
+          var from = ins[0],
+            to = ins[ins.length - 1]
+          var s = from.value || null,
+            e = to.value || null,
+            base = (
+              s || (typeof TODAY === 'string' ? TODAY : '2031-05-15')
+            ).split('-')
+          var y = +base[0],
+            m = +base[1] - 1
+          var sc = document.createElement('div')
+          sc.className = 'ltsel-scrim'
+          document.body.appendChild(sc)
+          open = { el: sc, back: inp }
+          function draw() {
+            var vi = document.documentElement.lang === 'vi'
+            var mn = vi
+              ? 'Tháng ' + (m + 1) + ', ' + y
+              : [
+                  'January',
+                  'February',
+                  'March',
+                  'April',
+                  'May',
+                  'June',
+                  'July',
+                  'August',
+                  'September',
+                  'October',
+                  'November',
+                  'December',
+                ][m] +
+                ' ' +
+                y
+            var dw = (
+              vi
+                ? ['T2', 'T3', 'T4', 'T5', 'T6', 'T7', 'CN']
+                : ['Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa', 'Su']
+            )
+              .map(function (x) {
+                return '<span>' + x + '</span>'
+              })
+              .join('')
+            var first = (new Date(Date.UTC(y, m, 1)).getUTCDay() + 6) % 7,
+              n = new Date(Date.UTC(y, m + 1, 0)).getUTCDate(),
+              c = ''
+            for (var i = 0; i < first; i++)
+              c += '<span class="ltcal-d out"></span>'
+            for (var d = 1; d <= n; d++) {
+              var k = key(y, m, d),
+                cl = 'ltcal-d'
+              if (k === s || k === e) cl += ' sel'
+              if (typeof TODAY === 'string' && k === TODAY) cl += ' today'
+              if (s && e && k >= s && k <= e)
+                cl += ' band' + (k === s ? ' b0' : '') + (k === e ? ' b1' : '')
+              c +=
+                '<button type="button" class="' +
+                cl +
+                '" data-k="' +
+                k +
+                '" aria-pressed="' +
+                (k === s || k === e) +
+                '"><span>' +
+                d +
+                '</span></button>'
+            }
+            function sh(k) {
+              var a = k.split('-')
+              return +a[2] + '/' + +a[1]
+            }
+            var days =
+              s && e
+                ? Math.round((Date.parse(e) - Date.parse(s)) / 864e5) + 1
+                : 0
+            var sum =
+              s && e
+                ? '<b>' +
+                  sh(s) +
+                  '</b> ' +
+                  (vi ? 'đến' : 'to') +
+                  ' <b>' +
+                  sh(e) +
+                  '</b> · ' +
+                  days +
+                  (vi ? ' ngày' : days === 1 ? ' day' : ' days')
+                : s
+                  ? '<b>' +
+                    sh(s) +
+                    '</b> · ' +
+                    (vi ? 'chọn ngày về' : 'now pick the last day')
+                  : vi
+                    ? 'Chọn ngày đi'
+                    : 'Pick the first day'
+            sc.innerHTML =
+              '<div class="ltsel" role="dialog" aria-modal="true"><div class="ltsel-grip"></div><div class="ltsel-h"><span>' +
+              (vi ? 'Ngày đi và về' : 'Trip dates') +
+              '</span><button class="ltsel-x" type="button" aria-label="' +
+              (vi ? 'Đóng' : 'Close') +
+              '">' +
+              XI +
+              '</button></div>' +
+              '<div class="ltcal-h"><b>' +
+              mn +
+              '</b><div class="ltcal-nav"><button type="button" class="ltcal-rb" data-n="-1" aria-label="' +
+              (vi ? 'Tháng trước' : 'Previous month') +
+              '">' +
+              chev('M8.5 1.5L1.5 9l7 7.5') +
+              '</button><button type="button" class="ltcal-rb" data-n="1" aria-label="' +
+              (vi ? 'Tháng sau' : 'Next month') +
+              '">' +
+              chev('M1.5 1.5L8.5 9l-7 7.5') +
+              '</button></div></div>' +
+              '<div class="ltcal-dow">' +
+              dw +
+              '</div><div class="ltcal-days">' +
+              c +
+              '</div><div class="ltcal-sum"><span>' +
+              sum +
+              '</span><button type="button" class="ltcal-done"' +
+              (s && e ? '' : ' disabled') +
+              '>' +
+              (vi ? 'Xong' : 'Done') +
+              '</button></div></div>'
+          }
+          draw()
+          var f0 =
+            sc.querySelector('.ltcal-d.sel') ||
+            sc.querySelector('.ltcal-d:not(.out)')
+          if (f0) f0.focus({ preventScroll: true })
+          sc.addEventListener('click', function (ev) {
+            var t = ev.target,
+              d = t.closest('.ltcal-d'),
+              nv = t.closest('.ltcal-rb')
+            if (d && d.dataset.k) {
+              var k = d.dataset.k
+              if (!s || (s && e)) {
+                s = k
+                e = null
+              } else if (k < s) {
+                s = k
+              } else {
+                e = k
+              }
+              draw()
+              var b = sc.querySelector('[data-k="' + k + '"]')
+              if (b) b.focus({ preventScroll: true })
+              return
+            }
+            if (nv) {
+              m += +nv.dataset.n
+              if (m < 0) {
+                m = 11
+                y--
+              }
+              if (m > 11) {
+                m = 0
+                y++
+              }
+              draw()
+              sc.querySelector('[data-n="' + nv.dataset.n + '"]').focus()
+              return
+            }
+            if (t.closest('.ltcal-done')) {
+              if (!(s && e)) return
+              from.value = s
+              to.value = e
+              ;[from, to].forEach(function (x) {
+                x.dispatchEvent(new Event('input', { bubbles: true }))
+                x.dispatchEvent(new Event('change', { bubbles: true }))
+              })
+              close()
+              return
+            }
+            if (t === sc || t.closest('.ltsel-x')) close()
+          })
+          sc.addEventListener('keydown', function (ev) {
+            if (ev.key === 'Escape') {
+              ev.stopPropagation()
+              close()
+            }
+          })
+        }
+        document.addEventListener(
+          'mousedown',
+          function (e) {
+            var s = e.target.closest && e.target.closest('input[type=date].in')
+            if (s) {
+              e.preventDefault()
+              s.focus()
+              show(s)
+            }
+          },
+          true,
+        )
+        document.addEventListener(
+          'click',
+          function (e) {
+            var s = e.target.closest && e.target.closest('input[type=date].in')
+            if (s) e.preventDefault()
+          },
+          true,
+        )
+        document.addEventListener(
+          'keydown',
+          function (e) {
+            var s = e.target
+            if (
+              s &&
+              s.matches &&
+              s.matches('input[type=date].in') &&
+              (e.key === 'Enter' || e.key === ' ' || e.key === 'ArrowDown')
+            ) {
+              e.preventDefault()
+              show(s)
+            }
+          },
+          true,
+        )
+      })()
+
+      /* swipe left to delete on an activity row, phone and tablet (asked by the operator) */
+      ;(function () {
+        var W = 104,
+          st = document.createElement('style')
+        st.textContent =
+          'ol:has(> li.e){overflow-x:clip}li.e[data-id]{position:relative;touch-action:pan-y}' +
+          'li.e.sw{transform:translateX(-' +
+          W +
+          'px)}' +
+          '.swdel{position:absolute;top:6px;bottom:6px;right:-' +
+          W +
+          'px;width:' +
+          (W - 8) +
+          'px;min-height:64px;border:0;border-radius:24px;background:var(--action);color:var(--onAction) !important;font:inherit;font-size:18px;font-weight:800;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;cursor:pointer}' +
+          '.swdel:focus-visible{outline:3px solid var(--text);outline-offset:2px}' +
+          '@media (prefers-reduced-motion:no-preference){li.e[data-id]{transition:transform .18s ease-out}li.e.drag{transition:none}}'
+        document.head.appendChild(st)
+        var TR =
+          '<svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16M9.5 7V4.5h5V7M6.5 7l1 12.5h9l1-12.5M10 11v5M14 11v5"/></svg>'
+        var d = null,
+          justSwiped = false
+        function on() {
+          return innerWidth < 1100
+        }
+        function closeAll(except) {
+          ;[].forEach.call(document.querySelectorAll('li.e.sw'), function (x) {
+            if (x !== except) {
+              x.classList.remove('sw')
+              x.style.transform = ''
+            }
+          })
+        }
+        function ensure(li) {
+          if (li.querySelector('.swdel')) return
+          var vi = document.documentElement.lang === 'vi',
+            b = document.createElement('button')
+          b.type = 'button'
+          b.className = 'swdel'
+          b.dataset.a = 'swdel'
+          b.dataset.id = li.dataset.id
+          b.innerHTML = TR + '<span>' + (vi ? 'Xoá' : 'Delete') + '</span>'
+          li.appendChild(b)
+        }
+        document.addEventListener(
+          'pointerdown',
+          function (e) {
+            if (!on()) return
+            var li = e.target.closest && e.target.closest('li.e[data-id]')
+            if (!li) {
+              closeAll()
+              return
+            }
+            if (e.target.closest('.swdel')) return
+            closeAll(li)
+            d = {
+              li: li,
+              x: e.clientX,
+              y: e.clientY,
+              open: li.classList.contains('sw'),
+              moved: false,
+            }
+          },
+          true,
+        )
+        document.addEventListener(
+          'pointermove',
+          function (e) {
+            if (!d) return
+            var dx = e.clientX - d.x,
+              dy = e.clientY - d.y
+            if (!d.moved) {
+              if (Math.abs(dx) < 10 || Math.abs(dx) < Math.abs(dy)) return
+              d.moved = true
+              ensure(d.li)
+              d.li.classList.add('drag')
+            }
+            var x = Math.max(-W, Math.min(0, (d.open ? -W : 0) + dx))
+            d.li.style.transform = 'translateX(' + x + 'px)'
+            d.cur = x
+          },
+          true,
+        )
+        function end() {
+          if (!d) return
+          var li = d.li
+          if (d.moved) {
+            justSwiped = true
+            setTimeout(function () {
+              justSwiped = false
+            }, 350)
+            li.classList.remove('drag')
+            li.style.transform = ''
+            li.classList.toggle('sw', d.cur < -W / 2)
+          }
+          d = null
+        }
+        document.addEventListener('pointerup', end, true)
+        document.addEventListener('pointercancel', end, true)
+        document.addEventListener(
+          'click',
+          function (e) {
+            var li = e.target.closest && e.target.closest('li.e[data-id]')
+            if (!li || e.target.closest('.swdel')) return
+            if (justSwiped || li.classList.contains('sw')) {
+              e.stopPropagation()
+              e.preventDefault()
+              if (!justSwiped) closeAll()
+            }
+          },
+          true,
+        )
       })()
     </script>
   </body>
