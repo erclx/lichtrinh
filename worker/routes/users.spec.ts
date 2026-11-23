@@ -13,6 +13,7 @@ import { describe, expect, it } from 'vitest'
 import { app } from '../app.ts'
 import { createDb } from '../db/client.ts'
 import { users } from '../db/schema.ts'
+import { updateUserKeepingAnAdmin } from '../db/users.ts'
 import { bare, cookieFrom, json } from '../test/requests.ts'
 import { addUser, signedIn, signIn, TEST_PASSWORD } from '../test/users.ts'
 
@@ -345,14 +346,17 @@ describe('PATCH /api/admin/users/:id', () => {
     expect(await errorCode(refused)).toBe('last_admin')
   })
 
-  it('keeps one admin when the last two are demoted together', async () => {
+  // Below the auth check, so a demoted caller's 403 cannot stand in for the guard.
+  it('lets one of two racing demotions land and refuses the other', async () => {
     const [first, second] = await onlyAdmins(2)
+    const db = createDb(env.DB)
 
-    await Promise.all([
-      edit(first.cookie, first.user.id, { role: 'member' }),
-      edit(first.cookie, second.user.id, { role: 'member' }),
+    const results = await Promise.all([
+      updateUserKeepingAnAdmin(db, first.user.id, { role: 'member' }),
+      updateUserKeepingAnAdmin(db, second.user.id, { role: 'member' }),
     ])
 
+    expect(results.filter((row) => row !== undefined)).toHaveLength(1)
     expect(await adminCount()).toBe(1)
   })
 

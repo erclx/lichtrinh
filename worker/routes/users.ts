@@ -7,14 +7,14 @@ import type {
   UserList,
 } from '@shared/users.ts'
 import { createUserRequest, updateUserRequest } from '@shared/users.ts'
-import { and, asc, eq, sql } from 'drizzle-orm'
+import { asc, eq } from 'drizzle-orm'
 import { Hono } from 'hono'
 
 import type { AuthEnv } from '../auth/guard.ts'
 import { endAllSessions } from '../auth/session.ts'
 import { createDb } from '../db/client.ts'
 import { users } from '../db/schema.ts'
-import { toUser } from '../db/users.ts'
+import { toUser, updateUserKeepingAnAdmin } from '../db/users.ts'
 import { fail, parseBody } from '../envelope.ts'
 import { logOutcome } from '../log.ts'
 
@@ -62,17 +62,7 @@ export const userRoutes = new Hono<AuthEnv>()
     const id = c.req.param('id')
     const changes = await parseBody(c, updateUserRequest)
     const db = createDb(c.env.DB)
-    // The count sits in this one statement, so racing demotions cannot both pass.
-    const keepsAnAdmin =
-      changes.role === 'member'
-        ? sql`not (${users.role} = ${'admin'} and (select count(*) from ${users} where ${users.role} = ${'admin'}) = 1)`
-        : undefined
-    const updated = await db
-      .update(users)
-      .set(changes)
-      .where(and(eq(users.id, id), keepsAnAdmin))
-      .returning()
-      .get()
+    const updated = await updateUserKeepingAnAdmin(db, id, changes)
     if (updated === undefined) {
       const exists = await db
         .select({ id: users.id })
