@@ -29,6 +29,7 @@
   "include": [
     "src",
     "shared",
+    "cli",
     "vite.config.ts",
     "vitest.config.ts",
     "drizzle.config.ts",

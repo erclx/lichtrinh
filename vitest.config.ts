@@ -64,6 +64,14 @@ export default mergeConfig(
             setupFiles: ['worker/test/apply-migrations.ts'],
           },
         },
+        {
+          extends: true,
+          test: {
+            name: 'cli',
+            environment: 'node',
+            include: ['cli/**/*.test.ts'],
+          },
+        },
       ],
     },
   }),
