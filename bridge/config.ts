@@ -8,6 +8,8 @@ export interface BridgeConfig {
   connectUrl: string
   secret: string
   ollamaUrl: string
+  /** The voice server, which listens on this machine alone. */
+  voiceUrl: string
 }
 
 /**
@@ -33,14 +35,29 @@ export function readConfig(
     connectUrl: connect.toString(),
     secret: env.BRIDGE_SECRET ?? '',
     ollamaUrl: readOllamaUrl(env),
+    voiceUrl: onThisMachine(
+      'VOICE_URL',
+      env.VOICE_URL,
+      'http://127.0.0.1:8770',
+    ),
   }
 }
 
 /** Ollama's address, which has to be this machine. */
 export function readOllamaUrl(env: Record<string, string | undefined>) {
-  const ollama = new URL(env.OLLAMA_URL || 'http://127.0.0.1:11434')
-  if (!LOOPBACK.has(ollama.hostname)) {
-    throw new Error('OLLAMA_URL must point at this machine')
+  return onThisMachine('OLLAMA_URL', env.OLLAMA_URL, 'http://127.0.0.1:11434')
+}
+
+// Ollama and the voice server hear prompts and clips, so neither may sit
+// on another machine.
+function onThisMachine(
+  name: string,
+  value: string | undefined,
+  fallback: string,
+) {
+  const url = new URL(value || fallback)
+  if (!LOOPBACK.has(url.hostname)) {
+    throw new Error(`${name} must point at this machine`)
   }
-  return ollama.origin
+  return url.origin
 }

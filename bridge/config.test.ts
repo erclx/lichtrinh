@@ -13,6 +13,7 @@ describe('readConfig', () => {
       connectUrl: 'wss://calendar.invented.example/api/bridge/connect',
       secret: 'secret',
       ollamaUrl: 'http://127.0.0.1:11434',
+      voiceUrl: 'http://127.0.0.1:8770',
     })
   })
 
@@ -48,5 +49,25 @@ describe('readConfig', () => {
         OLLAMA_URL: 'http://192.0.2.10:11434',
       }),
     ).toThrow('this machine')
+  })
+
+  it('refuses a voice server that is not on this machine', () => {
+    expect(() =>
+      readConfig({
+        LICHTRINH_URL: 'http://localhost:5173',
+        BRIDGE_SECRET: 'secret',
+        VOICE_URL: 'http://192.0.2.10:8770',
+      }),
+    ).toThrow('VOICE_URL must point at this machine')
+  })
+
+  it('takes a voice server on another local port', () => {
+    const config = readConfig({
+      LICHTRINH_URL: 'http://localhost:5173',
+      BRIDGE_SECRET: 'secret',
+      VOICE_URL: 'http://127.0.0.1:9100',
+    })
+
+    expect(config.voiceUrl).toBe('http://127.0.0.1:9100')
   })
 })
