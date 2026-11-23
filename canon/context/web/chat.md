@@ -11,7 +11,7 @@ Owns the browser half of talking to the assistant, for an account whose `canChat
 
 ## Layout
 
-### `src/features/chat/`
+### `web/features/chat/`
 
 Holds the chat list, one thread with its composer, and the places each width draws a thread, all reading the chat routes through the `shared/chats.ts` schemas.
 
@@ -21,7 +21,7 @@ Holds the chat list, one thread with its composer, and the places each width dra
 - `change-card.tsx` undoes through the calendar's undo with one `undoId` per card, so a press retried after a lost answer reaches the stored undo
 - The shell renders `chat-dock.tsx` from 1024 wide, as a half sheet from 480, and `talk-bar.tsx` otherwise, standing both aside on the chat pages
 
-### `src/features/chat/voice/`
+### `web/features/chat/voice/`
 
 Holds the mic in the composer, from a tap to the words landing in the box for the traveler to fix before Send.
 

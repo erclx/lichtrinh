@@ -67,7 +67,7 @@
         "scripts/verify.json": "sha256:5e9e1e78b1f5dafcc39baeba83d140975fbf0df5336c8afdd0267cd4749f1f85",
         "scripts/verify.ts": "sha256:60c1e951c29a438ec60bacf5c4e23f41448e7f791739fe3640e3f10925d9d0ba",
         "scripts/worktree-port.sh": "sha256:77672f787a296ba315377c36d3a88a861fd829bfebe17e97087839dfd2bb8a65",
-        "src/test/setup.ts": "sha256:81c5f1d7ba79bea949bc636250c52d71d18f2d56bfeff58ac15181786b93211d",
+        "web/test/setup.ts": "sha256:81c5f1d7ba79bea949bc636250c52d71d18f2d56bfeff58ac15181786b93211d",
         "tsconfig.json": "sha256:813fa919da021c1d06b3166d60aa99038888f1926ee8b0fca13312c7cfed8175",
         "vite.config.ts": "sha256:e4a7c35d6c0991d140fab883cefe9052954174dd33d951320619c4b59ae9c724",
         "vitest.config.ts": "sha256:5ab9ea52520240ca08f6ca59679e5c09c8b5e12151fc7dabb40a96f1ad3262c1"

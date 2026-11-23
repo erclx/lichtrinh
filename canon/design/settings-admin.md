@@ -9,12 +9,12 @@ Rows v02.1 and v01.6 build these screens. These frames are a reference, and wher
 
 ## Code
 
-- `src/features/settings/settings-page.tsx`: settings, holding Language, Manage accounts, and Sign out
-- `src/features/accounts/accounts-page.tsx`: the accounts list, with the reset confirm in `reset-confirm.tsx`
-- `src/features/accounts/create-account-page.tsx`: creating an account
-- `src/features/accounts/edit-account-page.tsx`: editing an account, with no frame of its own, built from the create frame's fields
-- `src/features/accounts/password-once.tsx`: the password shown once after a create or a reset
-- `src/features/assistant-settings/assistant-settings-page.tsx`: the admin's assistant page, holding the home computer card, both model choices, and the offline contact name, with its calls in `assistant-settings-api.ts`
+- `web/features/settings/settings-page.tsx`: settings, holding Language, Manage accounts, and Sign out
+- `web/features/accounts/accounts-page.tsx`: the accounts list, with the reset confirm in `reset-confirm.tsx`
+- `web/features/accounts/create-account-page.tsx`: creating an account
+- `web/features/accounts/edit-account-page.tsx`: editing an account, with no frame of its own, built from the create frame's fields
+- `web/features/accounts/password-once.tsx`: the password shown once after a create or a reset
+- `web/features/assistant-settings/assistant-settings-page.tsx`: the admin's assistant page, holding the home computer card, both model choices, and the offline contact name, with its calls in `assistant-settings-api.ts`
 - The page lists the two local aliases in place of the frame's Claude rows
 - The speech recognition section adds a usage line under each model, which the frame does not draw
 

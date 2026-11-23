@@ -19,7 +19,7 @@ bun run check
 
 | Path       | What it holds                                    |
 | ---------- | ------------------------------------------------ |
-| `src/`     | The React front end                              |
+| `web/`     | The React front end                              |
 | `canon/`   | Requirements, design record, and context entries |
 | `e2e/`     | Playwright end-to-end tests                      |
 | `scripts/` | The shell scripts behind the package scripts     |

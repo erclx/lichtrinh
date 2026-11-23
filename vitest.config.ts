@@ -8,6 +8,10 @@ import viteConfig from './vite.config.ts'
 export default mergeConfig(
   viteConfig,
   defineConfig({
+    // Its own prebundle, since the merged config would otherwise share
+    // `node_modules/.vite` with the dev server, and a check run during a
+    // review drive would rewrite the deps under the running preview.
+    cacheDir: 'node_modules/.vite-vitest',
     test: {
       passWithNoTests: true,
       exclude: [
@@ -21,7 +25,7 @@ export default mergeConfig(
         reporter: ['text', 'json', 'html'],
         exclude: [
           'node_modules/',
-          'src/test/setup.ts',
+          'web/test/setup.ts',
           'e2e/',
           'worker/test/**',
           'worker/db/migrations/**',
@@ -37,8 +41,8 @@ export default mergeConfig(
             name: 'web',
             environment: 'jsdom',
             globals: true,
-            setupFiles: ['src/test/setup.ts'],
-            include: ['src/**/*.test.{ts,tsx}', 'shared/**/*.test.ts'],
+            setupFiles: ['web/test/setup.ts'],
+            include: ['web/**/*.test.{ts,tsx}', 'shared/**/*.test.ts'],
           },
         },
         {

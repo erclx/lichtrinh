@@ -23,12 +23,12 @@
       "node"
     ],
     "paths": {
-      "@/*": ["./src/*"],
+      "@/*": ["./web/*"],
       "@shared/*": ["./shared/*"]
     }
   },
   "include": [
-    "src",
+    "web",
     "shared",
     "cli",
     "bridge",

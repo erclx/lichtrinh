@@ -8,6 +8,6 @@ export const site = {
   name: 'Site name',
   /** The default description, for a page that passes none of its own. */
   description: 'One sentence saying what this site is for.',
-  /** A path under `public/`, resolved against the site address. */
+  /** A path under `web/public/`, resolved against the site address. */
   card: '/og-image.png',
 }

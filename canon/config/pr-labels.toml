@@ -44,7 +44,7 @@ docs = [
   "CONTRIBUTING.md",
   "SECURITY.md",
 ]
-app = ["src/", "index.html", "public/", "components.json"]
+app = ["web/", "index.html", "components.json"]
 api = ["worker/", "wrangler.jsonc", "drizzle.config.ts"]
 shared = ["shared/"]
 e2e = ["e2e/"]
@@ -58,6 +58,6 @@ cli = ["cli/"]
 # Release automation opens its own pull request and applies its own label.
 release-managed = ["CHANGELOG.md", ".release-please-manifest.json"]
 # Generated evidence screenshots are captured output, not source.
-generated = ["assets/evidence/"]
+generated = ["e2e/evidence/readme/"]
 # Licence text is legal boilerplate with no surface to label.
 licence-text = ["LICENSE"]

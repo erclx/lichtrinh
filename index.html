@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <script>
-      // Runs before the first paint so the page never flashes the other theme. The key and its values match src/features/settings/appearance.ts, which this script cannot import, and the listener rereads the choice so Light or Dark survives a scheme flip.
+      // Runs before the first paint so the page never flashes the other theme. The key and its values match web/features/settings/appearance.ts, which this script cannot import, and the listener rereads the choice so Light or Dark survives a scheme flip.
       ;(function () {
         var scheme = window.matchMedia('(prefers-color-scheme: dark)')
         function stored() {
@@ -45,6 +45,6 @@
   </head>
   <body>
     <div id="root"></div>
-    <script type="module" src="/src/main.tsx"></script>
+    <script type="module" src="/web/main.tsx"></script>
   </body>
 </html>
