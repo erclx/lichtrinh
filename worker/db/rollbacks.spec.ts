@@ -19,10 +19,25 @@ async function appliedMigrations() {
   return results.map((row) => row.name)
 }
 
+async function columnsOf(table: string) {
+  const { results } = await env.DB.prepare(
+    'select name from pragma_table_info(?)',
+  )
+    .bind(table)
+    .all<{ name: string }>()
+  return results.map((row) => row.name)
+}
+
+async function rollBack(name: string) {
+  const rollback = env.TEST_ROLLBACKS.find((r) => r.name === name)
+  if (rollback === undefined) throw new Error(`No rollback named ${name}`)
+  await env.DB.batch(rollback.queries.map((q) => env.DB.prepare(q)))
+}
+
 async function rollBackEverything() {
   const newestFirst = [...env.TEST_ROLLBACKS].reverse()
   for (const rollback of newestFirst) {
-    await env.DB.batch(rollback.queries.map((q) => env.DB.prepare(q)))
+    await rollBack(rollback.name)
   }
 }
 
@@ -46,6 +61,32 @@ describe('migrations', () => {
     const rollbacks = env.TEST_ROLLBACKS.map((r) => r.name)
 
     expect(rollbacks).toEqual(migrations)
+  })
+})
+
+describe('rolling back the accounts migration', () => {
+  it('leaves the users table alone', async () => {
+    await rollBack('0001_accounts.sql')
+
+    expect(await appTables()).toEqual(['users'])
+  })
+
+  it('drops the sign-in, chat, and language columns from users', async () => {
+    await rollBack('0001_accounts.sql')
+
+    expect(await columnsOf('users')).toEqual([
+      'id',
+      'username',
+      'display_name',
+      'role',
+      'created_at',
+    ])
+  })
+
+  it('removes its own d1_migrations row alone', async () => {
+    await rollBack('0001_accounts.sql')
+
+    expect(await appliedMigrations()).toEqual(['0000_init.sql'])
   })
 })
 
