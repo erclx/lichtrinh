@@ -48,6 +48,7 @@ export default mergeConfig(
               wrangler: { configPath: './wrangler.jsonc' },
               miniflare: {
                 bindings: {
+                  BRIDGE_SECRET: 'test-bridge-secret',
                   TEST_MIGRATIONS: await readD1Migrations(
                     path.join(import.meta.dirname, 'worker/db/migrations'),
                   ),

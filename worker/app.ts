@@ -5,6 +5,7 @@ import { HTTPException } from 'hono/http-exception'
 
 import { type AuthEnv, requireAdmin, requireSession } from './auth/guard.ts'
 import { fail } from './envelope.ts'
+import { assistantRoutes } from './routes/assistant.ts'
 import { authRoutes } from './routes/auth.ts'
 import { changeRoutes } from './routes/changes.ts'
 import { entryRoutes } from './routes/entries.ts'
@@ -59,6 +60,7 @@ app.route('/', settingsRoutes)
 app.route('/', tripRoutes)
 app.route('/', entryRoutes)
 app.route('/', changeRoutes)
+app.route('/', assistantRoutes)
 
 app.notFound((c) => c.json(fail('not_found', 'No such API route'), 404))
 

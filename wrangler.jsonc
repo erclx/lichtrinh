@@ -18,4 +18,15 @@
       "migrations_dir": "worker/db/migrations",
     },
   ],
+  "durable_objects": {
+    "bindings": [
+      // One instance holds the workspace PC's bridge socket and the turn it
+      // is answering.
+      { "name": "ASSISTANT_RELAY", "class_name": "AssistantRelay" },
+    ],
+  },
+  "migrations": [
+    // SQLite is the only Durable Object storage the free plan offers.
+    { "tag": "v1", "new_sqlite_classes": ["AssistantRelay"] },
+  ],
 }

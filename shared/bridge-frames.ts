@@ -24,6 +24,8 @@ export type TurnMessage = z.infer<typeof turnMessage>
 
 /** Frames the relay sends down to the bridge. */
 export const downFrame = z.discriminatedUnion('type', [
+  // Answers a hello in the relay's protocol, so the bridge knows it is online.
+  z.strictObject({ type: z.literal('ready') }),
   z.strictObject({
     type: z.literal('turn'),
     turnId,

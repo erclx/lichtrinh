@@ -38,6 +38,9 @@ const REFUSALS = {
   currency_has_costs: [409, 'Entries carry costs in the current currency'],
   undo_conflict: [409, 'A later change touched this, so it cannot be undone'],
   already_undone: [409, 'That change is already undone'],
+  assistant_unavailable: [503, 'The workspace PC is not connected'],
+  assistant_busy: [409, 'The assistant is answering another message'],
+  no_trip: [409, 'There is no trip for a chat to plan'],
 } as const satisfies Partial<
   Record<ApiErrorCode, readonly [ContentfulStatusCode, string]>
 >

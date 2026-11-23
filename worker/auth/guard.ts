@@ -13,7 +13,13 @@ export interface AuthEnv {
 
 // The only routes a signed-out caller reaches. Every other path, an unknown
 // one included, needs a session, so a new route is protected by default.
-const SIGNED_OUT_ROUTES = new Set(['GET /api/health', 'POST /api/auth/sign-in'])
+// The bridge's socket holds a secret rather than a session, which its own
+// route checks.
+const SIGNED_OUT_ROUTES = new Set([
+  'GET /api/health',
+  'POST /api/auth/sign-in',
+  'GET /api/bridge/connect',
+])
 
 export const requireSession = createMiddleware<AuthEnv>(async (c, next) => {
   if (SIGNED_OUT_ROUTES.has(`${c.req.method} ${c.req.path}`)) return next()
@@ -29,6 +35,15 @@ export const requireSession = createMiddleware<AuthEnv>(async (c, next) => {
 export const requireAdmin = createMiddleware<AuthEnv>(async (c, next) => {
   if (c.var.user.role !== 'admin') {
     return c.json(fail('forbidden', 'Admin only'), 403)
+  }
+  await next()
+})
+
+// Read off the session on every request, so the admin turning chat off
+// refuses the account's next call.
+export const requireChat = createMiddleware<AuthEnv>(async (c, next) => {
+  if (!c.var.user.canChat) {
+    return c.json(fail('forbidden', 'Chat is off for this account'), 403)
   }
   await next()
 })
