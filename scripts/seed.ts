@@ -1,7 +1,6 @@
 // Migrates the database under LICHTRINH_STATE_ROOT, the checkout by default,
-// and writes the invented accounts e2e, captures, and drives sign in with,
-// plus two invented trips with their entries and costs. Every account is
-// invented, so its password is public by design.
+// and writes the invented accounts, trips, and entries e2e, captures, and
+// drives read. Every account is invented, so its password is public.
 
 import { spawnSync } from 'node:child_process'
 import { join, resolve } from 'node:path'

@@ -96,8 +96,7 @@ describe('dayRows', () => {
   })
 
   it('reads the clock in the entry’s zone, never the device’s', () => {
-    // 09:30 in Vietnam is 04:30 in Paris, so the same instant is still
-    // before a Paris entry at 09:00.
+    // 09:30 in Vietnam is 04:30 in Paris, still before a Paris entry at 09:00.
     const paris = anEntry({ timeZone: 'Europe/Paris' })
 
     const rows = dayRows([paris], '2031-05-15', halfPastNine)
