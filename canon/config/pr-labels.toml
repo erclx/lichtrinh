@@ -25,6 +25,14 @@ tooling = [
   "package.json",
   "bun.lock",
   "canon/config/",
+  ".oxlintrc.json",
+  "tsconfig.json",
+  "tsconfig.app.json",
+  "tsconfig.node.json",
+  "vite.config.ts",
+  "vitest.config.ts",
+  "playwright.config.ts",
+  "release-please-config.json",
 ]
 claude = [".claude/", "CLAUDE.md"]
 docs = [
@@ -33,9 +41,22 @@ docs = [
   "canon/REQUIREMENTS.md",
   "canon/DESIGN.md",
   "canon/context/",
+  "CONTRIBUTING.md",
+  "SECURITY.md",
 ]
+app = ["src/", "index.html", "public/", "components.json"]
+api = ["worker/", "wrangler.jsonc", "drizzle.config.ts"]
+shared = ["shared/"]
+e2e = ["e2e/"]
+voice = ["voice/"]
+design = ["canon/design/"]
+cli = ["cli/"]
 
 # Paths deliberately left unlabelled, keyed by the reason.
 [declined]
 # Release automation opens its own pull request and applies its own label.
 release-managed = ["CHANGELOG.md", ".release-please-manifest.json"]
+# Generated evidence screenshots are captured output, not source.
+generated = ["assets/evidence/"]
+# Licence text is legal boilerplate with no surface to label.
+licence-text = ["LICENSE"]
