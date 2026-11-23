@@ -4,6 +4,7 @@ import { AccountsPage } from '@/features/accounts/accounts-page'
 import { CreateAccountPage } from '@/features/accounts/create-account-page'
 import { EditAccountPage } from '@/features/accounts/edit-account-page'
 import { AssistantSettingsPage } from '@/features/assistant-settings/assistant-settings-page'
+import { BudgetPage } from '@/features/budget/budget-page'
 import { ChatListPage } from '@/features/chat/chat-list-page'
 import { ThreadPage } from '@/features/chat/thread-page'
 import { DayPage } from '@/features/day/day-view'
@@ -36,6 +37,7 @@ export const routes: RouteObject[] = [
           { path: 'trips/new', element: <TripForm /> },
           { path: 'trips/:tripId', element: <TripOverview /> },
           { path: 'trips/:tripId/days/:date', element: <DayPage /> },
+          { path: 'trips/:tripId/budget', element: <BudgetPage /> },
           { path: 'entries/new', element: <AddEntryPage /> },
           { path: 'entries/:entryId', element: <EntryDetail /> },
           { path: 'entries/:entryId/edit', element: <EditEntryPage /> },
