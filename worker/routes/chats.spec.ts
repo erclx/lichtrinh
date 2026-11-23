@@ -164,7 +164,12 @@ describe('POST /api/chats/:id/messages', () => {
     const res = await sendMessage(cookie, chatId, body)
     const turn = await bridge.next()
     if (turn.type !== 'turn') throw new Error(`Expected turn, got ${turn.type}`)
-    bridge.send({ type: 'final', turnId: turn.turnId, text: 'Invented reply' })
+    bridge.send({
+      type: 'final',
+      turnId: turn.turnId,
+      text: 'Invented reply',
+      heldRemoval: false,
+    })
     await readEvents(res)
     return bridge
   }
@@ -187,6 +192,29 @@ describe('POST /api/chats/:id/messages', () => {
       await (await getThread(cookie, chat.id)).json(),
     )
     expect(thread.messages).toHaveLength(2)
+  })
+
+  it('answers a retry of a failed reply with error, not done', async () => {
+    const { cookie, chat } = await chatterWithChat()
+    const body = { id: crypto.randomUUID(), text: 'Invented ask' }
+    const bridge = await connectBridge()
+    open.push(bridge)
+    const first = await sendMessage(cookie, chat.id, body)
+    const turn = await bridge.next()
+    if (turn.type !== 'turn') throw new Error(`Expected turn, got ${turn.type}`)
+    bridge.send({ type: 'failed', turnId: turn.turnId, reason: 'model_error' })
+    await readEvents(first)
+
+    const retry = await sendMessage(cookie, chat.id, body)
+
+    expect(await readEvents(retry)).toEqual([
+      expect.objectContaining({
+        type: 'error',
+        code: 'assistant_failed',
+        changed: false,
+        message: expect.objectContaining({ status: 'failed' }),
+      }),
+    ])
   })
 
   it('refuses a reused message id carrying another text', async () => {

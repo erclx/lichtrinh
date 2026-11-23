@@ -138,6 +138,7 @@ export async function recentMessages(db: Db, chatId: string, count: number) {
       id: chatMessages.id,
       role: chatMessages.role,
       text: chatMessages.text,
+      heldRemoval: chatMessages.heldRemoval,
     })
     .from(chatMessages)
     .where(eq(chatMessages.chatId, chatId))
@@ -182,6 +183,7 @@ export async function saveUserMessage(
         model: null,
         changeIds: '[]',
         replyTo: null,
+        heldRemoval: false,
         createdAt: at,
       })
       .onConflictDoNothing(),
@@ -202,6 +204,7 @@ export interface Reply {
   status: MessageStatus
   model: AssistantModel
   changeIds: string[]
+  heldRemoval: boolean
 }
 
 /** Saves the assistant's reply to a message and reads it back whole. */
@@ -219,6 +222,7 @@ export async function saveReply(db: Db, reply: Reply, at: Date) {
         model: reply.model,
         changeIds: JSON.stringify(reply.changeIds),
         replyTo: reply.replyTo,
+        heldRemoval: reply.heldRemoval,
         createdAt: at,
       })
       .onConflictDoNothing(),

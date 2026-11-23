@@ -138,6 +138,7 @@ async function runOne(host: string, model: AssistantModel, text: string) {
         text,
         at: new Date(fixtures.trip.now),
       }),
+      removalAsked: false,
     },
     {
       model: turnModel(host),

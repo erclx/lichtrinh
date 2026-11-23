@@ -30,6 +30,9 @@ export const downFrame = z.discriminatedUnion('type', [
     turnId,
     model: assistantModel,
     messages: z.array(turnMessage),
+    // The reply before this message was the guard holding several removals
+    // for a yes, so this turn may remove them.
+    removalAsked: z.boolean(),
   }),
   z.strictObject({
     type: z.literal('tool_result'),
@@ -63,7 +66,13 @@ export const upFrame = z.discriminatedUnion('type', [
     name: z.string(),
     arguments: z.unknown(),
   }),
-  z.strictObject({ type: z.literal('final'), turnId, text: z.string() }),
+  z.strictObject({
+    type: z.literal('final'),
+    turnId,
+    text: z.string(),
+    // The guard refused removals this turn, so the reply asks for a yes.
+    heldRemoval: z.boolean(),
+  }),
   z.strictObject({ type: z.literal('failed'), turnId, reason: failReason }),
 ])
 export type UpFrame = z.infer<typeof upFrame>

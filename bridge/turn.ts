@@ -103,7 +103,7 @@ async function loop(
       if (reply.trim() === '' && !calledAny) {
         up({ type: 'failed', turnId, reason: 'empty_reply' })
       } else {
-        up({ type: 'final', turnId, text: reply })
+        up({ type: 'final', turnId, text: reply, heldRemoval: guard.held() })
       }
       return
     }
@@ -154,23 +154,22 @@ const CONFIRM_FIRST = {
 }
 
 /**
- * Holds a turn to one removal unless the last reply asked a question. A
+ * Holds a turn to one removal unless the guard held the turn before it. A
  * round asking for several is refused whole, so none lands before the ask.
  */
 function removalGuard(turn: TurnFrame) {
-  const lastReply = turn.messages
-    .slice(0, -1)
-    .findLast((message) => message.role === 'assistant')
-  const asked = lastReply?.content.trim().endsWith('?') ?? false
   let removed = 0
+  let held = false
   return {
     check(names: string[]): (Record<string, unknown> | undefined)[] {
       const removals = names.filter((name) => name === 'remove_entry').length
-      const allowed = asked || removed + removals <= 1
+      const allowed = turn.removalAsked || removed + removals <= 1
       if (allowed) removed += removals
+      else held = true
       return names.map((name) =>
         name === 'remove_entry' && !allowed ? CONFIRM_FIRST : undefined,
       )
     },
+    held: () => held,
   }
 }

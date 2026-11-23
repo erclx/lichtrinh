@@ -51,7 +51,7 @@ Holds the process the workspace PC runs beside Ollama, which dials out to the ap
 - Put `LICHTRINH_URL` and `BRIDGE_SECRET` in `~/.config/lichtrinh/bridge.env`, source it, and start `lichtrinh bridge run`. The secret matches the Worker's, a `.dev.vars` line locally.
 - `bun run dev` passes the socket upgrade through to the relay, so `LICHTRINH_URL=http://localhost:5173` plus the worktree offset serves a local run
 - `lichtrinh bridge eval` scores an alias live on the invented asks in `bridge/fixtures/requests.json` and exits non-zero under 26 of 30
-- `turn.ts` is the tool loop, capped at six rounds and 110 seconds. It sends every tool call up to the relay and refuses a second removal in a turn until the traveler has answered a question.
+- `turn.ts` is the tool loop, capped at six rounds and 110 seconds. It sends every tool call up to the relay and refuses a second removal in a turn unless it held the turn before for a yes.
 
 ### `voice/`
 

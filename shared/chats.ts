@@ -64,8 +64,9 @@ export const chatThread = z.strictObject({
 export type ChatThread = z.infer<typeof chatThread>
 
 /**
- * A message to send. The client generates `id`, so a retry after a lost
- * stream answers the saved reply rather than running a second turn.
+ * A message to send under a client id. A retry answers the saved reply,
+ * a failed or stopped one included, so sending a failed message again
+ * takes a new id.
  */
 export const sendMessageRequest = z.strictObject({
   id: z.uuid(),

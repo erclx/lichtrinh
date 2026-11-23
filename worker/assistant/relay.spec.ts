@@ -9,6 +9,8 @@ import type { FakeBridge } from '../test/bridge.ts'
 import { connectBridge } from '../test/bridge.ts'
 import { chatterWithChat, readEvents, sendMessage } from '../test/chats.ts'
 import { bare } from '../test/requests.ts'
+import type { TurnInput } from './relay.ts'
+import { relayOf } from './relay.ts'
 
 const open: FakeBridge[] = []
 
@@ -67,7 +69,12 @@ describe('a whole turn through the relay', () => {
     })
     const result = await nextOf(bridge, 'tool_result')
     bridge.send({ type: 'delta', turnId: turn.turnId, text: 'Added.' })
-    bridge.send({ type: 'final', turnId: turn.turnId, text: 'Added.' })
+    bridge.send({
+      type: 'final',
+      turnId: turn.turnId,
+      text: 'Added.',
+      heldRemoval: false,
+    })
     const events = await readEvents(res)
 
     expect(res.status).toBe(200)
@@ -115,7 +122,12 @@ describe('a whole turn through the relay', () => {
       arguments: ADD,
     })
     await nextOf(bridge, 'tool_result')
-    bridge.send({ type: 'final', turnId: turn.turnId, text: 'Added.' })
+    bridge.send({
+      type: 'final',
+      turnId: turn.turnId,
+      text: 'Added.',
+      heldRemoval: false,
+    })
     await readEvents(res)
 
     const thread = await readThread(cookie, chat.id)
@@ -141,7 +153,12 @@ describe('a whole turn through the relay', () => {
     expect(apiError.parse(await second.json()).error.code).toBe(
       'assistant_busy',
     )
-    bridge.send({ type: 'final', turnId: turn.turnId, text: 'Done.' })
+    bridge.send({
+      type: 'final',
+      turnId: turn.turnId,
+      text: 'Done.',
+      heldRemoval: false,
+    })
     await readEvents(first)
   })
 
@@ -155,12 +172,78 @@ describe('a whole turn through the relay', () => {
     const retry = await sendMessage(cookie, chat.id, { id })
 
     expect(retry.status).toBe(409)
-    bridge.send({ type: 'final', turnId: turn.turnId, text: 'Done.' })
+    bridge.send({
+      type: 'final',
+      turnId: turn.turnId,
+      text: 'Done.',
+      heldRemoval: false,
+    })
     await readEvents(first)
   })
 })
 
+describe('holding several removals for a yes', () => {
+  it('tells the next turn the reply before it held removals', async () => {
+    const { cookie, chat } = await chatterWithChat()
+    const bridge = await bridgeOnline()
+    const first = await sendMessage(cookie, chat.id)
+    const held = await nextOf(bridge, 'turn')
+    bridge.send({
+      type: 'final',
+      turnId: held.turnId,
+      text: 'Both?',
+      heldRemoval: true,
+    })
+    await readEvents(first)
+
+    const second = await sendMessage(cookie, chat.id)
+    const next = await nextOf(bridge, 'turn')
+
+    expect(held.removalAsked).toBe(false)
+    expect(next.removalAsked).toBe(true)
+    bridge.send({
+      type: 'final',
+      turnId: next.turnId,
+      text: 'Done.',
+      heldRemoval: false,
+    })
+    await readEvents(second)
+  })
+})
+
 describe('a turn that breaks off', () => {
+  it('frees the relay when saving the message throws', async () => {
+    const { cookie, chat, user, trip } = await chatterWithChat()
+    const bridge = await bridgeOnline()
+    const broken = relayOf(env).fetch('https://relay/turn', {
+      method: 'POST',
+      body: JSON.stringify({
+        chatId: 'no-such-chat',
+        ownerId: user.id,
+        tripId: trip.id,
+        messageId: crypto.randomUUID(),
+        text: 'Invented ask',
+        model: 'lichtrinh-assistant',
+        messages: [],
+        versions: {},
+        removalAsked: false,
+      } satisfies TurnInput),
+    })
+    await expect(broken).rejects.toThrow()
+
+    const res = await sendMessage(cookie, chat.id)
+
+    expect(res.status).toBe(200)
+    const turn = await nextOf(bridge, 'turn')
+    bridge.send({
+      type: 'final',
+      turnId: turn.turnId,
+      text: 'Done.',
+      heldRemoval: false,
+    })
+    await readEvents(res)
+  })
+
   it('keeps a write made before the socket closed and says something changed', async () => {
     const { cookie, chat } = await chatterWithChat()
     const bridge = await connectBridge()
@@ -217,7 +300,12 @@ describe('a turn that breaks off', () => {
     const res = await sendMessage(cookie, chat.id)
     const turn = await nextOf(bridge, 'turn')
 
-    bridge.send({ type: 'final', turnId: turn.turnId, text: '  ' })
+    bridge.send({
+      type: 'final',
+      turnId: turn.turnId,
+      text: '  ',
+      heldRemoval: false,
+    })
     const events = await readEvents(res)
 
     expect(events.at(-1)).toMatchObject({
@@ -254,7 +342,12 @@ describe('a turn that breaks off', () => {
 
     expect(second.status).toBe(200)
     const next = await nextOf(bridge, 'turn')
-    bridge.send({ type: 'final', turnId: next.turnId, text: 'Done.' })
+    bridge.send({
+      type: 'final',
+      turnId: next.turnId,
+      text: 'Done.',
+      heldRemoval: false,
+    })
     await readEvents(second)
   })
 })

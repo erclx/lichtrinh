@@ -8,7 +8,7 @@ import { runTurn } from './turn.ts'
 
 const ADD = { title: 'Ăn trưa ở bến tàu', date: '2031-04-11', start: '12:00' }
 
-function turnFrame(messages: TurnMessage[] = []) {
+function turnFrame(messages: TurnMessage[] = [], removalAsked = false) {
   return {
     type: 'turn' as const,
     turnId: 'turn-1',
@@ -18,19 +18,24 @@ function turnFrame(messages: TurnMessage[] = []) {
       ...messages,
       { role: 'user' as const, content: 'them an trua o ben tau luc 12 gio' },
     ],
+    removalAsked,
   }
 }
 
 /** Runs a turn against scripted rounds, answering every tool call `ok`. */
 async function run(
   rounds: Round[],
-  options: { messages?: TurnMessage[]; timeoutMs?: number } = {},
+  options: {
+    messages?: TurnMessage[]
+    removalAsked?: boolean
+    timeoutMs?: number
+  } = {},
 ) {
   const fake = fakeModel(rounds)
   const sent: UpFrame[] = []
   const called: ToolCallFrame[] = []
   const turn = runTurn(
-    turnFrame(options.messages),
+    turnFrame(options.messages, options.removalAsked),
     {
       model: fake.model,
       send: (frame) => sent.push(frame),
@@ -54,7 +59,12 @@ describe('a turn with no tool call', () => {
     expect(sent).toEqual([
       { type: 'delta', turnId: 'turn-1', text: 'Chào ' },
       { type: 'delta', turnId: 'turn-1', text: 'bạn.' },
-      { type: 'final', turnId: 'turn-1', text: 'Chào bạn.' },
+      {
+        type: 'final',
+        turnId: 'turn-1',
+        text: 'Chào bạn.',
+        heldRemoval: false,
+      },
     ])
   })
 
@@ -66,6 +76,7 @@ describe('a turn with no tool call', () => {
       type: 'final',
       turnId: 'turn-1',
       text: 'Bạn muốn dời lịch nào?',
+      heldRemoval: false,
     })
   })
 
@@ -111,6 +122,7 @@ describe('a turn with tool calls', () => {
       type: 'final',
       turnId: 'turn-1',
       text: 'Đã thêm.',
+      heldRemoval: false,
     })
   })
 
@@ -199,7 +211,7 @@ describe('removing several entries', () => {
       'confirm_first',
       'confirm_first',
     ])
-    expect(sent.at(-1)).toMatchObject({ type: 'final' })
+    expect(sent.at(-1)).toMatchObject({ type: 'final', heldRemoval: true })
   })
 
   it('refuses a second removal in a later round of the same turn', async () => {
@@ -212,18 +224,34 @@ describe('removing several entries', () => {
     expect(called.map((frame) => frame.arguments)).toEqual([{ entry_id: 'e1' }])
   })
 
-  it('removes several once the traveler said yes to the question', async () => {
-    const { called } = await run([[removeTwo], [text('Đã xóa.')]], {
+  it('removes several in the turn after the guard held them for a yes', async () => {
+    const { called, sent } = await run([[removeTwo], [text('Đã xóa.')]], {
       messages: [
         { role: 'user', content: 'xoa het lich thu bay' },
         { role: 'assistant', content: 'Xóa cả hai lịch ngày thứ bảy nhé?' },
       ],
+      removalAsked: true,
     })
 
     expect(called.map((frame) => frame.arguments)).toEqual([
       { entry_id: 'e1' },
       { entry_id: 'e2' },
     ])
+    expect(sent.at(-1)).toMatchObject({ type: 'final', heldRemoval: false })
+  })
+
+  it('still holds several removals after a reply that asked something else', async () => {
+    const { called } = await run(
+      [[removeTwo], [text('Xóa cả hai lịch ngày thứ bảy nhé?')]],
+      {
+        messages: [
+          { role: 'user', content: 'them an trua' },
+          { role: 'assistant', content: 'Bạn cần gì nữa không?' },
+        ],
+      },
+    )
+
+    expect(called).toEqual([])
   })
 
   it('removes a single entry without asking', async () => {

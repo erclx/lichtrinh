@@ -2,6 +2,7 @@ import { buildPrompt, HISTORY_LENGTH } from '@shared/assistant-prompt.ts'
 import type {
   ChatEvent,
   ChatList,
+  ChatMessage,
   ChatRead,
   ChatThread,
 } from '@shared/chats.ts'
@@ -75,8 +76,7 @@ export const chatRoutes = new Hono<AuthEnv>()
         saved.text === request.text
       if (!sameSend) return refuse(c, 'id_conflict')
       const reply = await replyTo(db, saved.id)
-      if (reply !== undefined)
-        return eventStream([{ type: 'done', message: reply }])
+      if (reply !== undefined) return eventStream([replayOf(reply)])
     }
     const trip = await liveTrip(db, chat.tripId)
     if (trip === undefined) return refuse(c, 'no_trip')
@@ -85,6 +85,7 @@ export const chatRoutes = new Hono<AuthEnv>()
       recentMessages(db, chat.id, HISTORY_LENGTH + 1),
       readModel(db),
     ])
+    const history = recent.filter((message) => message.id !== request.id)
     const input: TurnInput = {
       chatId: chat.id,
       ownerId: c.var.user.id,
@@ -95,17 +96,30 @@ export const chatRoutes = new Hono<AuthEnv>()
       messages: buildPrompt({
         trip: toTrip(trip),
         entries,
-        history: recent.filter((message) => message.id !== request.id),
+        history,
         text: request.text,
         at: new Date(),
       }),
       versions: Object.fromEntries(entries.map((e) => [e.id, e.version])),
+      removalAsked: history.at(-1)?.heldRemoval ?? false,
     }
     return relayOf(c.env).fetch('https://relay/turn', {
       method: 'POST',
       body: JSON.stringify(input),
     })
   })
+
+// The saved reply ends the replay as the live stream ended it, so a
+// failed or stopped reply answers `error` and never reads as an answer.
+function replayOf(message: ChatMessage): ChatEvent {
+  if (message.status === 'complete') return { type: 'done', message }
+  return {
+    type: 'error',
+    code: 'assistant_failed',
+    changed: message.changes.length > 0,
+    message,
+  }
+}
 
 function eventStream(events: ChatEvent[]) {
   const lines = events.map((event) => `${JSON.stringify(event)}\n`).join('')

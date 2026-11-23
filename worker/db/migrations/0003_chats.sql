@@ -7,6 +7,7 @@ CREATE TABLE `chat_messages` (
 	`model` text,
 	`change_ids` text DEFAULT '[]' NOT NULL,
 	`reply_to` text,
+	`held_removal` integer DEFAULT false NOT NULL,
 	`created_at` integer NOT NULL,
 	FOREIGN KEY (`chat_id`) REFERENCES `chats`(`id`) ON UPDATE no action ON DELETE cascade
 );

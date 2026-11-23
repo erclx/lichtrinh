@@ -40,10 +40,11 @@ export interface TurnInput {
   messages: TurnMessage[]
   // Each listed entry's version as the prompt showed it.
   versions: Record<string, number>
+  removalAsked: boolean
 }
 
 type TurnEnd =
-  | { kind: 'final'; text: string }
+  | { kind: 'final'; text: string; heldRemoval: boolean }
   | { kind: 'failed' }
   | { kind: 'closed' }
   | { kind: 'stopped' }
@@ -198,16 +199,23 @@ export class AssistantRelay extends DurableObject<Env> {
       startedAt: Date.now(),
     }
     this.turn = turn
-    await saveUserMessage(
-      createDb(this.env.DB),
-      { id: input.messageId, chatId: input.chatId, text: input.text },
-      new Date(),
-    )
+    try {
+      await saveUserMessage(
+        createDb(this.env.DB),
+        { id: input.messageId, chatId: input.chatId, text: input.text },
+        new Date(),
+      )
+    } catch (error) {
+      this.turn = undefined
+      stream.error(error)
+      throw error
+    }
     send(socket, {
       type: 'turn',
       turnId: input.messageId,
       model: input.model,
       messages: input.messages,
+      removalAsked: input.removalAsked,
     })
     turn.timer = setTimeout(
       () => this.enqueue(turn, () => this.finish(turn, { kind: 'timeout' })),
@@ -270,7 +278,11 @@ export class AssistantRelay extends DurableObject<Env> {
       return
     }
     if (frame.type === 'final') {
-      await this.finish(turn, { kind: 'final', text: frame.text })
+      await this.finish(turn, {
+        kind: 'final',
+        text: frame.text,
+        heldRemoval: frame.heldRemoval,
+      })
       return
     }
     await this.finish(turn, { kind: 'failed' })
@@ -302,6 +314,7 @@ export class AssistantRelay extends DurableObject<Env> {
           status,
           model: input.model,
           changeIds: turn.changeIds,
+          heldRemoval: end.kind === 'final' && end.heldRemoval,
         },
         new Date(),
       )

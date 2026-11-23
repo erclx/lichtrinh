@@ -33,6 +33,7 @@ describe('what the bridge can reach', () => {
         turnId: 't',
         model: 'lichtrinh-assistant',
         messages: [{ role: 'user', content: 'x' }],
+        removalAsked: false,
       },
       {
         model: fake.model,

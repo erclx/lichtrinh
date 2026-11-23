@@ -182,6 +182,10 @@ export const chatMessages = sqliteTable(
     // A JSON array of the change ids the reply wrote, oldest first.
     changeIds: text('change_ids').notNull().default('[]'),
     replyTo: text('reply_to'),
+    // The bridge held several removals for a yes, which the next turn reads.
+    heldRemoval: integer('held_removal', { mode: 'boolean' })
+      .notNull()
+      .default(false),
     createdAt: integer('created_at', { mode: 'timestamp_ms' }).notNull(),
   },
   (table) => [

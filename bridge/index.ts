@@ -34,8 +34,20 @@ let retryMs = FIRST_RETRY_MS
 let stopping = false
 const pending = new Map<
   string,
-  { resolve: (result: Record<string, unknown>) => void; reject: () => void }
+  {
+    turnId: string
+    resolve: (result: Record<string, unknown>) => void
+    reject: () => void
+  }
 >()
+
+function rejectPending(turnId?: string) {
+  for (const [callId, call] of pending) {
+    if (turnId !== undefined && call.turnId !== turnId) continue
+    call.reject()
+    pending.delete(callId)
+  }
+}
 
 function connect() {
   log('connecting')
@@ -44,8 +56,7 @@ function connect() {
     onClose: (code) => {
       log('closed', { code })
       current?.running.cancel()
-      for (const call of pending.values()) call.reject()
-      pending.clear()
+      rejectPending()
       if (stopping) return
       if (code === PROTOCOL_MISMATCH) {
         console.error(
@@ -73,6 +84,7 @@ function onFrame(opened: BridgeSocket, frame: DownFrame) {
   }
   if (frame.type === 'cancel') {
     if (current?.turnId === frame.turnId) current.running.cancel()
+    rejectPending(frame.turnId)
     return
   }
   if (frame.type === 'warm') {
@@ -90,7 +102,7 @@ function onFrame(opened: BridgeSocket, frame: DownFrame) {
     send: opened.send,
     callTool: (call) =>
       new Promise((resolve, reject) => {
-        pending.set(call.callId, { resolve, reject })
+        pending.set(call.callId, { turnId: call.turnId, resolve, reject })
         opened.send(call)
       }),
   })

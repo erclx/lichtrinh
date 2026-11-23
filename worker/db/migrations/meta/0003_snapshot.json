@@ -1,7 +1,7 @@
 {
   "version": "6",
   "dialect": "sqlite",
-  "id": "460ca847-0bf1-4996-a3d1-36001f31405c",
+  "id": "3bc51c51-b155-4bf0-a5fa-a056f005b858",
   "prevId": "2df910b3-b690-4b0d-90af-86548ac837e5",
   "tables": {
     "auth_sessions": {
@@ -274,6 +274,14 @@
           "primaryKey": false,
           "notNull": false,
           "autoincrement": false
+        },
+        "held_removal": {
+          "name": "held_removal",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": false
         },
         "created_at": {
           "name": "created_at",
