@@ -20,6 +20,24 @@ function cityOf(zone: string) {
   return (zone.split('/').at(-1) ?? zone).replaceAll('_', ' ')
 }
 
+// Some runtimes still list a zone under a city's old name, as Chromium lists
+// Asia/Saigon, so its current name joins the label and a search finds either.
+const renamed: Record<string, string> = {
+  'Asia/Saigon': 'Ho Chi Minh',
+  'Asia/Calcutta': 'Kolkata',
+  'Asia/Katmandu': 'Kathmandu',
+  'Asia/Rangoon': 'Yangon',
+  'Europe/Kiev': 'Kyiv',
+}
+
+/** A zone's label, its city and its offset at `at`, such as `New York (GMT-4)`. */
+export function zoneLabel(zone: string, language: Language, at: Date) {
+  const city = cityOf(zone)
+  const current = renamed[zone]
+  const name = current === undefined ? city : `${current}, ${city}`
+  return `${name} (${offsetOf(zone, language, at)})`
+}
+
 /**
  * Every zone `Intl` knows, labeled with its city and its offset at `at`, such
  * as `Ho Chi Minh (GMT+7)`, in alphabetical order of the label. The device's
@@ -30,10 +48,7 @@ export function zoneOptions(language: Language, at: Date): SheetListOption[] {
   zones.add(deviceZone())
   const collator = new Intl.Collator(language)
   return [...zones]
-    .map((zone) => ({
-      value: zone,
-      label: `${cityOf(zone)} (${offsetOf(zone, language, at)})`,
-    }))
+    .map((zone) => ({ value: zone, label: zoneLabel(zone, language, at) }))
     .sort((a, b) => collator.compare(a.label, b.label))
 }
 
