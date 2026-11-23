@@ -62,4 +62,38 @@ export const CASES: CaptureCase[] = [
       await asAdmin(page)
     },
   },
+  {
+    section: 'accounts-new',
+    theme: 'default',
+    route: '/admin/accounts/new',
+    evidence: true,
+    setup: asAdmin,
+  },
+  {
+    section: 'accounts-new',
+    theme: 'dark',
+    route: '/admin/accounts/new',
+    evidence: true,
+    setup: async (page) => {
+      await dark(page)
+      await asAdmin(page)
+    },
+  },
+  {
+    section: 'settings',
+    theme: 'default',
+    route: '/settings',
+    evidence: true,
+    setup: asAdmin,
+  },
+  {
+    section: 'settings',
+    theme: 'dark',
+    route: '/settings',
+    evidence: true,
+    setup: async (page) => {
+      await dark(page)
+      await asAdmin(page)
+    },
+  },
 ]
