@@ -3,6 +3,7 @@ import { resolve } from 'node:path'
 
 import { resolveCheckout } from './checkout'
 import { runCli } from './program'
+import { runTask } from './task'
 
 const io = {
   stdout: (text: string) => process.stdout.write(text),
@@ -16,7 +17,7 @@ try {
     // `bun link` keeps the real path here, so this is the linked checkout.
     findCheckout: (cwd) =>
       resolveCheckout(cwd, resolve(import.meta.dirname, '..')),
-    runTask: async () => 0,
+    runTask: (task) => runTask(task, io.stderr),
   })
 } catch (error) {
   // An unexpected failure prints one line rather than a stack trace.
