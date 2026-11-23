@@ -7,6 +7,7 @@ import { Link } from 'react-router'
 import { useEntries, useTrips } from '@/calendar-data/queries'
 import { LoadFailed } from '@/components/load-failed'
 import { NoTrips } from '@/components/no-trips'
+import { RefreshFailed } from '@/components/refresh-failed'
 import { useNow } from '@/hooks/use-now'
 import { formatDateSpan, formatMoney } from '@/i18n/format'
 import { useLanguage } from '@/i18n/use-language'
@@ -93,7 +94,9 @@ export function TripList() {
         </p>
       )}
 
-      {trips.isError && (
+      <RefreshFailed show={trips.isError && trips.data !== undefined} />
+
+      {trips.isError && trips.data === undefined && (
         <LoadFailed
           message={t('trips.loadFailed')}
           error={trips.error}

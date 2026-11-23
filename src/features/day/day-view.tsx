@@ -7,6 +7,7 @@ import { Link, useParams } from 'react-router'
 
 import { useTrip } from '@/calendar-data/queries'
 import { LoadFailed } from '@/components/load-failed'
+import { RefreshFailed } from '@/components/refresh-failed'
 import { buttonVariants } from '@/components/ui/button'
 import { DayList } from '@/features/day/day-list'
 import { dayRows } from '@/features/day/day-state'
@@ -25,6 +26,8 @@ interface DayViewProps {
   date: string
   /** Whether the page is Today, which has no Back since it is a top place. */
   isHome?: boolean
+  /** Whether the last refresh failed, so the day shown may be out of date. */
+  stale?: boolean
 }
 
 function tripPathOf(trip: Trip) {
@@ -35,7 +38,13 @@ function tripPathOf(trip: Trip) {
  * One day of a trip: its date with Add, the trip and day number, the day's
  * estimated cost, the strip of the trip's days, and the day's one list.
  */
-export function DayView({ trip, entries, date, isHome = false }: DayViewProps) {
+export function DayView({
+  trip,
+  entries,
+  date,
+  isHome = false,
+  stale = false,
+}: DayViewProps) {
   const { t } = useTranslation()
   const language = useLanguage()
   const now = useNow()
@@ -77,6 +86,8 @@ export function DayView({ trip, entries, date, isHome = false }: DayViewProps) {
           </Link>
         }
       />
+
+      <RefreshFailed show={stale} />
 
       <div className="flex flex-col gap-1 pb-4">
         <Link
@@ -163,7 +174,7 @@ export function DayPage() {
     )
   }
 
-  if (query.isError) {
+  if (query.isError && query.data === undefined) {
     const missing =
       query.error instanceof ApiFailure && query.error.code === 'not_found'
     return (
@@ -194,5 +205,12 @@ export function DayPage() {
     )
   }
 
-  return <DayView trip={trip} entries={entries} date={day.data} />
+  return (
+    <DayView
+      trip={trip}
+      entries={entries}
+      date={day.data}
+      stale={query.isError}
+    />
+  )
 }

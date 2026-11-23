@@ -27,5 +27,5 @@ export function renderRoute(path: string) {
       </QueryClientProvider>
     </SessionProvider>,
   )
-  return { router }
+  return { router, client }
 }

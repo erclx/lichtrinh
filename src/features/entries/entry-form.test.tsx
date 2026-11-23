@@ -1,8 +1,9 @@
 import '@/i18n/setup'
 
-import { act, screen, within } from '@testing-library/react'
+import { act, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 
+import { calendarKeys } from '@/calendar-data/queries'
 import { applyLanguage } from '@/i18n/setup'
 import { anEntry, aTrip } from '@/test/calendar'
 import { aUser, failure, fakeApi, json } from '@/test/fake-api'
@@ -11,6 +12,7 @@ import { renderRoute } from '@/test/render-route'
 type User = ReturnType<typeof userEvent.setup>
 
 const addPath = '/entries/new?trip=trip-river&date=2031-05-15'
+const tripKey = calendarKeys.trip('trip-river')
 const lunch = anEntry({
   id: 'entry-lunch',
   title: 'Lunch',
@@ -55,6 +57,28 @@ describe('EntryForm', () => {
     expect(api.requests.find(({ method }) => method === 'POST')?.body).toEqual(
       expect.objectContaining({ costMinor: 1250 }),
     )
+  })
+
+  it('keeps the form and what was typed when a background refresh fails', async () => {
+    let reads = 0
+    fakeApi({
+      'GET /auth/me': () => json(aUser()),
+      'GET /trips/trip-river': () =>
+        reads++ === 0
+          ? json({ trip: aTrip(), entries: [] })
+          : failure('internal_error', 500),
+    })
+    const user = userEvent.setup()
+    const { client } = renderRoute(addPath)
+
+    await user.type(await screen.findByLabelText('What is it?'), 'Museum')
+    await act(() => client.refetchQueries())
+    // The cache tells React on a later tick, so settle on the failed state.
+    await waitFor(() =>
+      expect(client.getQueryState(tripKey)?.status).toBe('error'),
+    )
+
+    expect(screen.getByLabelText('What is it?')).toHaveValue('Museum')
   })
 
   it('starts after the day’s last entry for an hour', async () => {

@@ -27,7 +27,10 @@ export function TodayScreen() {
   const pick = trips.data === undefined ? null : pickToday(trips.data, now)
   const day = useTrip(pick?.kind === 'under-way' ? pick.trip.id : undefined)
 
-  if (trips.isError || day.isError) {
+  if (
+    (trips.isError && trips.data === undefined) ||
+    (day.isError && day.data === undefined)
+  ) {
     return (
       <>
         <PageHeader title={t('nav.today')} />
@@ -61,6 +64,7 @@ export function TodayScreen() {
         entries={day.data.entries}
         date={pick.date}
         isHome
+        stale={trips.isError || day.isError}
       />
     )
   }

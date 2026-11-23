@@ -1,12 +1,12 @@
 import '@/i18n/setup'
 
 import type { Entry } from '@shared/entries.ts'
-import { screen, waitFor, within } from '@testing-library/react'
+import { act, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 
 import { applyLanguage } from '@/i18n/setup'
 import { anEntry, aTrip } from '@/test/calendar'
-import { aUser, fakeApi, json } from '@/test/fake-api'
+import { aUser, failure, fakeApi, json } from '@/test/fake-api'
 import { renderRoute } from '@/test/render-route'
 
 type User = ReturnType<typeof userEvent.setup>
@@ -76,6 +76,26 @@ describe('DayList', () => {
 
     const card = await screen.findByRole('link', { name: /Flower market/ })
     expect(card).toHaveTextContent('Happening now · 45 min left')
+  })
+
+  it('keeps the loaded day and says so when a background refresh fails', async () => {
+    let reads = 0
+    fakeApi({
+      'GET /auth/me': () => json(aUser()),
+      'GET /trips/trip-river': () =>
+        reads++ === 0
+          ? json({ trip: aTrip(), entries: [anEntry({ title: 'Lunch' })] })
+          : failure('internal_error', 500),
+    })
+    const { client } = renderRoute(dayPath)
+
+    await screen.findByText('Lunch')
+    await act(() => client.refetchQueries())
+
+    expect(
+      await screen.findByText("Couldn't refresh, so this may be out of date"),
+    ).toBeInTheDocument()
+    expect(screen.getByText('Lunch')).toBeInTheDocument()
   })
 
   it('asks before a swiped Delete, and Keep it leaves the row', async () => {

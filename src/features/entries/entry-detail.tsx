@@ -7,6 +7,7 @@ import { useEntry, useTrip } from '@/calendar-data/queries'
 import { KindGlyph } from '@/components/kind-icons'
 import { kindTone } from '@/components/kinds'
 import { LoadFailed } from '@/components/load-failed'
+import { RefreshFailed } from '@/components/refresh-failed'
 import { Button, buttonVariants } from '@/components/ui/button'
 import { DeleteSheet } from '@/features/entries/delete-sheet'
 import {
@@ -33,7 +34,10 @@ export function EntryDetail() {
   const trip = useTrip(entry.data?.tripId)
   const [deleting, setDeleting] = useState(false)
 
-  if (entry.isError || trip.isError) {
+  if (
+    (entry.isError && entry.data === undefined) ||
+    (trip.isError && trip.data === undefined)
+  ) {
     const missing =
       entry.error instanceof ApiFailure && entry.error.code === 'not_found'
     return (
@@ -103,6 +107,7 @@ export function EntryDetail() {
   return (
     <>
       <PageHeader title={t('entries.activity')} backTo={dayPath} />
+      <RefreshFailed show={entry.isError || trip.isError} />
       <section
         className={cn(
           'flex flex-col gap-3 rounded-2xl p-5',

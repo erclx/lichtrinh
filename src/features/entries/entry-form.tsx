@@ -406,7 +406,7 @@ export function AddEntryPage() {
   const query = useTrip(tripId)
 
   if (query.isPending && tripId !== undefined) return <Loading />
-  if (query.isError) {
+  if (query.isError && query.data === undefined) {
     return (
       <>
         <PageHeader title={t('entries.addTitle')} backTo="/trips" />
@@ -450,7 +450,10 @@ export function EditEntryPage() {
   const entry = useEntry(entryId)
   const trip = useTrip(entry.data?.tripId)
 
-  if (entry.isError || trip.isError) {
+  if (
+    (entry.isError && entry.data === undefined) ||
+    (trip.isError && trip.data === undefined)
+  ) {
     const missing =
       entry.error instanceof ApiFailure && entry.error.code === 'not_found'
     return (

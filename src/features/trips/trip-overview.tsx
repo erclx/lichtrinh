@@ -6,6 +6,7 @@ import { Link, useParams } from 'react-router'
 import { useTrip } from '@/calendar-data/queries'
 import { kindTone } from '@/components/kinds'
 import { LoadFailed } from '@/components/load-failed'
+import { RefreshFailed } from '@/components/refresh-failed'
 import { buttonVariants } from '@/components/ui/button'
 import { useNow } from '@/hooks/use-now'
 import { formatDateSpan, formatLongDate, formatMoney } from '@/i18n/format'
@@ -42,7 +43,7 @@ export function TripOverview() {
     )
   }
 
-  if (query.isError) {
+  if (query.isError && query.data === undefined) {
     const missing =
       query.error instanceof ApiFailure && query.error.code === 'not_found'
     return (
@@ -76,6 +77,7 @@ export function TripOverview() {
   return (
     <>
       <PageHeader title={trip.name} backTo="/trips" />
+      <RefreshFailed show={query.isError} />
       <section className="flex flex-col gap-2 rounded-2xl border-[1.5px] border-border bg-card p-5 text-card-foreground">
         <p className="text-base text-muted-foreground">
           {[
