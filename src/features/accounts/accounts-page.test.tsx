@@ -17,8 +17,8 @@ const admin = aUser({
 })
 const traveler = aUser({
   id: 'user-traveler',
-  username: 'lan',
-  displayName: 'Lan',
+  username: 'traveler',
+  displayName: 'Du khách',
   canChat: true,
 })
 const cousin = aUser({
@@ -56,7 +56,7 @@ describe('AccountsPage', () => {
 
     renderAccounts()
 
-    const row = (await screen.findByText('Lan')).closest('li')
+    const row = (await screen.findByText('Du khách')).closest('li')
     expect(row).toHaveTextContent('Family · can chat')
     expect(screen.getByText('Minh').closest('li')).toHaveTextContent('Family')
   })
@@ -73,7 +73,7 @@ describe('AccountsPage', () => {
     expect(own).not.toBeNull()
     expect(within(own as HTMLElement).queryByRole('button')).toBeNull()
     expect(
-      screen.getByRole('button', { name: 'Reset password for Lan' }),
+      screen.getByRole('button', { name: 'Reset password for Du khách' }),
     ).toBeInTheDocument()
   })
 
@@ -116,7 +116,7 @@ describe('AccountsPage', () => {
     online = true
     await user.click(screen.getByRole('button', { name: 'Try again' }))
 
-    expect(await screen.findByText('Lan')).toBeInTheDocument()
+    expect(await screen.findByText('Du khách')).toBeInTheDocument()
   })
 })
 
@@ -130,11 +130,13 @@ describe('resetting a password', () => {
     renderAccounts()
 
     await user.click(
-      await screen.findByRole('button', { name: 'Reset password for Lan' }),
+      await screen.findByRole('button', {
+        name: 'Reset password for Du khách',
+      }),
     )
 
     const dialog = await screen.findByRole('alertdialog')
-    expect(dialog).toHaveTextContent("Reset Lan's password?")
+    expect(dialog).toHaveTextContent("Reset Du khách's password?")
     expect(dialog).toHaveTextContent('signed out on every device')
     expect(api.requests.some(({ method }) => method === 'POST')).toBe(false)
   })
@@ -147,7 +149,9 @@ describe('resetting a password', () => {
     })
     renderAccounts()
     await user.click(
-      await screen.findByRole('button', { name: 'Reset password for Lan' }),
+      await screen.findByRole('button', {
+        name: 'Reset password for Du khách',
+      }),
     )
 
     await user.click(await screen.findByRole('button', { name: 'Cancel' }))
@@ -166,7 +170,9 @@ describe('resetting a password', () => {
     })
     renderAccounts()
     await user.click(
-      await screen.findByRole('button', { name: 'Reset password for Lan' }),
+      await screen.findByRole('button', {
+        name: 'Reset password for Du khách',
+      }),
     )
 
     await user.click(
@@ -174,7 +180,9 @@ describe('resetting a password', () => {
     )
 
     expect(
-      await screen.findByRole('heading', { name: 'Send this password to Lan' }),
+      await screen.findByRole('heading', {
+        name: 'Send this password to Du khách',
+      }),
     ).toBeInTheDocument()
     expect(screen.getByText('neva')).toBeInTheDocument()
     expect(screen.getByText('stur')).toBeInTheDocument()
@@ -194,7 +202,9 @@ describe('resetting a password', () => {
     })
     renderAccounts()
     await user.click(
-      await screen.findByRole('button', { name: 'Reset password for Lan' }),
+      await screen.findByRole('button', {
+        name: 'Reset password for Du khách',
+      }),
     )
     await user.click(
       await screen.findByRole('button', { name: 'Reset password' }),
@@ -218,7 +228,9 @@ describe('resetting a password', () => {
     })
     renderAccounts()
     await user.click(
-      await screen.findByRole('button', { name: 'Reset password for Lan' }),
+      await screen.findByRole('button', {
+        name: 'Reset password for Du khách',
+      }),
     )
 
     await user.click(

@@ -29,9 +29,9 @@ export const FIXTURE_ACCOUNTS: readonly FixtureAccount[] = [
     password: 'seed-admin-pass',
   },
   {
-    id: 'fixture-lan',
-    username: 'lan',
-    displayName: 'Lan',
+    id: 'fixture-traveler',
+    username: 'traveler',
+    displayName: 'Du khách',
     role: 'member',
     canChat: true,
     language: 'vi',

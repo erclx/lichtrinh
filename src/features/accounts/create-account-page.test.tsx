@@ -63,7 +63,7 @@ describe('CreateAccountPage', () => {
       'POST /admin/users': () =>
         json(
           {
-            user: aUser({ username: 'lan', displayName: 'Lan' }),
+            user: aUser({ username: 'traveler', displayName: 'Du khách' }),
             password: 'mapekrytuvha',
           },
           201,
@@ -71,8 +71,8 @@ describe('CreateAccountPage', () => {
     })
     renderCreate()
 
-    await user.type(await screen.findByLabelText('Display name'), ' Lan ')
-    await user.type(screen.getByLabelText('Username'), 'Lan')
+    await user.type(await screen.findByLabelText('Display name'), ' Du khách ')
+    await user.type(screen.getByLabelText('Username'), 'Traveler')
     await user.click(screen.getByRole('button', { name: 'Admin' }))
     await user.click(screen.getByRole('button', { name: 'On' }))
     await user.click(screen.getByRole('button', { name: 'English' }))
@@ -80,13 +80,15 @@ describe('CreateAccountPage', () => {
       screen.getByRole('button', { name: 'Create and get the password' }),
     )
 
-    await screen.findByRole('heading', { name: 'Send this password to Lan' })
+    await screen.findByRole('heading', {
+      name: 'Send this password to Du khách',
+    })
     expect(api.requests.at(-1)).toEqual({
       method: 'POST',
       path: '/admin/users',
       body: {
-        displayName: 'Lan',
-        username: 'lan',
+        displayName: 'Du khách',
+        username: 'traveler',
         role: 'admin',
         canChat: true,
         language: 'en',
