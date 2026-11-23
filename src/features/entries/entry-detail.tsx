@@ -4,12 +4,12 @@ import { useTranslation } from 'react-i18next'
 import { Link, useNavigate, useParams } from 'react-router'
 
 import { useEntry, useTrip } from '@/calendar-data/queries'
+import { DeleteSheet } from '@/components/delete-sheet'
 import { KindGlyph } from '@/components/kind-icons'
 import { kindTone } from '@/components/kinds'
 import { LoadFailed } from '@/components/load-failed'
 import { RefreshFailed } from '@/components/refresh-failed'
 import { Button, buttonVariants } from '@/components/ui/button'
-import { DeleteSheet } from '@/features/entries/delete-sheet'
 import {
   formatLongDate,
   formatMoney,

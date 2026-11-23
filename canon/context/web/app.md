@@ -50,7 +50,7 @@ Holds the frame around every signed-in page, built against `canon/design/shell/`
 
 ### `src/features/`
 
-Holds one folder per screen feature, each importing the session and the shell. Today renders the day's view, and no other feature imports another. The shared day list in `src/components/` reaches into `day/` for its swipe row and `entries/` for the delete sheet.
+Holds one folder per screen feature, each importing the session and the shell. Today renders the day's view, and no other feature imports another.
 
 - `sign-in/` is the card a signed-out visitor sees, with no shell around it
 - `accounts/` is the admin's list, the create and edit pages sharing `account-fields.tsx`, the reset confirm, and the password shown once, which lives in component state alone
@@ -67,7 +67,7 @@ Holds the shadcn kit on Base UI with the Nova preset, owned and edited in place.
 
 ### `src/components/`
 
-Holds the app's own components, being the mark, the language toggle, the hand-built pickers the screens consume unchanged, and what more than one calendar feature shows, such as the kind icons, the day list and its entry states, the save error, and the undo status.
+Holds the app's own components, being the mark, the language toggle, the hand-built pickers the screens consume unchanged, and what more than one calendar feature shows, such as the kind icons, the day list with its entry states and swipe row, the delete sheet, the save error, and the undo status.
 
 - `picker-sheet.tsx` opens a drawer under 480px and a dialog from there up, under one title and close control
 - `sheet-list.tsx` is the one select, with radio rows and an optional filter that ignores diacritics
@@ -78,7 +78,7 @@ Holds the app's own components, being the mark, the language toggle, the hand-bu
 Holds one folder per screen area, its rules and controls landing before its screens do.
 
 - `trips/` holds the list, the new trip form, and the overview, and `today/` picks the trip under way in its own zone
-- `day/` holds the day page, and its `swipe-row.tsx` reveals Delete under 1024px, never the only route to it
+- `day/` holds the day page, and `src/components/swipe-row.tsx` reveals Delete on a day row under 1024px, never the only route to it
 - `src/components/day-state.ts` marks each entry done, now, or upcoming on its own zone's clock, for Today and the Calendar tab alike
 - `calendar/` is the Calendar tab, its view, date, and trip held in the address, and `calendar-range.ts` lays each trip over the month and week, splitting a date two trips share
 - `entries/` holds the detail, the shared add and edit form, its prefill and cost parsing, and `lengths.ts` for the start times and lengths

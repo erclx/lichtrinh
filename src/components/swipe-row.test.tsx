@@ -3,7 +3,7 @@ import '@/i18n/setup'
 import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 
-import { SwipeRow } from '@/features/day/swipe-row'
+import { SwipeRow } from '@/components/swipe-row'
 import { applyLanguage } from '@/i18n/setup'
 
 type User = ReturnType<typeof userEvent.setup>
