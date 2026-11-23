@@ -34,6 +34,7 @@ export const routes: RouteObject[] = [
             path: 'admin',
             element: <RequireAdmin />,
             children: [
+              { index: true, element: <NotFoundPage /> },
               { path: 'accounts', element: <AccountsPage /> },
               { path: 'accounts/new', element: <CreateAccountPage /> },
             ],

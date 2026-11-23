@@ -59,6 +59,16 @@ describe('the shell by role', () => {
     ).toBeInTheDocument()
   })
 
+  it('shows the admin the not-found page at the bare admin path', async () => {
+    fakeApi({ 'GET /auth/me': () => json(aUser({ role: 'admin' })) })
+
+    renderAt('/admin')
+
+    expect(
+      await screen.findByRole('heading', { name: 'Page not found' }),
+    ).toBeInTheDocument()
+  })
+
   it('marks the current destination', async () => {
     fakeApi({ 'GET /auth/me': () => json(aUser()) })
 
