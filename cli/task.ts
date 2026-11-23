@@ -7,10 +7,8 @@ import type { Task } from './program'
 const NOT_STARTED = 127
 
 /**
- * Runs one task with inherited output, printing `› <command>` first, and
- * resolves with its exit code, or 128 plus the signal number when a signal
- * ended it. Ctrl-C and SIGTERM reach the child, and this process waits for it
- * rather than dying first.
+ * Resolves with the task's exit code, or 128 plus the signal that ended it.
+ * Ctrl-C reaches the child, and this process waits for it rather than dying.
  */
 export function runTask(
   task: Task,
