@@ -303,6 +303,8 @@ export const vi = {
     thinking: 'Đang nghĩ…',
     stopped: 'Đã dừng. Những gì đã thay đổi vẫn giữ nguyên, kèm nút Hoàn tác.',
     busy: 'Trợ lý vẫn đang trả lời một tin khác. Thử lại sau giây lát.',
+    tripGone:
+      'Chuyến đi của cuộc trò chuyện này không còn nữa, nên trợ lý không lên kế hoạch ở đây được. Hãy bắt đầu cuộc trò chuyện mới.',
     stepAdd: 'Đã thêm “{{title}}” lúc {{time}}, {{date}}',
     stepMove: 'Đã dời “{{title}}” sang {{time}}, {{date}}',
     stepUpdate: 'Đã sửa “{{title}}” lúc {{time}}, {{date}}',

@@ -307,6 +307,8 @@ export const en = {
     thinking: 'Thinking…',
     stopped: 'Stopped. Anything it already changed stays, with Undo.',
     busy: 'The assistant is still answering another message. Try again in a moment.',
+    tripGone:
+      "This chat's trip is gone, so the assistant can't plan in it. Start a new chat.",
     stepAdd: 'Added “{{title}}” at {{time}}, {{date}}',
     stepMove: 'Moved “{{title}}” to {{time}}, {{date}}',
     stepUpdate: 'Changed “{{title}}” at {{time}}, {{date}}',

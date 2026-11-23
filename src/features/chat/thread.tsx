@@ -1,12 +1,17 @@
 import type { ChatMessage } from '@shared/chats.ts'
 import { useEffect, useRef } from 'react'
 import { useTranslation } from 'react-i18next'
+import { useNavigate } from 'react-router'
 
 import { LoadFailed } from '@/components/load-failed'
 import { ChangeCard } from '@/features/chat/change-card'
-import { useContact, useThread } from '@/features/chat/chat-api'
+import { useContact, useStartChat, useThread } from '@/features/chat/chat-api'
 import { Composer } from '@/features/chat/composer'
-import { FailedCard, OfflineCard } from '@/features/chat/notice-card'
+import {
+  FailedCard,
+  OfflineCard,
+  TripGoneCard,
+} from '@/features/chat/notice-card'
 import { StepLine } from '@/features/chat/step-line'
 import { stepText } from '@/features/chat/step-text'
 import {
@@ -40,8 +45,21 @@ export function Thread({ chatId, layout }: ThreadProps) {
   const thread = useThread(chatId, unsavedSend(turn))
   const contact = useContact()
   const { online } = useAssistantStatus()
+  const start = useStartChat()
+  const navigate = useNavigate()
   const offline = online === false
   const running = turn !== null && isRunning(turn)
+
+  // The dock and sheet follow the newest chat, so only the page navigates.
+  function startChat() {
+    start.mutate(undefined, {
+      onSuccess: (chat) => {
+        if (layout === 'page') {
+          void navigate(`/chats/${encodeURIComponent(chat.id)}`)
+        }
+      },
+    })
+  }
   const items = threadItems(thread.data?.messages ?? [], turn)
   const end = usePinnedEnd([
     items.length,
@@ -115,15 +133,22 @@ export function Thread({ chatId, layout }: ThreadProps) {
             })}
           </ol>
         )}
-        {turn?.phase === 'refused' && (
-          <p role="alert" className="rounded-md bg-muted p-3 text-sm">
-            {turn.refusal === 'assistant_busy'
-              ? t('chat.busy')
-              : turn.refusal === 'network'
-                ? t('errors.network')
-                : t('errors.generic')}
-          </p>
-        )}
+        {turn?.phase === 'refused' &&
+          (turn.refusal === 'no_trip' ? (
+            <TripGoneCard
+              onNewChat={startChat}
+              pending={start.isPending}
+              error={start.isError ? start.error : null}
+            />
+          ) : (
+            <p role="alert" className="rounded-md bg-muted p-3 text-sm">
+              {turn.refusal === 'assistant_busy'
+                ? t('chat.busy')
+                : turn.refusal === 'network'
+                  ? t('errors.network')
+                  : t('errors.generic')}
+            </p>
+          ))}
         <div ref={end} className={panel ? undefined : 'scroll-mb-28'} />
       </div>
       <div

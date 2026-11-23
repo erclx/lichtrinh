@@ -5,6 +5,7 @@ import type { ChatEvent, ChatMessage } from '@shared/chats.ts'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
+import { createMemoryRouter, RouterProvider } from 'react-router'
 
 import { Thread } from '@/features/chat/thread'
 import { applyLanguage } from '@/i18n/setup'
@@ -64,18 +65,28 @@ function chatApi(
   })
 }
 
-function renderThread() {
+function renderThread(layout: 'page' | 'panel' = 'panel') {
   const client = new QueryClient({
     defaultOptions: {
       queries: { retry: false, refetchInterval: false },
       mutations: { retry: false },
     },
   })
+  const router = createMemoryRouter(
+    [
+      {
+        path: '/chats/:chatId',
+        element: <Thread chatId="chat-today" layout={layout} />,
+      },
+    ],
+    { initialEntries: ['/chats/chat-today'] },
+  )
   render(
     <QueryClientProvider client={client}>
-      <Thread chatId="chat-today" layout="panel" />
+      <RouterProvider router={router} />
     </QueryClientProvider>,
   )
+  return { router }
 }
 
 async function send(text: string) {
@@ -239,6 +250,43 @@ describe('Thread', () => {
     })
   })
 
+  describe('a chat whose trip is gone', () => {
+    it('says the trip is gone and offers New chat rather than a retry', async () => {
+      chatApi([], {
+        'POST /chats/chat-today/messages': () => failure('no_trip', 409),
+      })
+      renderThread()
+
+      await send('ca phe')
+
+      expect(await screen.findByText(/trip is gone/)).toBeInTheDocument()
+      expect(screen.queryByText(/Try again in a few minutes/)).toBeNull()
+      expect(
+        screen.getByRole('button', { name: 'New chat' }),
+      ).toBeInTheDocument()
+    })
+
+    it('opens the new chat once New chat is pressed', async () => {
+      const { requests } = chatApi([], {
+        'POST /chats/chat-today/messages': () => failure('no_trip', 409),
+        'POST /chats': ({ body }) =>
+          json({ chat: aChat({ id: (body as { id: string }).id }) }, 201),
+      })
+      const { router } = renderThread('page')
+      const user = await send('ca phe')
+
+      await user.click(await screen.findByRole('button', { name: 'New chat' }))
+
+      const created = requests.find(
+        ({ method, path }) => method === 'POST' && path === '/chats',
+      )
+      const { id } = (created?.body ?? { id: 'none' }) as { id: string }
+      await vi.waitFor(() =>
+        expect(router.state.location.pathname).toBe(`/chats/${id}`),
+      )
+    })
+  })
+
   describe('offline', () => {
     it('names the contact the admin set and turns the box off', async () => {
       chatApi([], {
@@ -254,6 +302,19 @@ describe('Thread', () => {
         await screen.findByText('Ask Anh cả to turn it back on.'),
       ).toBeInTheDocument()
       expect(screen.getByLabelText('Message the assistant')).toBeDisabled()
+    })
+
+    it('asks the workspace PC to warm only once it reads online', async () => {
+      const { requests } = chatApi([], {
+        'GET /assistant/status': () => json(aStatus(false)),
+      })
+      renderThread()
+
+      await screen.findByText('The assistant is offline')
+
+      expect(requests.some(({ path }) => path === '/assistant/warm')).toBe(
+        false,
+      )
     })
 
     it('names the admin when no contact is set', async () => {

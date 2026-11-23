@@ -2,6 +2,8 @@ import { useId } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import { Button } from '@/components/ui/button'
+import { StartFailed } from '@/features/chat/start-failed'
+import { PlusIcon } from '@/shell/icons'
 
 /**
  * Says the workspace PC is off and whom to ask, from the admin's contact
@@ -26,6 +28,31 @@ export function OfflineCard({ contactName }: { contactName: string | null }) {
           : t('chat.offlineContact', { name: contactName })}
       </p>
     </section>
+  )
+}
+
+interface TripGoneCardProps {
+  onNewChat: () => void
+  pending: boolean
+  error: unknown
+}
+
+/**
+ * A send refused because the chat's trip was deleted, which no retry can
+ * fix, so it offers a new chat on the trip under way instead.
+ */
+export function TripGoneCard({ onNewChat, pending, error }: TripGoneCardProps) {
+  const { t } = useTranslation()
+
+  return (
+    <div role="alert" className="flex flex-col gap-3 rounded-md bg-muted p-3">
+      <p className="text-sm">{t('chat.tripGone')}</p>
+      {error !== null && <StartFailed error={error} />}
+      <Button className="w-full" onClick={onNewChat} aria-disabled={pending}>
+        <PlusIcon aria-hidden="true" />
+        {t('chat.newChat')}
+      </Button>
+    </div>
   )
 }
 
