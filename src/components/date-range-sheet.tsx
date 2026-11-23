@@ -1,4 +1,3 @@
-import { cn } from 'cn'
 import { CalendarIcon, ChevronLeftIcon, ChevronRightIcon } from 'lucide-react'
 import { useId, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
@@ -13,6 +12,7 @@ import {
 } from '@/i18n/format'
 import { isLanguage } from '@/i18n/language'
 import { monthCells } from '@/lib/month-cells'
+import { cn } from '@/lib/utils'
 
 export interface DateRange {
   /** The first day, as `YYYY-MM-DD`. */

@@ -1,5 +1,4 @@
 import type { DialogPopupProps } from '@base-ui/react/dialog'
-import { cn } from 'cn'
 import { XIcon } from 'lucide-react'
 import { type KeyboardEvent, type ReactNode, type Ref, useId } from 'react'
 import { useTranslation } from 'react-i18next'
@@ -17,6 +16,7 @@ import {
   DrawerTitle,
 } from '@/components/ui/drawer'
 import { useMediaQuery } from '@/hooks/use-media-query'
+import { cn } from '@/lib/utils'
 
 interface PickerSheetProps {
   open: boolean

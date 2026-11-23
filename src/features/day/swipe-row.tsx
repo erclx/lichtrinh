@@ -1,4 +1,3 @@
-import { cn } from 'cn'
 import { Trash2Icon } from 'lucide-react'
 import {
   type KeyboardEvent,
@@ -12,6 +11,7 @@ import {
 import { useTranslation } from 'react-i18next'
 
 import { useMediaQuery } from '@/hooks/use-media-query'
+import { cn } from '@/lib/utils'
 
 interface SwipeRowProps {
   children: ReactNode
