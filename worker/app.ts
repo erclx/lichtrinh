@@ -7,6 +7,7 @@ import { type AuthEnv, requireAdmin, requireSession } from './auth/guard.ts'
 import { fail } from './envelope.ts'
 import { authRoutes } from './routes/auth.ts'
 import { healthRoutes } from './routes/health.ts'
+import { settingsRoutes } from './routes/settings.ts'
 import { userRoutes } from './routes/users.ts'
 
 export const MAX_BODY_BYTES = 64 * 1024
@@ -51,6 +52,7 @@ app.use('/admin/*', requireAdmin)
 app.route('/', healthRoutes)
 app.route('/', authRoutes)
 app.route('/', userRoutes)
+app.route('/', settingsRoutes)
 
 app.notFound((c) => c.json(fail('not_found', 'No such API route'), 404))
 
