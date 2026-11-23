@@ -1,14 +1,10 @@
-import type { ApiError, ApiErrorCode } from '@shared/errors.ts'
 import { Hono } from 'hono'
 import { bodyLimit } from 'hono/body-limit'
 
+import { fail } from './envelope.ts'
 import { healthRoutes } from './routes/health.ts'
 
 export const MAX_BODY_BYTES = 64 * 1024
-
-function fail(code: ApiErrorCode, message: string): ApiError {
-  return { error: { code, message } }
-}
 
 export const app = new Hono<{ Bindings: Env }>().basePath('/api')
 
