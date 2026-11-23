@@ -1,7 +1,5 @@
 """The faster-whisper worker, for turbo by repository and PhoWhisper from its
-converted folder.
-
-Usage: python -m voice.workers.whisper <model-id> <models-dir>
+converted folder. Usage: python -m voice.workers.whisper <model-id> <models-dir>
 """
 
 import ctypes

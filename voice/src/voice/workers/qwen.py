@@ -1,5 +1,4 @@
 """The Qwen3-ASR worker, on the CUDA 13 stack torch brings.
-
 Usage: python -m voice.workers.qwen <model-id> <models-dir>
 """
 

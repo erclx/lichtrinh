@@ -1,8 +1,6 @@
 """The loop every worker runs: load once, then answer clips until stdin closes.
-
-A worker replies with `ok` on every frame. The first frame reports the load,
-and each later one answers one clip with its text or an error code.
-"""
+Every reply carries `ok`. The first reports the load, and each later one
+answers one clip with its text or an error code."""
 
 import logging
 import os
@@ -20,13 +18,11 @@ Transcriber = Callable[[Samples], str]
 
 log = logging.getLogger('voice.worker')
 
-# What loading weights onto a card raises: a missing file, a CUDA failure, a
-# bad config, or a library the environment lacks.
+# A missing file, a CUDA failure, a bad config, or a missing library.
 LOAD_ERRORS = (OSError, RuntimeError, ValueError, ImportError)
 
 
 def serve(load: Callable[[], Transcriber]) -> int:
-    """Runs one worker to its end and returns the process exit code."""
     logging.basicConfig(level=logging.INFO, format='%(name)s %(message)s')
     # `voice models` downloads every model ahead, so a worker never reaches the network.
     os.environ.setdefault('HF_HUB_OFFLINE', '1')

@@ -1,8 +1,6 @@
-"""The HTTP front the bridge calls, in the OpenAI transcription shape.
-
-Every failure answers `{"error": {"code", "message"}}`, and a caller branches
-on the code alone. No clip or transcript reaches a log line or an error body.
-"""
+"""The HTTP front the bridge calls, in the OpenAI transcription shape. Every
+failure answers `{"error": {"code", "message"}}`, branched on by code alone,
+and no clip or transcript reaches a log line or an error body."""
 
 import asyncio
 import contextlib

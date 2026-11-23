@@ -1,10 +1,6 @@
-"""A worker speaking the real protocol, standing in for both model families.
-
-Usage: fake_worker.py <model-id> <lock-path>. It holds an exclusive lock on the
-lock path while alive, as a model holds the card, so a second one refuses to
-load. It answers a clip with '<model-id>:<sample count>'. A clip whose first
-sample is CRASH exits mid-clip, and one whose first sample is STALL never answers.
-"""
+"""A worker on the real loop: fake_worker.py <model-id> <lock-path>. It holds the
+lock as a model holds the card, answers '<model-id>:<sample count>', and exits
+or stalls on a clip whose first sample is CRASH or STALL."""
 
 import fcntl
 import os

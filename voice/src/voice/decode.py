@@ -30,11 +30,8 @@ class ClipError(ValueError):
 
 
 def decode(data: bytes, max_seconds: float = MAX_SECONDS) -> Samples:
-    """Decodes webm, mp4, or any container FFmpeg reads to 16 kHz mono float32.
-
-    Stops decoding as soon as the clip passes `max_seconds`, so an overlong
-    upload costs no more work than the limit.
-    """
+    """Decodes webm, mp4, or any container FFmpeg reads to 16 kHz mono float32,
+    stopping as soon as the clip passes `max_seconds`."""
     if not data:
         raise ClipError(Refusal.EMPTY)
     limit = int(max_seconds * SAMPLE_RATE)

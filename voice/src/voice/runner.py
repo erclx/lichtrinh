@@ -1,8 +1,6 @@
-"""Keeps at most one model worker alive and hands it one clip at a time.
-
-The card is shared with the local language model, so a new model stops the
-old worker before its own starts, and an idle worker is stopped to free it.
-"""
+"""Keeps at most one model worker alive and hands it one clip at a time. The
+card is shared with the local language model, so a new model stops the old
+worker before its own starts, and an idle worker is stopped to free it."""
 
 import asyncio
 import logging

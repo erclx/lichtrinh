@@ -1,8 +1,6 @@
-"""Frames between the server and a model worker, over the worker's stdin and stdout.
-
-Each frame is two big-endian uint32 lengths, a JSON object header, and a raw
-payload, so samples cross as float32 bytes with no port or file between the two.
-"""
+"""Frames between the server and a worker over the worker's stdin and stdout:
+two big-endian uint32 lengths, a JSON object header, and a raw payload, so
+samples cross as float32 bytes with no port or file between the two."""
 
 import asyncio
 import json
