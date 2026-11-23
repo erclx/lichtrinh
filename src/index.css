@@ -3,7 +3,7 @@
 @import 'shadcn/tailwind.css';
 @import '@fontsource-variable/nunito';
 
-/* The head script in index.html sets data-theme from the device scheme, and the Settings override takes over that attribute. */
+/* The head script in index.html sets data-theme from the stored Appearance choice, or from the device scheme on Auto. */
 @custom-variant dark (&:where([data-theme=dark], [data-theme=dark] *));
 
 @theme inline {

@@ -1,6 +1,6 @@
 import '@/i18n/setup'
 
-import { render, screen } from '@testing-library/react'
+import { render, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { createMemoryRouter, RouterProvider } from 'react-router'
 
@@ -98,6 +98,51 @@ describe('SettingsPage', () => {
     expect(api.requests.at(-1)).toMatchObject({
       method: 'PATCH',
       body: { language: 'vi' },
+    })
+  })
+
+  describe('Appearance', () => {
+    afterEach(() => {
+      delete document.documentElement.dataset.theme
+    })
+
+    it('marks Auto pressed when nothing is stored', async () => {
+      fakeApi({ 'GET /auth/me': () => json(aUser()) })
+
+      renderSettings()
+      const group = await screen.findByRole('group', { name: 'Appearance' })
+
+      expect(
+        within(group).getByRole('button', { name: 'Auto' }),
+      ).toHaveAttribute('aria-pressed', 'true')
+    })
+
+    it('themes the page dark on Dark and remembers it on the device', async () => {
+      const user = userEvent.setup()
+      const api = fakeApi({ 'GET /auth/me': () => json(aUser()) })
+      renderSettings()
+      const group = await screen.findByRole('group', { name: 'Appearance' })
+
+      await user.click(within(group).getByRole('button', { name: 'Dark' }))
+
+      expect(document.documentElement.dataset.theme).toBe('dark')
+      expect(localStorage.getItem('lichtrinh.theme')).toBe('dark')
+      expect(
+        within(group).getByRole('button', { name: 'Dark' }),
+      ).toHaveAttribute('aria-pressed', 'true')
+      expect(api.requests.map((request) => request.method)).toEqual(['GET'])
+    })
+
+    it('opens on the choice the device remembers', async () => {
+      localStorage.setItem('lichtrinh.theme', 'light')
+      fakeApi({ 'GET /auth/me': () => json(aUser()) })
+
+      renderSettings()
+      const group = await screen.findByRole('group', { name: 'Appearance' })
+
+      expect(
+        within(group).getByRole('button', { name: 'Light' }),
+      ).toHaveAttribute('aria-pressed', 'true')
     })
   })
 })

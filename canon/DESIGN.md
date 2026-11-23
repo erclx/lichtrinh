@@ -7,11 +7,11 @@ reviewed: 2026-11-21
 
 # Design
 
-Values live in `src/index.css`, light on `:root` and dark on `:root[data-theme='dark']`, an attribute the head script in `index.html` sets from the device scheme. This record holds the intent.
+Values live in `src/index.css`, light on `:root` and dark on `:root[data-theme='dark']`, an attribute the head script in `index.html` sets from the Appearance choice in Settings, or from the device scheme on Auto. This record holds the intent.
 
 ## Overview
 
-Calm, large, and plain for an older traveler reading on an iPhone. Near-black controls sit on a pale ground, the type is big, and soft pastels only ever say what kind of thing an entry is. Every screen exists in light and dark and follows the device.
+Calm, large, and plain for an older traveler reading on an iPhone. Near-black controls sit on a pale ground, the type is big, and soft pastels only ever say what kind of thing an entry is. Every screen exists in light and dark and follows the device unless a person picks one in Settings.
 
 ## Colors
 
