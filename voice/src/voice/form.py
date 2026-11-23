@@ -9,6 +9,19 @@ class FormError(ValueError):
     """The body is not a multipart form."""
 
 
+def encode_form(fields: dict[str, bytes], boundary: str) -> tuple[str, bytes]:
+    """Returns the content type and body of a multipart form holding `fields`."""
+    body = b''.join(
+        f'--{boundary}\r\nContent-Disposition: form-data; name="{name}"; '
+        f'filename="{name}"\r\n\r\n'.encode()
+        + value
+        + b'\r\n'
+        for name, value in fields.items()
+    )
+    content_type = f'multipart/form-data; boundary={boundary}'
+    return content_type, body + f'--{boundary}--\r\n'.encode()
+
+
 def parse_form(body: bytes, content_type: str) -> dict[str, bytes]:
     """Returns each part's bytes by its field name. A repeated name keeps the last."""
     kind, options = parse_options_header(content_type)
