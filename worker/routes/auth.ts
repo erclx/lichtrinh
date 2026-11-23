@@ -16,12 +16,7 @@ import { createDb } from '../db/client.ts'
 import { users } from '../db/schema.ts'
 import { toUser } from '../db/users.ts'
 import { fail, parseBody } from '../envelope.ts'
-
-// Logs carry the account id and the outcome alone, never the username typed,
-// which can be a password entered in the wrong field.
-function logOutcome(outcome: string, userId?: string) {
-  console.log(JSON.stringify({ outcome, userId }))
-}
+import { logOutcome } from '../log.ts'
 
 export const authRoutes = new Hono<AuthEnv>()
   .post('/auth/sign-in', async (c) => {
@@ -54,7 +49,7 @@ export const authRoutes = new Hono<AuthEnv>()
     )
     if (account === undefined || !valid) {
       await recordFailure(db, keys, now)
-      logOutcome('sign_in_refused', account?.id)
+      logOutcome('sign_in_refused', { userId: account?.id })
       return c.json(
         fail('invalid_credentials', 'Wrong username or password'),
         401,
@@ -63,12 +58,12 @@ export const authRoutes = new Hono<AuthEnv>()
 
     await clearFailures(db, byName)
     await startSession(c, db, account.id, now)
-    logOutcome('signed_in', account.id)
+    logOutcome('signed_in', { userId: account.id })
     return c.json(toUser(account))
   })
   .post('/auth/sign-out', async (c) => {
     await endSession(c, createDb(c.env.DB), c.var.sessionId)
-    logOutcome('signed_out', c.var.user.id)
+    logOutcome('signed_out', { userId: c.var.user.id })
     return c.body(null, 204)
   })
   .get('/auth/me', (c) => c.json(c.var.user))
@@ -84,6 +79,6 @@ export const authRoutes = new Hono<AuthEnv>()
     if (updated === undefined) {
       return c.json(fail('unauthenticated', 'Sign in first'), 401)
     }
-    logOutcome('language_set', updated.id)
+    logOutcome('language_set', { userId: updated.id })
     return c.json(toUser(updated))
   })
