@@ -160,6 +160,26 @@ describe('EditAccountPage', () => {
     )
   })
 
+  it('sends no language for an account that never picked one', async () => {
+    const user = userEvent.setup()
+    const unset = aUser({ id: 'user-unset', displayName: 'Họ hàng' })
+    const api = fakeApi({
+      'GET /auth/me': () => json(admin),
+      'GET /admin/users': () => json({ users: [admin, unset] }),
+      'PATCH /admin/users/user-unset': () =>
+        json({ user: { ...unset, canChat: true } }),
+    })
+    renderEdit('user-unset')
+
+    await user.click(await screen.findByRole('button', { name: 'On' }))
+    await user.click(screen.getByRole('button', { name: 'Save' }))
+
+    await screen.findByRole('heading', { name: 'Accounts' })
+    expect(api.requests.find(({ method }) => method === 'PATCH')?.body).toEqual(
+      { canChat: true },
+    )
+  })
+
   it('renders the not-found page for an id no account holds', async () => {
     fakeApi(listed())
 
