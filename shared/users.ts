@@ -20,6 +20,23 @@ export const createUserRequest = z.strictObject({
 })
 export type CreateUserRequest = z.input<typeof createUserRequest>
 
+// Strict and never empty, so a body naming the username, the id, or the hash
+// fails rather than being ignored. Language takes no null, since null means a
+// person who never picked one.
+export const updateUserRequest = z
+  .strictObject({
+    displayName: createUserRequest.shape.displayName,
+    role,
+    canChat: z.boolean(),
+    language,
+  })
+  .partial()
+  .refine((changes) => Object.keys(changes).length > 0)
+export type UpdateUserRequest = z.infer<typeof updateUserRequest>
+
+export const updatedUser = z.strictObject({ user })
+export type UpdatedUser = z.infer<typeof updatedUser>
+
 /**
  * A generated password, returned once and never stored in the clear. It comes
  * without grouping spaces, and sign-in accepts it with or without them.

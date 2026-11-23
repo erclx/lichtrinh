@@ -1,8 +1,13 @@
 import { generatePassword } from '@shared/generated-password.ts'
 import { hashPassword } from '@shared/password-hash.ts'
-import type { CreatedUser, OneTimePassword, UserList } from '@shared/users.ts'
-import { createUserRequest } from '@shared/users.ts'
-import { asc, eq } from 'drizzle-orm'
+import type {
+  CreatedUser,
+  OneTimePassword,
+  UpdatedUser,
+  UserList,
+} from '@shared/users.ts'
+import { createUserRequest, updateUserRequest } from '@shared/users.ts'
+import { and, asc, eq, sql } from 'drizzle-orm'
 import { Hono } from 'hono'
 
 import type { AuthEnv } from '../auth/guard.ts'
@@ -52,6 +57,38 @@ export const userRoutes = new Hono<AuthEnv>()
       password,
     }
     return c.json(body, 201)
+  })
+  .patch('/admin/users/:id', async (c) => {
+    const id = c.req.param('id')
+    const changes = await parseBody(c, updateUserRequest)
+    const db = createDb(c.env.DB)
+    // The count sits inside the one statement, so two demotions racing past
+    // a separate read cannot both pass and leave no admin.
+    const keepsAnAdmin =
+      changes.role === 'member'
+        ? sql`not (${users.role} = ${'admin'} and (select count(*) from ${users} where ${users.role} = ${'admin'}) = 1)`
+        : undefined
+    const updated = await db
+      .update(users)
+      .set(changes)
+      .where(and(eq(users.id, id), keepsAnAdmin))
+      .returning()
+      .get()
+    if (updated === undefined) {
+      const exists = await db
+        .select({ id: users.id })
+        .from(users)
+        .where(eq(users.id, id))
+        .get()
+      if (exists === undefined) {
+        return c.json(fail('not_found', 'No such account'), 404)
+      }
+      logOutcome('user_update_refused', { userId: id, byUserId: c.var.user.id })
+      return c.json(fail('last_admin', 'The app needs one admin'), 409)
+    }
+    logOutcome('user_updated', { userId: id, byUserId: c.var.user.id })
+    const body: UpdatedUser = { user: toUser(updated) }
+    return c.json(body)
   })
   .post('/admin/users/:id/password', async (c) => {
     const id = c.req.param('id')

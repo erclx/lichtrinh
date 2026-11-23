@@ -21,6 +21,7 @@ export const apiErrorCode = z.enum([
   'assistant_busy',
   'assistant_failed',
   'no_trip',
+  'last_admin',
 ])
 export type ApiErrorCode = z.infer<typeof apiErrorCode>
 
