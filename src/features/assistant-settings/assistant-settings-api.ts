@@ -4,8 +4,23 @@ import {
   assistantStatus,
 } from '@shared/assistant.ts'
 import { contactSettings } from '@shared/settings.ts'
+import { voiceAdmin, type VoiceModel, voiceSettings } from '@shared/voice.ts'
 
 import { apiFetch } from '@/lib/api'
+
+/** The speech model every clip runs on, with how each model did in use. */
+export function readVoice() {
+  return apiFetch('/admin/voice', { schema: voiceAdmin })
+}
+
+export async function saveVoiceModel(model: VoiceModel) {
+  const saved = await apiFetch('/admin/voice', {
+    method: 'PUT',
+    body: { model },
+    schema: voiceSettings,
+  })
+  return saved.model
+}
 
 export function readAssistantStatus() {
   return apiFetch('/assistant/status', { schema: assistantStatus })
