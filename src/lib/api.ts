@@ -84,7 +84,8 @@ export async function apiFetch(
   return parsed.data
 }
 
-async function failureFrom(response: Response): Promise<ApiFailure> {
+/** Reads a refused answer's envelope, for a caller reading the body itself. */
+export async function failureFrom(response: Response): Promise<ApiFailure> {
   const parsed = apiError.safeParse(await readJson(response))
   if (!parsed.success) {
     return new ApiFailure('unexpected_response', response.status, null)
