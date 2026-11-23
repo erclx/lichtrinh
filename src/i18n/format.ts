@@ -1,4 +1,5 @@
 import { minorDigits } from '@shared/currency.ts'
+import { divideHalfUp } from '@shared/rates.ts'
 
 import type { Language } from './resources'
 
@@ -142,4 +143,24 @@ export function formatMoney(
     style: 'currency',
     currency,
   }).format(minor / 10 ** minorDigits(currency))
+}
+
+/**
+ * An estimate in whole major units with the currency's code, such as
+ * `268 USD`, rounding a half up. It takes the `BigInt` a conversion gives,
+ * which stays exact past the safe integer range.
+ */
+export function formatApproxMoney(
+  minor: number | bigint,
+  currency: string,
+  language: Language,
+): string {
+  const whole = divideHalfUp(
+    BigInt(minor),
+    10n ** BigInt(minorDigits(currency)),
+  )
+  const amount = new Intl.NumberFormat(language, {
+    maximumFractionDigits: 0,
+  }).format(whole)
+  return `${amount} ${currency}`
 }

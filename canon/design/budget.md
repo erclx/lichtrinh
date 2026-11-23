@@ -9,7 +9,9 @@ Row v01.7 builds these screens. These frames are a reference, and where that row
 
 ## Code
 
-- None yet. The v01.7 plan names the paths.
+- `src/features/budget/budget-page.tsx`: the trip frames, being the total with its home figure, the kind bar and legend, and By day
+- `src/components/home-estimate.tsx`: the "about" figure beside the total, read by the overview and the day view too
+- The history frames have no code yet, and their row names the paths
 
 ## States
 

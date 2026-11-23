@@ -83,6 +83,27 @@ describe('SettingsPage', () => {
     ).toHaveAttribute('href', '/admin/accounts')
   })
 
+  it('gives the admin the Exchange rates row', async () => {
+    fakeApi({ 'GET /auth/me': () => json(aUser({ role: 'admin' })) })
+
+    renderSettings()
+
+    expect(
+      await screen.findByRole('link', { name: 'Exchange rates' }),
+    ).toHaveAttribute('href', '/admin/rates')
+  })
+
+  it('shows a member no Exchange rates row', async () => {
+    fakeApi({ 'GET /auth/me': () => json(aUser({ role: 'member' })) })
+
+    renderSettings()
+    await screen.findByRole('heading', { name: 'Settings' })
+
+    expect(
+      screen.queryByRole('link', { name: 'Exchange rates' }),
+    ).not.toBeInTheDocument()
+  })
+
   it('gives the admin the Assistant row', async () => {
     fakeApi({ 'GET /auth/me': () => json(aUser({ role: 'admin' })) })
 

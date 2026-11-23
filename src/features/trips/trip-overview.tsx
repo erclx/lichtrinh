@@ -1,9 +1,10 @@
-import type { Entry } from '@shared/entries.ts'
+import { sumCosts } from '@shared/budget.ts'
 import { nowInZone } from '@shared/trip-time.ts'
 import { useTranslation } from 'react-i18next'
 import { Link, useParams } from 'react-router'
 
 import { useTrip } from '@/calendar-data/queries'
+import { HomeEstimate } from '@/components/home-estimate'
 import { kindTone } from '@/components/kinds'
 import { LoadFailed } from '@/components/load-failed'
 import { RefreshFailed } from '@/components/refresh-failed'
@@ -16,13 +17,6 @@ import { datesBetween, daysIn } from '@/lib/trip-days'
 import { cn } from '@/lib/utils'
 import { ChevronIcon } from '@/shell/icons'
 import { PageHeader } from '@/shell/page-header'
-
-function costOf(entries: Entry[]) {
-  const costs = entries.flatMap(({ costMinor }) =>
-    costMinor === null ? [] : [costMinor],
-  )
-  return costs.length === 0 ? null : costs.reduce((sum, cost) => sum + cost, 0)
-}
 
 /** One trip's card with its total, then each of its days opening that day. */
 export function TripOverview() {
@@ -70,7 +64,7 @@ export function TripOverview() {
   }
 
   const { trip, entries } = query.data
-  const total = costOf(entries)
+  const total = sumCosts(entries)
   const today = nowInZone(now, trip.timeZone).date
   const tripPath = `/trips/${encodeURIComponent(trip.id)}`
 
@@ -89,11 +83,28 @@ export function TripOverview() {
           ].join(' · ')}
         </p>
         {total !== null && (
-          <p className="font-heading text-xl font-extrabold">
-            {formatMoney(total, trip.currency, language)}
+          <p className="flex flex-wrap items-baseline gap-x-2">
+            <span className="font-heading text-xl font-extrabold">
+              {formatMoney(total, trip.currency, language)}
+            </span>
+            <HomeEstimate
+              amountMinor={total}
+              currency={trip.currency}
+              homeCurrency={trip.homeCurrency}
+              className="text-base text-muted-foreground"
+            />
           </p>
         )}
       </section>
+
+      <div className="flex flex-wrap gap-2 pt-3">
+        <Link
+          to={`${tripPath}/budget`}
+          className={cn(buttonVariants({ variant: 'secondary' }))}
+        >
+          {t('budget.title')}
+        </Link>
+      </div>
 
       <h2 className="pt-6 pb-1 font-heading text-lg font-extrabold">
         {t('trips.days')}
@@ -101,7 +112,7 @@ export function TripOverview() {
       <ul>
         {datesBetween(trip.startsOn, trip.endsOn).map((date, index) => {
           const onDay = entries.filter((entry) => entry.startsOn === date)
-          const cost = costOf(onDay)
+          const cost = sumCosts(onDay)
           return (
             <li key={date} className="border-b-[1.5px] border-border">
               <Link

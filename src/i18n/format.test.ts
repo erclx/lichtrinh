@@ -1,4 +1,5 @@
 import {
+  formatApproxMoney,
   formatCardDate,
   formatDateSpan,
   formatDuration,
@@ -88,6 +89,34 @@ describe('formatMoney', () => {
       expect(formatMoney(minor, currency, language)).toBe(text)
     },
   )
+})
+
+describe('formatApproxMoney', () => {
+  it.each([
+    ['vi', 26_824n, 'USD', '268 USD'],
+    ['en', 26_824n, 'USD', '268 USD'],
+    ['vi', 1_234_567n, 'VND', '1.234.567 VND'],
+    ['en', 1_234_567n, 'VND', '1,234,567 VND'],
+  ] as const)(
+    'reads whole major units with the code in %s',
+    (language, minor, currency, text) => {
+      expect(formatApproxMoney(minor, currency, language)).toBe(text)
+    },
+  )
+
+  it('rounds a half up to the whole unit', () => {
+    expect(formatApproxMoney(26_850n, 'USD', 'en')).toBe('269 USD')
+  })
+
+  it('rounds just under a half down', () => {
+    expect(formatApproxMoney(26_849n, 'USD', 'en')).toBe('268 USD')
+  })
+
+  it('keeps an amount past the safe integer range exact', () => {
+    expect(
+      formatApproxMoney(900_719_925_473_198_380_074_526n, 'USD', 'en'),
+    ).toBe('9,007,199,254,731,983,800,745 USD')
+  })
 })
 
 describe('formatLongDate', () => {

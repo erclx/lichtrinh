@@ -138,6 +138,25 @@ export const FIXTURE_ENTRIES: readonly FixtureEntry[] = [
     costMinor: 50_000,
     addedBy: 'fixture-admin',
   }),
+  // No kind, for the budget's Uncategorized row.
+  onRiver('fixture-entry-postcards', '2031-05-14', {
+    title: 'Postcards and stamps',
+    notes: null,
+    kind: null,
+    startTime: '15:00',
+    endTime: '15:30',
+    costMinor: 60_000,
+    addedBy: 'fixture-traveler',
+  }),
+  onRiver('fixture-entry-massage', '2031-05-17', {
+    title: 'Foot massage by the river',
+    notes: null,
+    kind: 'rest',
+    startTime: '16:00',
+    endTime: '17:00',
+    costMinor: 250_000,
+    addedBy: 'fixture-admin',
+  }),
   onRiver('fixture-entry-breakfast', '2031-05-15', {
     title: 'Pho breakfast near the hotel',
     notes: null,
@@ -196,6 +215,17 @@ export const FIXTURE_ENTRIES: readonly FixtureEntry[] = [
     costMinor: 300_000,
     addedBy: 'fixture-traveler',
   },
+]
+
+export interface FixtureRate {
+  from: string
+  to: string
+  rate: string
+}
+
+/** The river trip's pair, set by the admin, so the home figure shows. */
+export const FIXTURE_RATES: readonly FixtureRate[] = [
+  { from: 'USD', to: 'VND', rate: '25500' },
 ]
 
 /** The assistant's add in the seeded chat, which its card undoes. */
@@ -358,6 +388,7 @@ async function insertAccounts(state: string) {
     await proxy.env.DB.batch(rows)
     await proxy.env.DB.batch(calendarRows(proxy.env.DB))
     await proxy.env.DB.batch(chatRows(proxy.env.DB))
+    await proxy.env.DB.batch(rateRows(proxy.env.DB))
   } finally {
     await proxy.dispose()
   }
@@ -417,6 +448,19 @@ function calendarRows(db: SeedDatabase) {
       ),
     ),
   ]
+}
+
+// Under the `rate:<FROM>:<TO>` key the rates route reads.
+function rateRows(db: SeedDatabase) {
+  const rate = db.prepare(
+    `INSERT INTO settings (key, value, updated_at, updated_by)
+     VALUES (?, ?, ?, 'fixture-admin')
+     ON CONFLICT (key) DO NOTHING`,
+  )
+  const at = Date.UTC(2031, 4, 1)
+  return FIXTURE_RATES.map((fixture) =>
+    rate.bind(`rate:${fixture.from}:${fixture.to}`, fixture.rate, at),
+  )
 }
 
 // The assistant's entry carries its change, so the seeded chat's card can

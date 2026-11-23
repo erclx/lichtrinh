@@ -15,6 +15,8 @@ export function logOutcome(
     messageId?: string
     transcriptionId?: string
     model?: string
+    /** A currency pair such as `USD:VND`, two codes the route already checked. */
+    pair?: string
     changes?: number
     audioMs?: number
     ms?: number

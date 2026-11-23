@@ -13,6 +13,7 @@ export const calendarKeys = {
   trip: (id: string) => ['calendar', 'trip', id] as const,
   entries: (range: EntryRange) => ['calendar', 'entries', range] as const,
   entry: (id: string) => ['calendar', 'entry', id] as const,
+  rates: () => ['calendar', 'rates'] as const,
 }
 
 export function useTrips() {
