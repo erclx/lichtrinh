@@ -4,6 +4,7 @@ import react from '@vitejs/plugin-react'
 import { readFileSync } from 'fs'
 import path from 'path'
 import { defineConfig } from 'vite'
+import { VitePWA } from 'vite-plugin-pwa'
 
 const portOffset = Number(process.env.WORKTREE_PORT_OFFSET) || 0
 
@@ -33,7 +34,26 @@ export default defineConfig({
   define: {
     __APP_VERSION__: JSON.stringify(appVersion),
   },
-  plugins: [react(), tailwindcss(), cloudflare(cloudflareOptions)],
+  plugins: [
+    react(),
+    tailwindcss(),
+    cloudflare(cloudflareOptions),
+    // A worker holding the built app, so a reload with no connection still
+    // opens it. It never answers under `/api/`, so a cached answer cannot
+    // outlive a sign-out, and the home-screen manifest is a later row's.
+    VitePWA({
+      registerType: 'autoUpdate',
+      injectRegister: false,
+      manifest: false,
+      workbox: {
+        globPatterns: ['**/*.{js,css,html,svg,png,ico,woff2}'],
+        // The social cards are for link previews, never read in the app.
+        globIgnores: ['**/og-image*'],
+        navigateFallback: 'index.html',
+        navigateFallbackDenylist: [/^\/api\//],
+      },
+    }),
+  ],
   resolve: {
     alias: {
       '@': path.resolve(import.meta.dirname, './src'),
