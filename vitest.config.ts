@@ -60,7 +60,7 @@ export default mergeConfig(
           ],
           test: {
             name: 'worker',
-            include: ['worker/**/*.spec.ts'],
+            include: ['worker/**/*.{test,spec}.ts'],
             setupFiles: ['worker/test/apply-migrations.ts'],
           },
         },
