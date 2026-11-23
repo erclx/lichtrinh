@@ -16,7 +16,7 @@ interface TalkBarProps {
 /**
  * The bar that opens the assistant: above the tabs on a phone, where it
  * opens the latest chat's page, and at the foot of the page from 480 wide,
- * where it opens the sheet. Drawn without the mic, which v01.6 adds.
+ * where it opens the sheet. The mic lives in the composer it opens.
  */
 export function TalkBar({ onOpenPanel, talkRef }: TalkBarProps) {
   const { t } = useTranslation()
