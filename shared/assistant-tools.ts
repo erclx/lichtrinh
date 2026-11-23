@@ -3,10 +3,9 @@ import { z } from 'zod'
 import type { Entry } from './entries.ts'
 import { clockTime, localDate } from './trip-time.ts'
 
-// The four calendar tools the model may call, and nothing else. Every tool
-// acts on the chat's own trip, so none takes a trip id, and the Worker runs
-// each call as the chat's owner. Argument names are snake_case because the
-// scored harness offered them that way.
+// The four calendar tools the model may call. Each acts on the chat's own
+// trip, so none takes a trip id. Names are snake_case as the scored harness
+// offered them.
 
 const entryId = z
   .string()

@@ -1,6 +1,5 @@
-// The bridge on the workspace PC: dials out to the relay, runs each turn
-// against the local model, and redials with backoff when the socket drops.
-// It writes nothing to disk and logs ids, the model alias, counts, and
+// Dials out to the relay, runs each turn on the local model, and redials
+// with backoff. It writes nothing to disk and logs ids, the alias, and
 // durations, never message text or tool arguments.
 import type { AssistantModel } from '@shared/assistant.ts'
 import type { DownFrame } from '@shared/bridge-frames.ts'

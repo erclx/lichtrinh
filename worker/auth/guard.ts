@@ -11,10 +11,8 @@ export interface AuthEnv {
   Variables: { user: User; sessionId: string }
 }
 
-// The only routes a signed-out caller reaches. Every other path, an unknown
-// one included, needs a session, so a new route is protected by default.
-// The bridge's socket holds a secret rather than a session, which its own
-// route checks.
+// The only routes a signed-out caller reaches, so a new route is protected
+// by default. The bridge socket carries a secret its own route checks.
 const SIGNED_OUT_ROUTES = new Set([
   'GET /api/health',
   'POST /api/auth/sign-in',

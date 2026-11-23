@@ -72,11 +72,8 @@ export function relayOf(env: Env) {
 }
 
 /**
- * Holds the socket the workspace PC's bridge dials out on and the one turn
- * it is answering. It accepts the socket through the hibernation API, so an
- * idle connection costs nothing, and the runtime answers the bridge's pings
- * without waking it. An open turn holds a response, which keeps the object
- * in memory until the turn ends.
+ * Holds the bridge's hibernatable socket, idle at no cost with pings answered
+ * by the runtime, and the one open turn, whose response keeps it in memory.
  */
 export class AssistantRelay extends DurableObject<Env> {
   private turn: OpenTurn | undefined
@@ -138,8 +135,7 @@ export class AssistantRelay extends DurableObject<Env> {
     if (turn?.socket === ws) {
       this.enqueue(turn, () => this.finish(turn, { kind: 'closed' }))
     }
-    // A hibernatable socket completes the closing handshake by hand. The
-    // codes below carry no close frame to echo.
+    // A hibernatable socket echoes the close by hand, bar codes with no frame.
     if (ws.readyState === WebSocket.CLOSED) return
     if ([1005, 1006, 1015].includes(code)) ws.close()
     else ws.close(code, reason)

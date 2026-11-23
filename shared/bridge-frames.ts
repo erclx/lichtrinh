@@ -2,10 +2,9 @@ import { z } from 'zod'
 
 import { assistantModel } from './assistant.ts'
 
-// The socket protocol between the relay in the Worker and the bridge on the
-// workspace PC. The two deploy apart, so the bridge opens with its protocol
-// version and the relay closes a socket speaking another one. A change a
-// running bridge would misread raises the version.
+// The relay and the workspace PC's bridge deploy apart, so the bridge opens
+// with this version and the relay closes a socket speaking another. A change
+// a running bridge would misread raises it.
 export const BRIDGE_PROTOCOL = 1
 
 /** The close code the relay sends a bridge speaking another protocol. */

@@ -11,10 +11,8 @@ export interface BridgeConfig {
 }
 
 /**
- * The bridge's settings, read from the environment the owner's env file
- * sets. Throws naming what is missing or unsafe: a remote app reached over
- * plain `http:`, which would send the secret in the clear, or an Ollama
- * anywhere but this machine.
+ * The bridge's settings from the environment. Throws on a missing setting,
+ * a remote app over plain `http:`, or an Ollama off this machine.
  */
 export function readConfig(
   env: Record<string, string | undefined>,

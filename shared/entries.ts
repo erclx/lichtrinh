@@ -38,10 +38,8 @@ export function endsBeforeStart(span: Span) {
 const LAST_START_HOUR = 23
 
 /**
- * Where a new entry starts when nobody named a time: the first whole hour
- * after the day's last entry ends, or 09:00 on an empty day. `day` holds the
- * entries starting on that date. Past 23:00, or after an entry running past
- * midnight, it stops at 23:00.
+ * The first whole hour after the last of `day`'s entries ends, 09:00 on an
+ * empty day, and never past 23:00, for a new entry nobody named a time for.
  */
 export function firstFreeHour(day: Span[]): string {
   if (day.length === 0) return '09:00'

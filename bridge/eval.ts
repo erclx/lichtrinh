@@ -1,7 +1,6 @@
-// Scores an alias live on the invented requests in fixtures/requests.json,
-// each sent with its diacritics and again without, through the same prompt
-// and loop a real turn takes, over an in-memory copy of the fixture trip.
-// Run by hand on the workspace PC after an Ollama upgrade or a model change.
+// Scores an alias live on fixtures/requests.json, each ask with and without
+// diacritics, through the real prompt and loop over an in-memory trip. Run by
+// hand on the workspace PC after an Ollama upgrade or a model change.
 import { parseArgs } from 'node:util'
 
 import type { AssistantModel } from '@shared/assistant.ts'

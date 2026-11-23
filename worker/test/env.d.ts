@@ -1,10 +1,8 @@
 import type { D1Migration } from 'cloudflare:test'
 
 declare global {
-  // A Wrangler secret in production and a `.dev.vars` line locally, which
-  // the test project binds a fixed value for. Declared here because
-  // `wrangler types` writes it only where `.dev.vars` exists, and CI has
-  // none. The relay binding comes from wrangler.jsonc.
+  // A Wrangler secret, declared by hand since `wrangler types` writes it
+  // only where `.dev.vars` exists, which CI lacks.
   interface Env {
     BRIDGE_SECRET: string
   }

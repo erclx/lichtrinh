@@ -28,11 +28,8 @@ export interface RunningTurn {
 type Ended = 'cancelled' | 'timeout' | undefined
 
 /**
- * Runs one turn as a short tool loop over Ollama's chat API. Text streams up
- * as it arrives and every tool call goes up to the relay, which runs it in
- * the Worker, so the loop itself touches nothing beyond the socket and the
- * model. It ends on a reply with no tool call, at six rounds, on a cancel,
- * or at the turn timeout.
+ * One turn as a tool loop over Ollama's chat API. Every tool call goes up to
+ * the relay, and it ends on a plain reply, six rounds, a cancel, or a timeout.
  */
 export function runTurn(
   turn: TurnFrame,
@@ -157,10 +154,8 @@ const CONFIRM_FIRST = {
 }
 
 /**
- * Holds a turn to one removal unless the reply before this message asked
- * the traveler a question, which the prompt has it ask before removing
- * several entries or a whole day. A round asking for several removals is
- * refused whole, so none of them lands before the question.
+ * Holds a turn to one removal unless the last reply asked a question. A
+ * round asking for several is refused whole, so none lands before the ask.
  */
 function removalGuard(turn: TurnFrame) {
   const lastReply = turn.messages

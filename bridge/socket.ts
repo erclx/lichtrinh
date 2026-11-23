@@ -26,8 +26,7 @@ export function openSocket(
   config: BridgeConfig,
   handlers: Handlers,
 ): BridgeSocket {
-  // Bun's WebSocket takes request headers in its second argument, which the
-  // DOM typing reads as subprotocols.
+  // Bun takes headers here, which the DOM typing reads as subprotocols.
   const options = { headers: { authorization: `Bearer ${config.secret}` } }
   const ws = new WebSocket(config.connectUrl, options as unknown as string[])
   let ping: ReturnType<typeof setInterval> | undefined
