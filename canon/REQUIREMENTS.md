@@ -16,7 +16,7 @@ This record holds at most 600 words.
 - **Know the budget.** Estimated costs add up per day and per trip in the trip's currency, with an approximate home-currency total beside them.
 - **Undo anything.** Every change, by a person or by the assistant, records who made it and can be undone.
 - **Keep the conversations.** The traveler keeps a list of chats with the assistant, picks one up where it stopped, and starts a new one at will.
-- **Vietnamese first.** Every screen exists in Vietnamese and English. Production opens in Vietnamese and development in English, with a toggle in both.
+- **Vietnamese first.** Every screen exists in Vietnamese and English. Each account opens in its own language, Vietnamese unless the admin sets otherwise, and development opens in English, with a toggle in both.
 - **Learn safely.** A guided tutorial walks through each control, and a practice trip lets the traveler try everything without touching real plans.
 - **Readable offline.** The traveler can read the last loaded plan without a connection.
 - **Accurate voice.** Speech recognition is picked by measuring the candidates on the traveler's own northern Vietnamese speech, not on a vendor's claim.
