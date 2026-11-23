@@ -1,0 +1,243 @@
+import type { DeleteRequest, Removed, TripFields } from '@shared/changes.ts'
+import { tripFields } from '@shared/changes.ts'
+import type {
+  createTripRequest,
+  Trip,
+  TripWrite,
+  updateTripRequest,
+} from '@shared/trips.ts'
+import { and, asc, eq, exists, isNull, sql } from 'drizzle-orm'
+import type { z } from 'zod'
+
+import { changes, trips } from '../db/schema.ts'
+import { logOutcome } from '../log.ts'
+import type { Actor, Db, Refused } from './record.ts'
+import {
+  deferForeignKeys,
+  insertWhen,
+  recordChange,
+  recorded,
+  refused,
+  sameFields,
+} from './record.ts'
+
+type TripRow = typeof trips.$inferSelect
+
+export function tripFieldsOf(row: TripRow): TripFields {
+  return {
+    name: row.name,
+    startsOn: row.startsOn,
+    endsOn: row.endsOn,
+    timeZone: row.timeZone,
+    currency: row.currency,
+    homeCurrency: row.homeCurrency,
+  }
+}
+
+export function toTrip(row: TripRow): Trip {
+  return { id: row.id, ...tripFieldsOf(row), version: row.version }
+}
+
+/** The condition that the trip is live and still at the version read. */
+export function tripAt(db: Db, id: string, version: number) {
+  return exists(
+    db
+      .select({ one: sql`1` })
+      .from(trips)
+      .where(
+        and(
+          eq(trips.id, id),
+          eq(trips.version, version),
+          isNull(trips.deletedAt),
+        ),
+      ),
+  )
+}
+
+export function liveTrip(db: Db, id: string) {
+  return db
+    .select()
+    .from(trips)
+    .where(and(eq(trips.id, id), isNull(trips.deletedAt)))
+    .get()
+}
+
+// Classifies a write whose guard refused it, from the row as it stands now.
+async function whyRefused(db: Db, id: string, version: number) {
+  const row = await liveTrip(db, id)
+  if (row === undefined) return refused('not_found')
+  if (row.version !== version) return refused('edit_conflict')
+  return refused('entries_outside_range')
+}
+
+export function listTrips(db: Db): Promise<Trip[]> {
+  return db
+    .select()
+    .from(trips)
+    .where(isNull(trips.deletedAt))
+    .orderBy(asc(trips.startsOn), asc(trips.endsOn), asc(trips.id))
+    .then((rows) => rows.map(toTrip))
+}
+
+export async function createTrip(
+  db: Db,
+  actor: Actor,
+  request: z.output<typeof createTripRequest>,
+  at: Date,
+): Promise<TripWrite | Refused> {
+  const { id, ...fields } = request
+  const changeId = crypto.randomUUID()
+  const [, guard] = await db.batch([
+    deferForeignKeys(db),
+    recordChange(
+      db,
+      actor,
+      at,
+      {
+        id: changeId,
+        tripId: id,
+        op: 'create',
+        entity: 'trip',
+        entityId: id,
+        before: null,
+        after: fields,
+      },
+      sql`not exists (select 1 from trips where id = ${id})`,
+    ),
+    insertWhen(
+      db,
+      trips,
+      { id, ...fields, version: 1 },
+      recorded(db, changeId),
+    ),
+  ])
+  if (guard.meta.changes === 0) return replayCreate(db, id, fields)
+  logOutcome('trip_created', { tripId: id, changeId, byUserId: actor.userId })
+  const row = await liveTrip(db, id)
+  if (row === undefined) throw new Error('A created trip did not read back')
+  return { trip: toTrip(row), changeId }
+}
+
+// The id is taken, so this is a retry of that create or a client bug. A
+// retry carries the body the first create stored, and answers what the
+// first one answered.
+async function replayCreate(
+  db: Db,
+  id: string,
+  fields: TripFields,
+): Promise<TripWrite | Refused> {
+  const [row, created] = await Promise.all([
+    liveTrip(db, id),
+    db
+      .select({ id: changes.id, after: changes.after })
+      .from(changes)
+      .where(
+        and(
+          eq(changes.entity, 'trip'),
+          eq(changes.entityId, id),
+          eq(changes.op, 'create'),
+        ),
+      )
+      .get(),
+  ])
+  if (row === undefined || created?.after == null) {
+    return refused('id_conflict')
+  }
+  const stored = tripFields.parse(JSON.parse(created.after))
+  if (!sameFields(stored, fields)) return refused('id_conflict')
+  return { trip: toTrip(row), changeId: created.id }
+}
+
+export async function updateTrip(
+  db: Db,
+  actor: Actor,
+  id: string,
+  request: z.output<typeof updateTripRequest>,
+  at: Date,
+): Promise<TripWrite | Refused> {
+  const row = await liveTrip(db, id)
+  if (row === undefined) return refused('not_found')
+  if (row.version !== request.version) return refused('edit_conflict')
+  const before = tripFieldsOf(row)
+  const after: TripFields = {
+    name: request.name ?? before.name,
+    startsOn: request.startsOn ?? before.startsOn,
+    endsOn: request.endsOn ?? before.endsOn,
+    timeZone: request.timeZone ?? before.timeZone,
+    currency: request.currency ?? before.currency,
+    homeCurrency: request.homeCurrency ?? before.homeCurrency,
+  }
+  if (after.endsOn < after.startsOn) return refused('validation_failed')
+  const changeId = crypto.randomUUID()
+  const [, guard, updated] = await db.batch([
+    deferForeignKeys(db),
+    recordChange(
+      db,
+      actor,
+      at,
+      {
+        id: changeId,
+        tripId: id,
+        op: 'update',
+        entity: 'trip',
+        entityId: id,
+        before,
+        after,
+      },
+      tripAt(db, id, request.version),
+    ),
+    db
+      .update(trips)
+      .set({ ...after, version: sql`${trips.version} + 1` })
+      .where(and(eq(trips.id, id), recorded(db, changeId)))
+      .returning(),
+  ])
+  const trip = updated[0]
+  if (guard.meta.changes === 0 || trip === undefined) {
+    return whyRefused(db, id, request.version)
+  }
+  logOutcome('trip_updated', { tripId: id, changeId, byUserId: actor.userId })
+  return { trip: toTrip(trip), changeId }
+}
+
+/**
+ * Soft-deletes the trip and leaves its entries as they are, so undoing the
+ * delete brings the trip back with every entry it held.
+ */
+export async function deleteTrip(
+  db: Db,
+  actor: Actor,
+  id: string,
+  request: DeleteRequest,
+  at: Date,
+): Promise<Removed | Refused> {
+  const row = await liveTrip(db, id)
+  if (row === undefined) return refused('not_found')
+  if (row.version !== request.version) return refused('edit_conflict')
+  const changeId = crypto.randomUUID()
+  const [, guard] = await db.batch([
+    deferForeignKeys(db),
+    recordChange(
+      db,
+      actor,
+      at,
+      {
+        id: changeId,
+        tripId: id,
+        op: 'delete',
+        entity: 'trip',
+        entityId: id,
+        before: tripFieldsOf(row),
+        after: null,
+      },
+      tripAt(db, id, request.version),
+    ),
+    db
+      .update(trips)
+      .set({ deletedAt: at, version: sql`${trips.version} + 1` })
+      .where(and(eq(trips.id, id), recorded(db, changeId))),
+  ])
+  if (guard.meta.changes === 0) return whyRefused(db, id, request.version)
+  logOutcome('trip_deleted', { tripId: id, changeId, byUserId: actor.userId })
+  return { changeId }
+}

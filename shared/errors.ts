@@ -11,6 +11,11 @@ export const apiErrorCode = z.enum([
   'validation_failed',
   'username_taken',
   'unsupported_media_type',
+  'edit_conflict',
+  'id_conflict',
+  'undo_conflict',
+  'already_undone',
+  'entries_outside_range',
 ])
 export type ApiErrorCode = z.infer<typeof apiErrorCode>
 
