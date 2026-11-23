@@ -4,6 +4,8 @@ import { env } from 'cloudflare:workers'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
 import { app, MAX_BODY_BYTES } from './app.ts'
+import { bare, TEST_ORIGIN } from './test/requests.ts'
+import { signedIn } from './test/users.ts'
 
 // A database whose every call fails with SQL and private text in the
 // message, so a test can prove none of it leaves the Worker.
@@ -40,15 +42,19 @@ describe('GET /api/health', () => {
 })
 
 describe('unknown API paths', () => {
-  it('answers 404 with the not_found envelope', async () => {
-    const res = await app.request('/api/nope', {}, env)
+  it('answers a signed-in caller 404 with the not_found envelope', async () => {
+    const { cookie } = await signedIn()
+
+    const res = await app.request('/api/nope', bare('GET', cookie), env)
 
     expect(res.status).toBe(404)
     expect(apiError.parse(await res.json()).error.code).toBe('not_found')
   })
 
   it('answers JSON, never the app shell', async () => {
-    const res = await app.request('/api/trips/abc', {}, env)
+    const { cookie } = await signedIn()
+
+    const res = await app.request('/api/trips/abc', bare('GET', cookie), env)
 
     expect(res.headers.get('content-type')).toMatch(/^application\/json/)
   })
@@ -67,9 +73,55 @@ describe('request body limit', () => {
   })
 
   it('lets a body exactly at the limit through to routing', async () => {
-    const res = await app.request('/api/health', postBody(MAX_BODY_BYTES), env)
+    const { cookie } = await signedIn()
+
+    const res = await app.request(
+      '/api/health',
+      {
+        ...postBody(MAX_BODY_BYTES),
+        headers: { 'content-type': 'application/json', cookie },
+      },
+      env,
+    )
 
     expect(res.status).toBe(404)
+  })
+})
+
+describe('an unsafe request with a body', () => {
+  it('refuses a form post from another origin with forbidden', async () => {
+    const res = await app.request(
+      '/api/auth/sign-in',
+      {
+        method: 'POST',
+        headers: {
+          'content-type': 'application/x-www-form-urlencoded',
+          origin: 'https://elsewhere.example',
+        },
+        body: 'username=someone&password=guess',
+      },
+      env,
+    )
+
+    expect(res.status).toBe(403)
+    expect(apiError.parse(await res.json()).error.code).toBe('forbidden')
+  })
+
+  it('refuses a same-origin body that is not JSON with unsupported_media_type', async () => {
+    const res = await app.request(
+      '/api/auth/sign-in',
+      {
+        method: 'POST',
+        headers: { 'content-type': 'text/xml', origin: TEST_ORIGIN },
+        body: '<username>someone</username>',
+      },
+      env,
+    )
+
+    expect(res.status).toBe(415)
+    expect(apiError.parse(await res.json()).error.code).toBe(
+      'unsupported_media_type',
+    )
   })
 })
 

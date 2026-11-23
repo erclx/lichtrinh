@@ -1,12 +1,18 @@
 import { Command, CommanderError } from 'commander'
 
 import packageJson from '../package.json' with { type: 'json' }
+import { registerAdmin } from './commands/admin'
 import { registerDb } from './commands/db'
 
 export interface CliIo {
   stdout: (text: string) => void
   stderr: (text: string) => void
   cwd: string
+  /**
+   * Asks the owner a yes or no question. A verb treats a missing one as a
+   * no, so nothing that needs a confirm runs without a person to give it.
+   */
+  confirm?: (question: string) => Promise<boolean>
 }
 
 /** One command line a verb hands off, run inside a checkout. */
@@ -45,6 +51,7 @@ export function createProgram(io: CliIo, run: RunInCheckout): Command {
       writeErr: (text) => io.stderr(text),
     })
   registerDb(program, run)
+  registerAdmin(program, run, io)
   return program
 }
 

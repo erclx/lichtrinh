@@ -4,6 +4,13 @@ export const apiErrorCode = z.enum([
   'not_found',
   'body_too_large',
   'internal_error',
+  'unauthenticated',
+  'forbidden',
+  'invalid_credentials',
+  'rate_limited',
+  'validation_failed',
+  'username_taken',
+  'unsupported_media_type',
 ])
 export type ApiErrorCode = z.infer<typeof apiErrorCode>
 
