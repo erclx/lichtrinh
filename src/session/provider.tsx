@@ -101,8 +101,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
           : current,
       )
     } catch {
-      // The press already applied and is stored on this device, so a failed
-      // save costs only the next new device, and a 401 is the gate's to handle.
+      // The press already applied on this device, and a 401 is the gate's.
     }
   }, [])
 

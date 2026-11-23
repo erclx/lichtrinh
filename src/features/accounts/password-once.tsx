@@ -29,8 +29,7 @@ export function PasswordOnce({
   const [copy, setCopy] = useState<CopyState>('idle')
   const headingRef = useRef<HTMLHeadingElement>(null)
   const groups = groupPassword(password)
-  // Spelled out letter by letter, since a screen reader guesses at a
-  // pronunciation for a group read as a word.
+  // Letter by letter, since a reader guesses at a group read as a word.
   const spoken = groups.map((group) => group.split('').join(' ')).join(', ')
 
   useEffect(() => {

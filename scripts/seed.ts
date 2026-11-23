@@ -1,8 +1,6 @@
-// Migrates a local database and writes the invented fixture accounts that
-// e2e, captures, and review drives sign in with. Run it as
-// `bun scripts/seed.ts`, with LICHTRINH_STATE_ROOT naming the folder whose
-// `.wrangler/state` holds the database, the checkout itself by default.
-// Every account here is invented, and its password is public by design.
+// Migrates the database under LICHTRINH_STATE_ROOT, the checkout by default,
+// and writes the invented accounts e2e, captures, and drives sign in with.
+// Every account is invented, so its password is public by design.
 
 import { spawnSync } from 'node:child_process'
 import { join, resolve } from 'node:path'
@@ -79,8 +77,7 @@ async function insertAccounts(state: string) {
     remoteBindings: false,
   })
   try {
-    // Bound values, and no write to an account already there, so a second
-    // run leaves the first run's rows and any password a drive changed.
+    // A rerun skips existing accounts, keeping any password a drive changed.
     const insert = proxy.env.DB.prepare(
       `INSERT INTO users
          (id, username, display_name, role, created_at, password_hash, can_chat, language)

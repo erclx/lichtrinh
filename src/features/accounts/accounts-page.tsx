@@ -59,8 +59,7 @@ export function AccountsPage() {
   const location = useLocation()
   const navigate = useNavigate()
   const [chosen, setChosen] = useState<User | null>(null)
-  // Read once at mount, since the history entry is cleared below so a
-  // reload or Back never reopens the confirm.
+  // Read once, since the entry is cleared so a reload never reopens it.
   const [requested, setRequested] = useState(() =>
     resetRequestOf(location.state),
   )

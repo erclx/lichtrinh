@@ -23,9 +23,7 @@ test('the admin creates a member, who signs in and is refused the accounts page'
   page,
   browserName,
 }) => {
-  // Playwright's WebKit on Linux drops a Secure cookie over plain
-  // http://localhost, so the session the API sets never comes back. Safari on
-  // an iPhone keeps it, which the operator's tunnel check covers.
+  // Linux WebKit drops Secure cookies on http://localhost, unlike iPhone Safari.
   test.skip(browserName === 'webkit', 'Linux WebKit drops the Secure cookie')
   if (fixtureAdmin === undefined) throw new Error('The seed holds no admin')
   // Each browser runs the journey against one server, so each makes its own.

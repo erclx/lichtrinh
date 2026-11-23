@@ -2,10 +2,8 @@ import { apiError, type ApiErrorCode } from '@shared/errors.ts'
 import type { z } from 'zod'
 
 /**
- * The API's own codes, plus two only the client can see: `network` when no
- * answer arrived, and `unexpected_response` when one arrived in a shape the
- * app cannot read. Both stay out of the shared enum, since the API never
- * sends them.
+ * The API's codes, plus `network` for no answer and `unexpected_response`
+ * for one the app cannot read, kept out of the shared enum the API sends.
  */
 export type FailureCode = ApiErrorCode | 'network' | 'unexpected_response'
 
@@ -67,8 +65,7 @@ export async function apiFetch(
     response = await fetch(`/api${path}`, {
       method,
       credentials: 'same-origin',
-      // Every write declares JSON, a bodyless one too, since a dev proxy can
-      // hand the Worker an empty body that its content-type check refuses.
+      // Bodyless writes too, since the dev proxy sends an empty body the API checks.
       headers:
         method === 'GET' ? undefined : { 'content-type': 'application/json' },
       body: body === undefined ? undefined : JSON.stringify(body),
