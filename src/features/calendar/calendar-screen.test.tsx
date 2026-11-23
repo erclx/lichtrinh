@@ -75,8 +75,8 @@ describe('CalendarScreen', () => {
     await user.click(screen.getByRole('button', { name: 'Week' }))
 
     expect(
-      await screen.findByRole('link', { name: 'Thursday, May 15' }),
-    ).toHaveTextContent('1 entry')
+      await screen.findByRole('link', { name: 'Thursday, May 15, 1 entry' }),
+    ).toHaveAttribute('href', '/calendar?view=day&date=2031-05-15')
     expect(router.state.location.search).toBe('?view=week&date=2031-05-15')
   })
 

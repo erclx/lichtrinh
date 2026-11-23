@@ -62,15 +62,22 @@ export function WeekRows({
     const costs = costsOf(dayEntries, trips, language)
     const longDate = formatLongDate(day.date, language)
     const isToday = day.date === today
+    const label = [
+      longDate,
+      dayEntries.length > 0
+        ? t('calendar.entries', { count: dayEntries.length })
+        : t('calendar.free'),
+      ...costs,
+    ].join(', ')
     return (
       <li key={day.date} className="flex items-stretch gap-2">
         <Link
           to={dayHref(day.date)}
-          aria-label={longDate}
+          aria-label={label}
           aria-current={isToday ? 'date' : undefined}
           className={cn(
             'flex min-h-target min-w-0 flex-1 items-center gap-3 rounded-[20px] border-[1.5px] border-border bg-card px-3.5 py-1.5 text-card-foreground',
-            isToday && 'outline-3 -outline-offset-3 outline-foreground',
+            isToday && 'border-[3px] border-foreground',
             focusRing,
           )}
         >
