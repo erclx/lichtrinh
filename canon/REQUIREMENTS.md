@@ -9,7 +9,7 @@ This record holds at most 600 words.
 ## Goals
 
 - **Plan by talking.** The traveler speaks or types a request in Vietnamese, with or without diacritics, and an assistant adds, moves, changes, or removes the matching entries, or answers questions about the plan.
-- **Plan by hand.** Anyone signed in can tap a time slot and enter a title, a description, a time range, and an estimated cost without the assistant.
+- **Plan by hand.** Anyone signed in can tap Add beside a day and enter a title, a description, a time range, and an estimated cost without the assistant.
 - **Today first.** The app opens on today, showing what is happening now, what comes next, and the day's estimated cost, or the next trip when none is under way.
 - **One shared calendar.** Everyone with an account sees the same trips and entries, and sees the changes others make.
 - **Any trip, one calendar.** The calendar holds many trips, each with its own dates, time zone, and currency, shown together on one calendar that can narrow to one trip.

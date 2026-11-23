@@ -11,6 +11,10 @@ English dates follow `Intl` in the build, as 9/20, 9/20/2031, and Mon to Sun, wh
 
 ## Code
 
+- `src/features/trips/trip-list.tsx`: the trips list, each card with its span, its status, and its trip-currency total
+- `src/features/trips/trip-form.tsx`: the new trip form, its name, dates, local time, and both currencies
+- `src/features/trips/trip-overview.tsx`: the overview card and each day with its kind dots and cost
+- `src/components/no-trips.tsx`: the empty calendar the list shows with no trip, drawn in `onboarding/`
 - `src/components/date-range-sheet.tsx`: the Trip dates range sheet setting From and To together
 - `src/components/sheet-list.tsx`: the local time and currency choices
 - `src/lib/month-cells.ts`: the Monday-first month the range sheet and the calendar both lay out
