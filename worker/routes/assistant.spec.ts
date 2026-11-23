@@ -1,6 +1,7 @@
-import { assistantStatus } from '@shared/assistant.ts'
+import { assistantSettings, assistantStatus } from '@shared/assistant.ts'
 import { PROTOCOL_MISMATCH, REPLACED } from '@shared/bridge-frames.ts'
 import { apiError } from '@shared/errors.ts'
+import { contactSettings } from '@shared/settings.ts'
 import { env } from 'cloudflare:workers'
 import { afterEach, describe, expect, it } from 'vitest'
 
@@ -14,7 +15,7 @@ import {
   TEST_BRIDGE_SECRET,
 } from '../test/bridge.ts'
 import { chatterWithChat, sendMessage } from '../test/chats.ts'
-import { bare } from '../test/requests.ts'
+import { bare, json } from '../test/requests.ts'
 import { signedIn } from '../test/users.ts'
 
 const open: FakeBridge[] = []
@@ -197,6 +198,100 @@ describe('POST /api/assistant/warm', () => {
 
     expect(res.status).toBe(403)
     expect(await errorCode(res)).toBe('forbidden')
+  })
+})
+
+describe('PUT /api/admin/assistant', () => {
+  function putModel(cookie: string, model: unknown) {
+    return app.request(
+      '/api/admin/assistant',
+      json('PUT', { model }, cookie),
+      env,
+    )
+  }
+
+  afterEach(async () => {
+    await createDb(env.DB).delete(settings)
+  })
+
+  it('answers the model it saved', async () => {
+    const { cookie } = await signedIn({ role: 'admin' })
+
+    const res = await putModel(cookie, 'lichtrinh-assistant-gemma')
+
+    expect(res.status).toBe(200)
+    expect(assistantSettings.parse(await res.json())).toEqual({
+      model: 'lichtrinh-assistant-gemma',
+    })
+  })
+
+  it('names the saved model on the next status read', async () => {
+    const admin = await signedIn({ role: 'admin' })
+    const member = await signedIn()
+
+    await putModel(admin.cookie, 'lichtrinh-assistant-gemma')
+
+    expect((await readStatus(member.cookie)).model).toBe(
+      'lichtrinh-assistant-gemma',
+    )
+  })
+
+  it('replaces a model saved earlier', async () => {
+    const { cookie } = await signedIn({ role: 'admin' })
+    await putModel(cookie, 'lichtrinh-assistant-gemma')
+
+    await putModel(cookie, 'lichtrinh-assistant')
+
+    expect((await readStatus(cookie)).model).toBe('lichtrinh-assistant')
+  })
+
+  it('warms the saved model on the next warm', async () => {
+    const { cookie } = await signedIn({ role: 'admin', canChat: true })
+    const bridge = await bridgeOnline()
+    await putModel(cookie, 'lichtrinh-assistant-gemma')
+
+    await app.request('/api/assistant/warm', bare('POST', cookie), env)
+
+    expect(await bridge.next()).toEqual({
+      type: 'warm',
+      model: 'lichtrinh-assistant-gemma',
+    })
+  })
+
+  it('leaves the contact name in place', async () => {
+    const { cookie } = await signedIn({ role: 'admin' })
+    await app.request(
+      '/api/admin/settings',
+      json('PUT', { contactName: 'Invented Cousin' }, cookie),
+      env,
+    )
+
+    await putModel(cookie, 'lichtrinh-assistant-gemma')
+
+    const res = await app.request('/api/settings', bare('GET', cookie), env)
+    expect(contactSettings.parse(await res.json()).contactName).toBe(
+      'Invented Cousin',
+    )
+  })
+
+  it('refuses an alias it does not know with validation_failed', async () => {
+    const { cookie } = await signedIn({ role: 'admin' })
+
+    const res = await putModel(cookie, 'some-cloud-model')
+
+    expect(res.status).toBe(400)
+    expect(await errorCode(res)).toBe('validation_failed')
+    expect((await readStatus(cookie)).model).toBe('lichtrinh-assistant')
+  })
+
+  it('refuses a member with forbidden', async () => {
+    const { cookie } = await signedIn()
+
+    const res = await putModel(cookie, 'lichtrinh-assistant-gemma')
+
+    expect(res.status).toBe(403)
+    expect(await errorCode(res)).toBe('forbidden')
+    expect((await readStatus(cookie)).model).toBe('lichtrinh-assistant')
   })
 })
 

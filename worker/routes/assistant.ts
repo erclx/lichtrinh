@@ -1,13 +1,16 @@
-import type { AssistantStatus } from '@shared/assistant.ts'
+import type { AssistantSettings, AssistantStatus } from '@shared/assistant.ts'
+import { assistantSettings } from '@shared/assistant.ts'
 import { Hono } from 'hono'
 
 import { lastAnsweredAt } from '../assistant/chats.ts'
-import { readModel } from '../assistant/model.ts'
+import { ASSISTANT_MODEL_KEY, readModel } from '../assistant/model.ts'
 import { relayOf } from '../assistant/relay.ts'
 import type { AuthEnv } from '../auth/guard.ts'
 import { requireChat } from '../auth/guard.ts'
 import { createDb } from '../db/client.ts'
-import { fail, refuse } from '../envelope.ts'
+import { settings } from '../db/schema.ts'
+import { fail, parseBody, refuse } from '../envelope.ts'
+import { logOutcome } from '../log.ts'
 
 export const assistantRoutes = new Hono<AuthEnv>()
   .get('/assistant/status', async (c) => {
@@ -30,6 +33,23 @@ export const assistantRoutes = new Hono<AuthEnv>()
       return refuse(c, 'assistant_unavailable')
     }
     return c.body(null, 202)
+  })
+  // The contact route owns its own key in the same table, so each upsert
+  // leaves the other's row alone. A running turn keeps the model it read.
+  .put('/admin/assistant', async (c) => {
+    const { model } = await parseBody(c, assistantSettings)
+    const change = {
+      value: model,
+      updatedAt: new Date(),
+      updatedBy: c.var.user.id,
+    }
+    await createDb(c.env.DB)
+      .insert(settings)
+      .values({ key: ASSISTANT_MODEL_KEY, ...change })
+      .onConflictDoUpdate({ target: settings.key, set: change })
+    logOutcome('assistant_model_set', { byUserId: c.var.user.id, model })
+    const body: AssistantSettings = { model }
+    return c.json(body)
   })
   // The bridge holds the secret and no session, so the guard lets this path
   // through signed out and the secret is checked here instead.

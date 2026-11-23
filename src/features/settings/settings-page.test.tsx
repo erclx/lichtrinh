@@ -83,6 +83,27 @@ describe('SettingsPage', () => {
     ).toHaveAttribute('href', '/admin/accounts')
   })
 
+  it('gives the admin the Assistant row', async () => {
+    fakeApi({ 'GET /auth/me': () => json(aUser({ role: 'admin' })) })
+
+    renderSettings()
+
+    expect(
+      await screen.findByRole('link', { name: 'Assistant' }),
+    ).toHaveAttribute('href', '/admin/assistant')
+  })
+
+  it('shows a member no Assistant row', async () => {
+    fakeApi({ 'GET /auth/me': () => json(aUser({ role: 'member' })) })
+
+    renderSettings()
+    await screen.findByRole('heading', { name: 'Settings' })
+
+    expect(
+      screen.queryByRole('link', { name: 'Assistant' }),
+    ).not.toBeInTheDocument()
+  })
+
   it('saves a language press to the account', async () => {
     const user = userEvent.setup()
     const api = fakeApi({
