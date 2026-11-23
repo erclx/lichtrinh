@@ -36,12 +36,13 @@ export async function addUser(options: TestUserOptions = {}) {
   return { ...row, password }
 }
 
-export function signIn(username: string, password: string) {
-  return app.request(
-    '/api/auth/sign-in',
-    json('POST', { username, password }),
-    env,
-  )
+/** Signs in from `address`, the header Cloudflare's edge sets, when given. */
+export function signIn(username: string, password: string, address?: string) {
+  const init = json('POST', { username, password })
+  if (address !== undefined) {
+    init.headers = { ...init.headers, 'cf-connecting-ip': address }
+  }
+  return app.request('/api/auth/sign-in', init, env)
 }
 
 /** Inserts an account, signs it in, and returns the cookie to send. */

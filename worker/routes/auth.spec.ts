@@ -307,3 +307,127 @@ describe('a signed-out caller', () => {
     expect(res.status).toBe(200)
   })
 })
+
+describe('sign-in rate limit', () => {
+  const FIFTEEN_MINUTES_S = 15 * 60
+  let addressCount = 0
+
+  // A documentation-range address per case, since the per-address count
+  // persists across the cases in this file.
+  function freshAddress() {
+    addressCount += 1
+    return `203.0.113.${addressCount}`
+  }
+
+  async function failTimes(username: string, times: number, address: string) {
+    for (let i = 0; i < times; i++) {
+      await signIn(username, 'not-the-password', address)
+    }
+  }
+
+  async function failFromNewAddresses(username: string, times: number) {
+    for (let i = 0; i < times; i++) {
+      await signIn(username, 'not-the-password', freshAddress())
+    }
+  }
+
+  async function failAsUnknownNames(times: number, address: string) {
+    for (let i = 0; i < times; i++) {
+      await signIn(`nobody-${i}`, 'not-the-password', address)
+    }
+  }
+
+  it('still answers invalid_credentials on the tenth failure', async () => {
+    const account = await addUser()
+    const address = freshAddress()
+    await failTimes(account.username, 9, address)
+
+    const res = await signIn(account.username, 'not-the-password', address)
+
+    expect(res.status).toBe(401)
+  })
+
+  it('refuses the eleventh attempt for a username with rate_limited', async () => {
+    const account = await addUser()
+    const address = freshAddress()
+    await failTimes(account.username, 10, address)
+
+    const res = await signIn(account.username, TEST_PASSWORD, address)
+
+    expect(res.status).toBe(429)
+    expect(await errorCode(res)).toBe('rate_limited')
+  })
+
+  it('names the seconds left in the window in Retry-After', async () => {
+    const account = await addUser()
+    const address = freshAddress()
+    await failTimes(account.username, 10, address)
+
+    const res = await signIn(account.username, TEST_PASSWORD, address)
+
+    const retryAfter = Number(res.headers.get('retry-after'))
+    expect(retryAfter).toBeGreaterThan(0)
+    expect(retryAfter).toBeLessThanOrEqual(FIFTEEN_MINUTES_S)
+  })
+
+  it('counts the username whichever address the attempts come from', async () => {
+    const account = await addUser()
+    await failFromNewAddresses(account.username, 10)
+
+    const res = await signIn(account.username, TEST_PASSWORD, freshAddress())
+
+    expect(res.status).toBe(429)
+  })
+
+  it('counts every failure in a concurrent burst', async () => {
+    const account = await addUser()
+    const address = freshAddress()
+    await Promise.all(
+      Array.from({ length: 10 }, () =>
+        signIn(account.username, 'not-the-password', address),
+      ),
+    )
+
+    const res = await signIn(account.username, TEST_PASSWORD, address)
+
+    expect(res.status).toBe(429)
+  })
+
+  it('starts the count over once the window has passed', async () => {
+    const account = await addUser()
+    const address = freshAddress()
+    await failTimes(account.username, 10, address)
+    await env.DB.prepare(
+      'update sign_in_attempts set window_started_at = window_started_at - ?',
+    )
+      .bind(16 * 60 * 1000)
+      .run()
+
+    const res = await signIn(account.username, TEST_PASSWORD, address)
+
+    expect(res.status).toBe(200)
+  })
+
+  it('clears the username count on a successful sign-in', async () => {
+    const account = await addUser()
+    const address = freshAddress()
+    await failTimes(account.username, 9, address)
+    await signIn(account.username, TEST_PASSWORD, address)
+    await failTimes(account.username, 9, address)
+
+    const res = await signIn(account.username, 'not-the-password', address)
+
+    expect(res.status).toBe(401)
+  })
+
+  it('refuses the fifty-first failure from one address across usernames', async () => {
+    const address = freshAddress()
+    await failAsUnknownNames(50, address)
+    const account = await addUser()
+
+    const res = await signIn(account.username, TEST_PASSWORD, address)
+
+    expect(res.status).toBe(429)
+    expect(await errorCode(res)).toBe('rate_limited')
+  })
+})

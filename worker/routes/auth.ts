@@ -2,6 +2,13 @@ import { signInRequest } from '@shared/auth.ts'
 import { eq } from 'drizzle-orm'
 import { Hono } from 'hono'
 
+import {
+  addressKey,
+  blockedForSeconds,
+  clearFailures,
+  recordFailure,
+  usernameKey,
+} from '../auth/attempts.ts'
 import type { AuthEnv } from '../auth/guard.ts'
 import { verifyPassword } from '../auth/password.ts'
 import { endSession, startSession } from '../auth/session.ts'
@@ -21,6 +28,18 @@ export const authRoutes = new Hono<AuthEnv>()
     const body = await parseBody(c, signInRequest)
     const now = Date.now()
     const db = createDb(c.env.DB)
+    // Cloudflare's edge sets this header and overwrites a client's copy.
+    // Local development has no edge, so every attempt shares one address.
+    const address = c.req.header('cf-connecting-ip') ?? 'local'
+    const byName = usernameKey(body.username)
+    const keys = [byName, addressKey(address)]
+
+    const waitSeconds = await blockedForSeconds(db, keys, now)
+    if (waitSeconds > 0) {
+      logOutcome('sign_in_rate_limited')
+      c.header('Retry-After', String(waitSeconds))
+      return c.json(fail('rate_limited', 'Too many failed sign-ins'), 429)
+    }
 
     const account = await db
       .select()
@@ -34,6 +53,7 @@ export const authRoutes = new Hono<AuthEnv>()
       account?.passwordHash ?? null,
     )
     if (account === undefined || !valid) {
+      await recordFailure(db, keys, now)
       logOutcome('sign_in_refused', account?.id)
       return c.json(
         fail('invalid_credentials', 'Wrong username or password'),
@@ -41,6 +61,7 @@ export const authRoutes = new Hono<AuthEnv>()
       )
     }
 
+    await clearFailures(db, byName)
     await startSession(c, db, account.id, now)
     logOutcome('signed_in', account.id)
     return c.json(toUser(account))
