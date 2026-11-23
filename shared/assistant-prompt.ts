@@ -1,11 +1,10 @@
-import type { TurnMessage } from '@shared/bridge-frames.ts'
-import type { ChatRole } from '@shared/chats.ts'
-import { minorDigits } from '@shared/currency.ts'
-import type { Entry } from '@shared/entries.ts'
-import { nowInZone, shiftClock } from '@shared/trip-time.ts'
-import type { Trip } from '@shared/trips.ts'
-
-import { toolEntry } from './tools.ts'
+import { toolEntry } from './assistant-tools.ts'
+import type { TurnMessage } from './bridge-frames.ts'
+import type { ChatRole } from './chats.ts'
+import { minorDigits } from './currency.ts'
+import type { Entry } from './entries.ts'
+import { nowInZone, shiftClock } from './trip-time.ts'
+import type { Trip } from './trips.ts'
 
 /** How many earlier messages a turn sends, inside the 16,384-token alias. */
 export const HISTORY_LENGTH = 20

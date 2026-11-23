@@ -1,3 +1,4 @@
+import { buildPrompt, HISTORY_LENGTH } from '@shared/assistant-prompt.ts'
 import type {
   ChatEvent,
   ChatList,
@@ -17,7 +18,6 @@ import {
   threadOf,
 } from '../assistant/chats.ts'
 import { readModel } from '../assistant/model.ts'
-import { buildPrompt, HISTORY_LENGTH } from '../assistant/prompt.ts'
 import type { TurnInput } from '../assistant/relay.ts'
 import { relayOf } from '../assistant/relay.ts'
 import type { AuthEnv } from '../auth/guard.ts'

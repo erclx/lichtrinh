@@ -1,5 +1,5 @@
-import type { ToolCall } from '@shared/assistant-tools.ts'
-import { parseToolCall } from '@shared/assistant-tools.ts'
+import type { ToolCall, ToolEntry } from '@shared/assistant-tools.ts'
+import { parseToolCall, toolEntry } from '@shared/assistant-tools.ts'
 import type { TurnStep } from '@shared/chats.ts'
 import { minorDigits } from '@shared/currency.ts'
 import type { Entry } from '@shared/entries.ts'
@@ -27,17 +27,6 @@ export interface ToolContext {
   // turn's own writes update it so the model can act on them again.
   versions: Map<string, number>
   at: Date
-}
-
-/** An entry as the model reads it back, its cost in the trip currency. */
-export type ToolEntry = {
-  id: string
-  title: string
-  date: string
-  start: string
-  end: string
-  cost: number | null
-  notes: string | null
 }
 
 export type ToolResult =
@@ -218,18 +207,6 @@ async function freeHourOn(context: ToolContext, date: string) {
 function endAfter(date: string, start: string, end: string) {
   const sameDay = { date, time: end }
   return end < start ? shiftClock(sameDay, 24 * 60) : sameDay
-}
-
-export function toolEntry(entry: Entry, digits: number): ToolEntry {
-  return {
-    id: entry.id,
-    title: entry.title,
-    date: entry.startsOn,
-    start: entry.startTime,
-    end: entry.endTime,
-    cost: entry.costMinor === null ? null : entry.costMinor / 10 ** digits,
-    notes: entry.notes,
-  }
 }
 
 function refusal({ refused }: Refused): ToolOutcome {

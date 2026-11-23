@@ -1,9 +1,9 @@
-import type { Entry } from '@shared/entries.ts'
-import type { Trip } from '@shared/trips.ts'
 import { describe, expect, it } from 'vitest'
 
-import type { PromptInput } from './prompt.ts'
-import { buildPrompt, HISTORY_LENGTH } from './prompt.ts'
+import type { PromptInput } from './assistant-prompt.ts'
+import { buildPrompt, HISTORY_LENGTH } from './assistant-prompt.ts'
+import type { Entry } from './entries.ts'
+import type { Trip } from './trips.ts'
 
 const trip: Trip = {
   id: 'trip-1',

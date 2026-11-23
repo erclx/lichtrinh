@@ -1,5 +1,6 @@
 import { z } from 'zod'
 
+import type { Entry } from './entries.ts'
 import { clockTime, localDate } from './trip-time.ts'
 
 // The four calendar tools the model may call, and nothing else. Every tool
@@ -139,4 +140,27 @@ export function parseToolCall(name: string, args: unknown): ParsedToolCall {
   const parsed = TOOLS[known.data].args.safeParse(args)
   if (!parsed.success) return { ok: false, error: 'invalid_arguments' }
   return { ok: true, call: { name: known.data, args: parsed.data } as ToolCall }
+}
+
+/** An entry as the model reads it back, its cost in the trip currency. */
+export type ToolEntry = {
+  id: string
+  title: string
+  date: string
+  start: string
+  end: string
+  cost: number | null
+  notes: string | null
+}
+
+export function toolEntry(entry: Entry, digits: number): ToolEntry {
+  return {
+    id: entry.id,
+    title: entry.title,
+    date: entry.startsOn,
+    start: entry.startTime,
+    end: entry.endTime,
+    cost: entry.costMinor === null ? null : entry.costMinor / 10 ** digits,
+    notes: entry.notes,
+  }
 }
