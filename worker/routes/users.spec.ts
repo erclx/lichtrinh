@@ -8,7 +8,8 @@ import { app } from '../app.ts'
 import { bare, cookieFrom, json } from '../test/requests.ts'
 import { addUser, signedIn, signIn, TEST_PASSWORD } from '../test/users.ts'
 
-const GROUPED_PASSWORD = /^[a-z2-9]{4} [a-z2-9]{4} [a-z2-9]{4}$/
+// Plain, so the screens group it for reading and copy it whole.
+const PLAIN_PASSWORD = /^[abcdefghjkmnpqrstuvwxyz23456789]{12}$/
 
 let created = 0
 function newUsername() {
@@ -35,7 +36,7 @@ describe('POST /api/admin/users', () => {
 
     expect(res.status).toBe(201)
     const body = createdUser.parse(await res.json())
-    expect(body.password).toMatch(GROUPED_PASSWORD)
+    expect(body.password).toMatch(PLAIN_PASSWORD)
     expect(body.user).toMatchObject({ role: 'member', canChat: false })
   })
 
@@ -172,7 +173,7 @@ describe('POST /api/admin/users/:id/password', () => {
 
     expect(res.status).toBe(200)
     const { password } = oneTimePassword.parse(await res.json())
-    expect(password).toMatch(GROUPED_PASSWORD)
+    expect(password).toMatch(PLAIN_PASSWORD)
     expect((await signIn(account.username, password)).status).toBe(200)
   })
 

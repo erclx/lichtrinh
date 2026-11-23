@@ -20,7 +20,10 @@ export const createUserRequest = z.strictObject({
 })
 export type CreateUserRequest = z.input<typeof createUserRequest>
 
-/** A generated password, returned once and never stored in the clear. */
+/**
+ * A generated password, returned once and never stored in the clear. It comes
+ * without grouping spaces, and sign-in accepts it with or without them.
+ */
 export const oneTimePassword = z.strictObject({ password: z.string() })
 export type OneTimePassword = z.infer<typeof oneTimePassword>
 

@@ -1,4 +1,4 @@
-import { generatePassword, groupInFours } from '@shared/generated-password.ts'
+import { generatePassword } from '@shared/generated-password.ts'
 import { hashPassword } from '@shared/password-hash.ts'
 import type { CreatedUser, OneTimePassword, UserList } from '@shared/users.ts'
 import { createUserRequest } from '@shared/users.ts'
@@ -49,7 +49,7 @@ export const userRoutes = new Hono<AuthEnv>()
     logOutcome('user_created', { userId: created.id, byUserId: c.var.user.id })
     const body: CreatedUser = {
       user: toUser(created),
-      password: groupInFours(password),
+      password,
     }
     return c.json(body, 201)
   })
@@ -70,6 +70,6 @@ export const userRoutes = new Hono<AuthEnv>()
       return c.json(fail('not_found', 'No such account'), 404)
     }
     logOutcome('password_reset', { userId: id, byUserId: c.var.user.id })
-    const body: OneTimePassword = { password: groupInFours(password) }
+    const body: OneTimePassword = { password }
     return c.json(body)
   })
