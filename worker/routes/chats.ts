@@ -28,6 +28,7 @@ import { liveTrip, toTrip } from '../calendar/trips.ts'
 import { createDb } from '../db/client.ts'
 import { parseBody, refuse } from '../envelope.ts'
 import { logOutcome } from '../log.ts'
+import { markSent } from '../voice/transcriptions.ts'
 
 // Each route reads chats of the signed-in account alone, so another
 // account's chat answers not found and reveals nothing.
@@ -69,12 +70,16 @@ export const chatRoutes = new Hono<AuthEnv>()
     const chat = await ownChat(db, c.var.user.id, c.req.param('id'))
     if (chat === undefined) return refuse(c, 'not_found')
     const saved = await findMessage(db, request.id)
-    if (saved !== undefined) {
-      const sameSend =
-        saved.chatId === chat.id &&
+    const sameSend =
+      saved === undefined ||
+      (saved.chatId === chat.id &&
         saved.role === 'user' &&
-        saved.text === request.text
-      if (!sameSend) return refuse(c, 'id_conflict')
+        saved.text === request.text)
+    if (!sameSend) return refuse(c, 'id_conflict')
+    if (request.voice !== undefined) {
+      await markSent(db, c.var.user.id, request.voice, request.id, new Date())
+    }
+    if (saved !== undefined) {
       const reply = await replyTo(db, saved.id)
       if (reply !== undefined) return eventStream([replayOf(reply)])
     }

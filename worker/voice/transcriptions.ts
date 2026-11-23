@@ -1,6 +1,6 @@
-import type { VoiceModel, VoiceUsage } from '@shared/voice.ts'
+import type { VoiceModel, VoiceSend, VoiceUsage } from '@shared/voice.ts'
 import { voiceModel } from '@shared/voice.ts'
-import { eq, sql } from 'drizzle-orm'
+import { and, eq, sql } from 'drizzle-orm'
 
 import type { Db } from '../calendar/record.ts'
 import { transcriptions } from '../db/schema.ts'
@@ -81,4 +81,28 @@ export async function usageByModel(db: Db): Promise<VoiceUsage[]> {
       meanEditRatio: row?.meanEditRatio ?? null,
     }
   })
+}
+
+/**
+ * Marks a clip sent as the message `messageId`, with how much the sender
+ * edited its text. It holds to the sender's own clip, so another account's
+ * id changes nothing, and a retried send writes the same values again.
+ */
+export async function markSent(
+  db: Db,
+  userId: string,
+  sent: VoiceSend,
+  messageId: string,
+  at: Date,
+) {
+  await db
+    .update(transcriptions)
+    .set({ sentMessageId: messageId, editRatio: sent.editRatio, updatedAt: at })
+    .where(
+      and(
+        eq(transcriptions.id, sent.transcriptionId),
+        eq(transcriptions.userId, userId),
+        eq(transcriptions.outcome, 'ok'),
+      ),
+    )
 }

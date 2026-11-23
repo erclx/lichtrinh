@@ -1,5 +1,6 @@
 import type { ChatEvent } from '@shared/chats.ts'
 import { chatEvent, chatRead } from '@shared/chats.ts'
+import type { VoiceSend } from '@shared/voice.ts'
 import { env } from 'cloudflare:workers'
 
 import { app } from '../app.ts'
@@ -24,13 +25,17 @@ export async function chatterWithChat() {
 export function sendMessage(
   cookie: string,
   chatId: string,
-  body: { id?: string; text?: string } = {},
+  body: { id?: string; text?: string; voice?: VoiceSend } = {},
 ) {
   return app.request(
     `/api/chats/${chatId}/messages`,
     json(
       'POST',
-      { id: body.id ?? crypto.randomUUID(), text: body.text ?? 'Invented ask' },
+      {
+        id: body.id ?? crypto.randomUUID(),
+        text: body.text ?? 'Invented ask',
+        ...(body.voice === undefined ? {} : { voice: body.voice }),
+      },
       cookie,
     ),
     env,

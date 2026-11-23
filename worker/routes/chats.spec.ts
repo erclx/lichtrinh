@@ -6,7 +6,7 @@ import { afterEach, describe, expect, it } from 'vitest'
 
 import { app } from '../app.ts'
 import { createDb } from '../db/client.ts'
-import { trips, users } from '../db/schema.ts'
+import { transcriptions, trips, users } from '../db/schema.ts'
 import type { FakeBridge } from '../test/bridge.ts'
 import { connectBridge } from '../test/bridge.ts'
 import { chatterWithChat, readEvents, sendMessage } from '../test/chats.ts'
@@ -284,6 +284,117 @@ describe('POST /api/chats/:id/messages', () => {
     const { cookie, chat } = await chatterWithChat()
 
     const res = await sendMessage(cookie, chat.id, { text: '   ' })
+
+    expect(res.status).toBe(400)
+  })
+})
+
+describe('a send whose text started as a clip', () => {
+  const open: FakeBridge[] = []
+
+  afterEach(async () => {
+    await Promise.all(open.splice(0).map((bridge) => bridge.close()))
+  })
+
+  async function addClip(userId: string) {
+    const at = new Date('2031-04-11T09:00:00Z')
+    const id = crypto.randomUUID()
+    await createDb(env.DB).insert(transcriptions).values({
+      id,
+      userId,
+      model: 'qwen3-asr-1.7b',
+      outcome: 'ok',
+      audioMs: 1200,
+      transcribeMs: 300,
+      characters: 20,
+      createdAt: at,
+      updatedAt: at,
+    })
+    return id
+  }
+
+  function clipRow(id: string) {
+    return createDb(env.DB)
+      .select()
+      .from(transcriptions)
+      .where(eq(transcriptions.id, id))
+      .get()
+  }
+
+  async function sendAndAnswer(
+    cookie: string,
+    chatId: string,
+    body: Parameters<typeof sendMessage>[2],
+  ) {
+    const bridge = await connectBridge()
+    open.push(bridge)
+    const res = await sendMessage(cookie, chatId, body)
+    const turn = await bridge.next()
+    if (turn.type !== 'turn') throw new Error(`Expected turn, got ${turn.type}`)
+    bridge.send({
+      type: 'final',
+      turnId: turn.turnId,
+      text: 'Done.',
+      heldRemoval: false,
+    })
+    return readEvents(res)
+  }
+
+  it('marks the clip sent as this message with its edit ratio', async () => {
+    const { cookie, chat, user } = await chatterWithChat()
+    const clipId = await addClip(user.id)
+    const id = crypto.randomUUID()
+
+    await sendAndAnswer(cookie, chat.id, {
+      id,
+      voice: { transcriptionId: clipId, editRatio: 0.25 },
+    })
+
+    expect(await clipRow(clipId)).toMatchObject({
+      sentMessageId: id,
+      editRatio: 0.25,
+    })
+  })
+
+  it('writes the same values on a retried send', async () => {
+    const { cookie, chat, user } = await chatterWithChat()
+    const clipId = await addClip(user.id)
+    const id = crypto.randomUUID()
+    const voice = { transcriptionId: clipId, editRatio: 0.5 }
+    await sendAndAnswer(cookie, chat.id, { id, voice })
+
+    const retry = await sendMessage(cookie, chat.id, { id, voice })
+    await readEvents(retry)
+
+    expect(await clipRow(clipId)).toMatchObject({
+      sentMessageId: id,
+      editRatio: 0.5,
+    })
+  })
+
+  it("sends with another account's clip id and leaves that clip alone", async () => {
+    const other = await signedIn({ canChat: true })
+    const clipId = await addClip(other.user.id)
+    const { cookie, chat } = await chatterWithChat()
+
+    const events = await sendAndAnswer(cookie, chat.id, {
+      voice: { transcriptionId: clipId, editRatio: 1 },
+    })
+
+    expect(events.at(-1)?.type).toBe('done')
+    expect(await clipRow(clipId)).toMatchObject({
+      sentMessageId: null,
+      editRatio: null,
+    })
+  })
+
+  it('refuses an edit ratio outside 0 to 1', async () => {
+    const { cookie, chat, user } = await chatterWithChat()
+    const clipId = await addClip(user.id)
+
+    const res = await sendMessage(cookie, chat.id, {
+      voice: { transcriptionId: clipId, editRatio: 1.5 },
+    })
 
     expect(res.status).toBe(400)
   })
