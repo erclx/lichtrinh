@@ -240,7 +240,7 @@ export function DateRangeSheet({
                     >
                       <span
                         className={cn(
-                          'relative flex size-12 items-center justify-center rounded-full group-focus-visible:outline-3 group-focus-visible:outline-offset-2 group-focus-visible:outline-ring',
+                          'relative flex aspect-square w-full max-w-12 items-center justify-center rounded-full group-focus-visible:outline-3 group-focus-visible:outline-offset-2 group-focus-visible:outline-ring',
                           cell.date === today &&
                             'shadow-[inset_0_0_0_2px_var(--ring)]',
                           isEnd &&
