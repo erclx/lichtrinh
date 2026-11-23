@@ -39,7 +39,9 @@ Holds the `lichtrinh` command for the product's own services, which the owner in
 - `program.ts` builds the commander program from an injected output, task runner, and checkout lookup, so tests drive it with no process
 - `checkout.ts` picks the git top level of the working folder when it is a lichtrinh checkout, a linked worktree included, else the command's own checkout
 - `task.ts` prints `› <command>`, runs it with inherited output, and returns its exit code
-- `commands/` holds one file per verb group, starting with `db status` and `db migrate` over the local database
+- `commands/` holds one file per verb group, being `db status` and `db migrate` over the local database and `admin create`, which makes an admin account
+
+The app has no sign-up, so the first admin comes from `lichtrinh admin create <username> --local` after `bun run db:migrate`. The same verb with `--remote` writes the deployed database and asks to confirm first. It prints the generated password once, and `--language` defaults to `vi`, so the operator's own account takes `--language en`.
 
 ### `voice/`
 

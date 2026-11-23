@@ -20,6 +20,16 @@ Holds the Worker entry and the Hono app mounted on `/api`. The root `wrangler.js
 - A body past 64 KB gets `body_too_large` before any route reads it
 - Specs run inside workerd as the `worker` Vitest project, calling `app.request(path, init, env)` with no server running
 
+### `worker/auth/`
+
+Holds sign-in and the guard every route sits behind. The app runs the body limit, then `csrf()`, then a check that answers `415 unsupported_media_type` to any unsafe-method body other than JSON, then the guard.
+
+- `guard.ts` lets a signed-out caller reach `GET /api/health` and `POST /api/auth/sign-in` alone, so a new route, an unknown path included, answers `401 unauthenticated` until signed in
+- `guard.ts` puts `user` and `sessionId` on the Hono context, which later routes read, and `requireAdmin` answers `403 forbidden` on `/api/admin/*`
+- `session.ts` issues a 180-day `__Host-session` cookie, stores only the SHA-256 of its token, and slides the expiry at most once a day
+- `attempts.ts` counts failed sign-ins in one upsert each, refusing past 10 per username or 50 per address within 15 minutes
+- `password.ts` verifies PBKDF2 hashes from `shared/password-hash.ts`, whose exception to the installed hash rule is `.claude/rules/project/code/passwords.md`
+
 ### `worker/db/`
 
 Holds the Drizzle schema, the client a route gets its database from, the migrations `drizzle-kit` writes, and a rollback for each.
@@ -38,8 +48,8 @@ Holds the schemas the app, the API, and later the assistant's tools all import a
 
 The Worker's two smaller folders each carry one job.
 
-- `worker/routes/`: one Hono router per API area, mounted on the app
-- `worker/test/`: the setup file migrating the database before each worker spec file, and the test-only binding types
+- `worker/routes/`: one Hono router per API area, being health, sessions under `/api/auth/`, accounts under `/api/admin/users`, and the contact name under `/api/settings`
+- `worker/test/`: the setup file migrating the database before each worker spec file, the test-only binding types, and builders for invented accounts and signed-in requests
 
 ## Gotchas
 
@@ -47,3 +57,10 @@ The Worker's two smaller folders each carry one job.
 - Storage resets per spec file rather than per test, so a case that writes or rolls back hands its state to the next case in that file
 - `vitest.config.ts` merges `vite.config.ts`, so `cloudflare()` loads in both test projects. Suspect it first when `bun run test:run` hangs after a plugin upgrade.
 - Coverage runs on V8, which Cloudflare's known-issues page calls unsupported. Switch to Istanbul and exclude `worker/db/migrations/` if CI reports `worker/` at zero.
+
+### Signed-in specs
+
+A spec reaching past the guard sends what a browser would, and two headers trip a spec that does not.
+
+- `csrf()` reads a bodiless POST with no Origin header as a form post, so a spec sends one through `bare()` in `worker/test/requests.ts`
+- Only Cloudflare's edge sets `CF-Connecting-IP`, so every local sign-in shares one address count, and a spec counting failures passes its own address
