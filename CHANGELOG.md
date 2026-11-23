@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.0.2](https://github.com/erclx/lichtrinh/compare/v0.0.1...v0.0.2) (2026-11-23)
+
+
+### Features
+
+* **accounts:** add sign-in, the app shell, and the accounts page ([#14](https://github.com/erclx/lichtrinh/issues/14)) ([70a3725](https://github.com/erclx/lichtrinh/commit/70a3725c6729fb9d0d0865244cf2c71b46965377))
+* **api:** store trips and entries, record every change, and undo it ([#13](https://github.com/erclx/lichtrinh/issues/13)) ([8199ef0](https://github.com/erclx/lichtrinh/commit/8199ef059943d0561f183fdb83ba4e101d22fb96))
+* **assistant:** chat with the local model through a relayed bridge ([#16](https://github.com/erclx/lichtrinh/issues/16)) ([e72814f](https://github.com/erclx/lichtrinh/commit/e72814f4d474f28afe7292a7200f37d00d105eec))
+* **auth:** sign family members in and let the admin manage accounts ([#9](https://github.com/erclx/lichtrinh/issues/9)) ([2bedd09](https://github.com/erclx/lichtrinh/commit/2bedd098a94f8ef3bfe4cf7426dc7337f91fd4d5))
+* **controls:** add sheet list, trip dates range sheet, and swipe row ([#10](https://github.com/erclx/lichtrinh/issues/10)) ([a51d41f](https://github.com/erclx/lichtrinh/commit/a51d41fd48d027c9344ea34726375546d04da358))
+* **voice:** serve speech recognition on the workspace pc ([#15](https://github.com/erclx/lichtrinh/issues/15)) ([a8c718e](https://github.com/erclx/lichtrinh/commit/a8c718e5b99158f0d01af7aeb4a6462a0aac43a2))
+
 ## 0.0.1 (2026-11-23)
 
 
