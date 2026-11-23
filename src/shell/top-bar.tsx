@@ -56,7 +56,9 @@ export function TopBar({ header, navHidden, onShowNav, showRef }: TopBarProps) {
             navHidden && 'lg:block',
           )}
         />
-        <span className="truncate font-heading text-lg font-extrabold">
+        {/* Under 360 wide the toggle and Settings leave no room for the name,
+            so the mark stands alone rather than cutting the name short. */}
+        <span className="hidden font-heading text-lg font-extrabold whitespace-nowrap min-[360px]:inline">
           {t('app.name')}
         </span>
       </div>

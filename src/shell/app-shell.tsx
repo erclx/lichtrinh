@@ -77,7 +77,9 @@ export function AppShell() {
           </div>
         </main>
       </div>
-      <Tabs destinations={nav} />
+      {/* Three tabs fit a 320 wide phone, so the admin reaches Accounts from
+          Settings there, as the admin frames draw it. */}
+      <Tabs destinations={nav.filter(({ adminOnly }) => !adminOnly)} />
     </div>
   )
 }
