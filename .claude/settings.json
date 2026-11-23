@@ -12,9 +12,10 @@
       "Bash(canon pr drive-copy:*)",
       "Bash(canon pr frames:*)",
       "Bash(canon pr tick:*)",
-      "Bash(canon pr lift:*)"
+      "Bash(canon pr lift:*)",
+      "Bash(canon pr merge:*)"
     ],
-    "ask": ["Bash(canon pr merge:*)"],
+    "ask": [],
     "deny": [
       "Agent",
       "Task",
