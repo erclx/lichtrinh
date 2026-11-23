@@ -58,15 +58,27 @@ function marks(language: Language) {
   }
 }
 
-/** A typed rate as the API's decimal string, reading the language's own marks. */
+/**
+ * A typed rate as the API's decimal string, in the language's own marks. A
+ * group mark needs three digits after it, so `1.08` in Vietnamese is refused.
+ */
 function parseRate(text: string, language: Language) {
   const { group, decimal } = marks(language)
-  const plain = text
+  const [whole = '', fraction, ...extra] = text
     .replace(/\s/g, '')
-    .split(group)
-    .join('')
-    .replace(decimal, '.')
-  const parsed = rateValue.safeParse(plain)
+    .split(decimal)
+  if (extra.length > 0) return null
+  const [lead = '', ...groups] = whole.split(group)
+  if (
+    groups.length > 0 &&
+    (!/^\d{1,3}$/.test(lead) || groups.some((part) => !/^\d{3}$/.test(part)))
+  ) {
+    return null
+  }
+  const plain = [lead, ...groups].join('')
+  const parsed = rateValue.safeParse(
+    fraction === undefined ? plain : `${plain}.${fraction}`,
+  )
   return parsed.success ? parsed.data : null
 }
 

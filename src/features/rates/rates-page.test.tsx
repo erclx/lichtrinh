@@ -199,7 +199,29 @@ describe('RatesPage', () => {
 
     renderRoute('/admin/rates')
 
-    await screen.findByRole('heading')
-    expect(screen.queryByRole('textbox')).not.toBeInTheDocument()
+    expect(
+      await screen.findByRole('heading', { name: 'Page not found' }),
+    ).toBeInTheDocument()
   })
+
+  it.each([
+    ['vi', 'Số VND đổi được 1 USD', 'Lưu', '1.08'],
+    ['en', 'How many VND one USD buys', 'Save', '1,5'],
+  ] as const)(
+    'refuses the other language’s decimal mark in %s',
+    async (language, fieldName, saveName, typed) => {
+      await applyLanguage(language)
+      const user = userEvent.setup()
+      const api = serve([])
+      renderRoute('/admin/rates')
+      const field = await screen.findByRole('textbox', { name: fieldName })
+
+      await user.type(field, typed)
+      await user.click(screen.getByRole('button', { name: saveName }))
+
+      expect(field).toHaveAttribute('aria-invalid', 'true')
+      expect(field).toHaveValue(typed)
+      expect(api.requests.some(({ method }) => method === 'PUT')).toBe(false)
+    },
+  )
 })
