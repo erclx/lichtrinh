@@ -1,4 +1,5 @@
 import {
+  formatCardDate,
   formatDateSpan,
   formatDuration,
   formatLongDate,
@@ -104,6 +105,20 @@ describe('formatWeekday', () => {
     ['en', 'Thu'],
   ] as const)('gives the short weekday in %s', (language, text) => {
     expect(formatWeekday('2031-05-15', language)).toBe(text)
+  })
+})
+
+describe('formatCardDate', () => {
+  it('gives the weekday, day, and month in English', () => {
+    expect(formatCardDate('2031-05-16', 'en')).toBe('Fri, May 16')
+  })
+
+  it('keeps the day whatever zone the device sits in', () => {
+    vi.stubEnv('TZ', 'Pacific/Kiritimati')
+
+    expect(formatCardDate('2031-05-16', 'en')).toBe('Fri, May 16')
+
+    vi.unstubAllEnvs()
   })
 })
 

@@ -6,6 +6,7 @@ import {
   type Turn,
   type TurnAction,
   turnReducer,
+  unsavedSend,
 } from '@/features/chat/turn'
 import { anAddChange, aReply, aStep, aUserMessage } from '@/test/chat'
 
@@ -207,5 +208,21 @@ describe('threadItems', () => {
     const items = threadItems([], run({ type: 'dropped' }))
 
     expect(items.at(-1)).toMatchObject({ kind: 'live', retry: sent.text })
+  })
+})
+
+describe('unsavedSend', () => {
+  it('names the send of a stopped turn, whose reply no event carried', () => {
+    expect(unsavedSend(run({ type: 'stop' }))).toBe(sent.id)
+  })
+
+  it('names nothing once an event carried the saved reply', () => {
+    const turn = run(event({ type: 'done', message: aReply() }))
+
+    expect(unsavedSend(turn)).toBeNull()
+  })
+
+  it('names nothing while the turn runs', () => {
+    expect(unsavedSend(startTurn(sent))).toBeNull()
   })
 })

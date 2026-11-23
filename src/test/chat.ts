@@ -75,15 +75,26 @@ export function anAddChange(
   }
 }
 
-/** The same breakfast moved from 07:00 to 07:30. */
+const boatTrip: EntryFields = {
+  ...breakfast,
+  title: 'Sunset boat trip',
+  kind: 'transport',
+  startsOn: '2031-05-15',
+  startTime: '17:00',
+  endsOn: '2031-05-15',
+  endTime: '19:00',
+}
+
+/** The assistant moving an invented boat trip from 17:00 to 17:30. */
 export function aMoveChange(
   overrides: Partial<Extract<Change, { entity: 'entry' }>> = {},
 ): Change {
   return anAddChange({
     id: 'change-move',
     op: 'update',
-    before: breakfast,
-    after: { ...breakfast, startTime: '07:30', endTime: '08:30' },
+    entityId: 'entry-boat',
+    before: boatTrip,
+    after: { ...boatTrip, startTime: '17:30', endTime: '19:30' },
     ...overrides,
   })
 }

@@ -3,6 +3,8 @@ import { chatList, chatRead, chatThread } from '@shared/chats.ts'
 import { contactSettings } from '@shared/settings.ts'
 import { useQuery } from '@tanstack/react-query'
 
+import { refreshMs } from '@/calendar-data/query-client'
+import { isReplySaved } from '@/features/chat/turn'
 import { apiFetch } from '@/lib/api'
 
 const segment = encodeURIComponent
@@ -56,10 +58,22 @@ export function useChats() {
   return useQuery({ queryKey: chatKeys.list(), queryFn: listChats })
 }
 
-export function useThread(id: string) {
+const savingMs = 1_000
+
+/**
+ * One chat, asked again every second while `unsavedSend` names a send whose
+ * reply the API is still saving after a Stop or a drop, so its cards arrive
+ * without the usual 30 second wait.
+ */
+export function useThread(id: string, unsavedSend: string | null = null) {
   return useQuery({
     queryKey: chatKeys.thread(id),
     queryFn: () => readThread(id),
+    refetchInterval: ({ state }) =>
+      unsavedSend !== null &&
+      !isReplySaved(state.data?.messages ?? [], unsavedSend)
+        ? savingMs
+        : refreshMs,
   })
 }
 

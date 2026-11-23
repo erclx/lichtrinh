@@ -136,22 +136,38 @@ export function threadItems(
     turn.phase !== 'unavailable' &&
     turn.phase !== 'refused'
   ) {
-    const sentAt = saved.findIndex(({ id }) => id === turn.sent.id)
-    if (sentAt === -1) {
+    if (!saved.some(({ id }) => id === turn.sent.id)) {
       items.push({ kind: 'sent', id: turn.sent.id, text: turn.sent.text })
     }
-    const replySaved =
-      sentAt !== -1 &&
-      saved.slice(sentAt + 1).some(({ role }) => role === 'assistant')
     if (turn.message !== null) {
       if (!saved.some(({ id }) => id === turn.message?.id)) {
         items.push({ kind: 'message', message: turn.message, retry: null })
       }
-    } else if (!replySaved) {
+    } else if (!isReplySaved(saved, turn.sent.id)) {
       items.push({ kind: 'live', turn, retry: null })
     }
   }
   return withRetry(items)
+}
+
+/** Whether the saved messages hold a reply to the message sent under `sentId`. */
+export function isReplySaved(saved: ChatMessage[], sentId: string): boolean {
+  const sentAt = saved.findIndex(({ id }) => id === sentId)
+  return (
+    sentAt !== -1 &&
+    saved.slice(sentAt + 1).some(({ role }) => role === 'assistant')
+  )
+}
+
+/**
+ * The send whose reply the API is still saving: a turn that ended on Stop
+ * or a drop, which no event carried the saved reply for.
+ */
+export function unsavedSend(turn: Turn | null): string | null {
+  if (turn === null || turn.message !== null) return null
+  return turn.phase === 'stopped' || turn.phase === 'failed'
+    ? turn.sent.id
+    : null
 }
 
 function withRetry(items: ThreadItem[]): ThreadItem[] {
