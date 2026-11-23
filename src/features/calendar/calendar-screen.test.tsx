@@ -31,13 +31,15 @@ function calendarApi(entries: Record<string, unknown[]> = {}) {
   })
 }
 
+// Noon UTC on 15 May 2031 reads as 15 May on almost every device's clock,
+// so the unfiltered calendar's device date holds wherever the suite runs.
+const noonOnTheFifteenth = new Date('2031-05-15T12:00:00Z')
+
 beforeEach(async () => {
   localStorage.clear()
   await applyLanguage('en')
-  // Noon UTC on 15 May 2031 reads as 15 May on almost every device's clock,
-  // so the unfiltered calendar's device date holds wherever the suite runs.
   vi.useFakeTimers({ toFake: ['Date'] })
-  vi.setSystemTime(new Date('2031-05-15T12:00:00Z'))
+  vi.setSystemTime(noonOnTheFifteenth)
 })
 
 afterEach(() => {
