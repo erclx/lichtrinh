@@ -12,10 +12,10 @@ describe('assistantTools', () => {
     ])
   })
 
-  it('marks the fields an add needs as required in its JSON Schema', () => {
+  it('requires only a title and a date on an add', () => {
     const add = assistantTools[0].function.parameters
 
-    expect(add.required).toEqual(['title', 'date', 'start', 'end'])
+    expect(add.required).toEqual(['title', 'date'])
   })
 })
 

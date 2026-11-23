@@ -29,8 +29,14 @@ const notes = z.string().trim().max(2000).describe('A short description')
 export const addEntryArgs = z.strictObject({
   title,
   date,
-  start: time,
-  end: time.describe('HH:MM, 24-hour. Estimate it when not given'),
+  // Left out, they take the first free hour and run one hour, which the
+  // result names so the reply can say so.
+  start: time
+    .optional()
+    .describe('HH:MM, 24-hour. Leave out when the traveler named no time'),
+  end: time
+    .optional()
+    .describe('HH:MM, 24-hour. Leave out when the traveler named no end'),
   cost: cost.optional(),
   notes: notes.optional(),
 })

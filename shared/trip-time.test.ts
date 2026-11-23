@@ -1,4 +1,10 @@
-import { convertClock, isTimeZone, nowInZone } from './trip-time.ts'
+import {
+  convertClock,
+  isTimeZone,
+  minutesBetween,
+  nowInZone,
+  shiftClock,
+} from './trip-time.ts'
 
 // New York's 2031 changes: clocks jump from 02:00 to 03:00 on 9 March and
 // fall back from 02:00 to 01:00 on 2 November.
@@ -125,5 +131,37 @@ describe('convertClock', () => {
     )
 
     expect(moved).toEqual({ date: '2031-11-02', time: '01:30' })
+  })
+})
+
+describe('shiftClock', () => {
+  it('moves a wall clock forward within the day', () => {
+    expect(shiftClock({ date: '2031-04-10', time: '09:15' }, 90)).toEqual({
+      date: '2031-04-10',
+      time: '10:45',
+    })
+  })
+
+  it('rolls past midnight into the next date', () => {
+    expect(shiftClock({ date: '2031-04-30', time: '23:30' }, 60)).toEqual({
+      date: '2031-05-01',
+      time: '00:30',
+    })
+  })
+
+  it('reads the wall clock alone, ignoring a zone shift that night', () => {
+    expect(shiftClock({ date: '2031-03-09', time: '01:30' }, 60)).toEqual({
+      date: '2031-03-09',
+      time: '02:30',
+    })
+  })
+})
+
+describe('minutesBetween', () => {
+  it('counts the wall clock minutes from one clock to a later one', () => {
+    const from = { date: '2031-04-10', time: '22:00' }
+    const to = { date: '2031-04-11', time: '01:15' }
+
+    expect(minutesBetween(from, to)).toBe(195)
   })
 })
