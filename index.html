@@ -3,13 +3,21 @@
   <head>
     <meta charset="UTF-8" />
     <script>
-      // Runs before the first paint so a dark device never flashes light. The change listener rewrites the attribute on every scheme flip, so a Settings override must stop it rather than only write data-theme.
+      // Runs before the first paint so the page never flashes the other theme. The key and its values match src/features/settings/appearance.ts, which this script cannot import, and the listener rereads the choice so Light or Dark survives a scheme flip.
       ;(function () {
         var scheme = window.matchMedia('(prefers-color-scheme: dark)')
+        function stored() {
+          try {
+            var value = localStorage.getItem('lichtrinh.theme')
+            return value === 'light' || value === 'dark' ? value : 'auto'
+          } catch (e) {
+            return 'auto'
+          }
+        }
         function apply() {
-          document.documentElement.dataset.theme = scheme.matches
-            ? 'dark'
-            : 'light'
+          var choice = stored()
+          document.documentElement.dataset.theme =
+            choice === 'auto' ? (scheme.matches ? 'dark' : 'light') : choice
         }
         apply()
         scheme.addEventListener('change', apply)
