@@ -12,10 +12,23 @@ export function resolveCheckout(cwd: string, ownRoot: string): Checkout {
   const top = spawnSync('git', ['rev-parse', '--show-toplevel'], {
     cwd,
     encoding: 'utf8',
+    env: withoutGitLocation(process.env),
   })
   const root = top.status === 0 ? top.stdout.trim() : undefined
   if (root !== undefined && isLichtrinh(root)) return { root, fallback: false }
   return { root: ownRoot, fallback: true }
+}
+
+/**
+ * A git hook exports these, and git obeys them over `cwd`, so the lookup
+ * would read the repository running the hook rather than the working folder.
+ */
+export function withoutGitLocation(env: NodeJS.ProcessEnv): NodeJS.ProcessEnv {
+  const clean = { ...env }
+  for (const name of ['GIT_DIR', 'GIT_WORK_TREE', 'GIT_INDEX_FILE']) {
+    delete clean[name]
+  }
+  return clean
 }
 
 function isLichtrinh(root: string): boolean {
