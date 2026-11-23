@@ -449,12 +449,14 @@ export function EditEntryPage() {
   const entry = useEntry(entryId)
   const trip = useTrip(entry.data?.tripId)
 
+  // A deleted entry is gone even while its last read is still cached.
+  const missing =
+    entry.error instanceof ApiFailure && entry.error.code === 'not_found'
   if (
+    missing ||
     (entry.isError && entry.data === undefined) ||
     (trip.isError && trip.data === undefined)
   ) {
-    const missing =
-      entry.error instanceof ApiFailure && entry.error.code === 'not_found'
     return (
       <>
         <PageHeader title={t('entries.editTitle')} backTo="/" />
