@@ -32,6 +32,7 @@ export interface Refused {
     | 'edit_conflict'
     | 'id_conflict'
     | 'entries_outside_range'
+    | 'currency_has_costs'
     | 'undo_conflict'
     | 'already_undone'
   >

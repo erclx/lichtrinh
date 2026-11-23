@@ -25,7 +25,12 @@ import {
   sameFields,
   stampedBy,
 } from './record.ts'
-import { holdsEveryEntry, liveTrip, tripFieldsOf } from './trips.ts'
+import {
+  brokenMoveRule,
+  liveTrip,
+  tripFieldsOf,
+  tripMoveHolds,
+} from './trips.ts'
 
 type ChangeRow = typeof changes.$inferSelect
 
@@ -233,11 +238,8 @@ export async function undoChange(
     const raced = await settledUndo(db, target.id, undoId)
     if (raced !== undefined) return raced
     const now = await stateOf(db, target)
-    return refused(
-      now?.version === state.version
-        ? 'entries_outside_range'
-        : 'undo_conflict',
-    )
+    if (now?.version !== state.version) return refused('undo_conflict')
+    return plan.brokenRule()
   }
   logOutcome('change_undone', { changeId: undoId, byUserId: actor.userId })
   return { change: await readChange(db, undoId) }
@@ -279,7 +281,9 @@ function undoTrip(
       .from(trips)
       .where(and(eq(trips.id, id), eq(trips.version, state.version))),
   )
-  const fromZone = state.current?.timeZone
+  const current =
+    state.current !== null && 'currency' in state.current ? state.current : null
+  const fromZone = current?.timeZone
   const rezone =
     fromZone !== undefined && restore !== null && fromZone !== restore.timeZone
       ? and(
@@ -294,7 +298,12 @@ function undoTrip(
     condition:
       restore === null
         ? atVersion
-        : (and(atVersion, holdsEveryEntry(db, id, restore)) ?? atVersion),
+        : (and(atVersion, tripMoveHolds(db, id, current, restore)) ??
+          atVersion),
+    brokenRule: (): Promise<Refused> =>
+      restore === null
+        ? Promise.resolve(refused('undo_conflict'))
+        : brokenMoveRule(db, id, current, restore),
     rezoned:
       rezone === undefined
         ? undefined
@@ -350,6 +359,8 @@ function undoEntry(
         ? atVersion
         : (and(atVersion, tripHolds(db, restore.tripId, restore.startsOn)) ??
           atVersion),
+    brokenRule: (): Promise<Refused> =>
+      Promise.resolve(refused('entries_outside_range')),
     rezoned: undefined,
     writes: (landed: SQL) => [
       db

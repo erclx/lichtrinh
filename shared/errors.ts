@@ -16,6 +16,7 @@ export const apiErrorCode = z.enum([
   'undo_conflict',
   'already_undone',
   'entries_outside_range',
+  'currency_has_costs',
 ])
 export type ApiErrorCode = z.infer<typeof apiErrorCode>
 

@@ -405,6 +405,25 @@ describe('POST /api/changes/:id/undo', () => {
     expect(await errorCode(res)).toBe('entries_outside_range')
   })
 
+  it('refuses undoing a currency change once an entry carries a cost', async () => {
+    const { cookie } = await signedIn()
+    const { trip } = await addTrip(cookie, { currency: 'VND' })
+    const switched = tripWrite.parse(
+      await (
+        await patch(cookie, `/api/trips/${trip.id}`, {
+          version: 1,
+          currency: 'USD',
+        })
+      ).json(),
+    )
+    await addEntry(cookie, trip.id, { costMinor: 1250 })
+
+    const res = await undo(cookie, switched.changeId)
+
+    expect(res.status).toBe(409)
+    expect(await errorCode(res)).toBe('currency_has_costs')
+  })
+
   it('refuses an undo id another change holds with id_conflict', async () => {
     const { cookie } = await signedIn()
     const { trip } = await addTrip(cookie)

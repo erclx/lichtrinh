@@ -37,9 +37,9 @@ export const createTripRequest = z
 export type CreateTripRequest = z.input<typeof createTripRequest>
 
 /**
- * A change to some of a trip's fields, carrying the version it was read at.
- * A new zone moves every entry that shared the old one, keeping its clock
- * times. New dates are refused while a live entry starts outside them.
+ * Some of a trip's fields at the version read. A new zone moves the entries
+ * in the old one, new dates refuse a live entry outside them, and a new
+ * `currency` refuses a live entry carrying a cost.
  */
 export const updateTripRequest = z.strictObject({
   version: rowVersion,

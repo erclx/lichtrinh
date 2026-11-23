@@ -35,6 +35,7 @@ const REFUSALS = {
   edit_conflict: [409, 'Changed since it was read, so read it again'],
   id_conflict: [409, 'That id is taken by another record'],
   entries_outside_range: [400, 'An entry would fall outside its trip'],
+  currency_has_costs: [409, 'Entries carry costs in the current currency'],
   undo_conflict: [409, 'A later change touched this, so it cannot be undone'],
   already_undone: [409, 'That change is already undone'],
 } as const satisfies Partial<

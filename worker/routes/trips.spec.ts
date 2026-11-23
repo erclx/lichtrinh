@@ -328,6 +328,50 @@ describe('a trip date change', () => {
   })
 })
 
+describe('a trip currency change', () => {
+  it('refuses a trip whose entries carry a cost with currency_has_costs', async () => {
+    const { cookie } = await signedIn()
+    const { trip } = await addTrip(cookie, { currency: 'VND' })
+    await addEntry(cookie, trip.id, { costMinor: 450000 })
+
+    const res = await patchTrip(cookie, trip.id, {
+      version: 1,
+      currency: 'USD',
+    })
+
+    expect(res.status).toBe(409)
+    expect(await errorCode(res)).toBe('currency_has_costs')
+    const stored = (await listTrips(cookie)).find((t) => t.id === trip.id)
+    expect(stored?.currency).toBe('VND')
+  })
+
+  it('allows it while no live entry carries a cost', async () => {
+    const { cookie } = await signedIn()
+    const { trip } = await addTrip(cookie, { currency: 'VND' })
+    await addEntry(cookie, trip.id, { costMinor: null })
+
+    const res = await patchTrip(cookie, trip.id, {
+      version: 1,
+      currency: 'USD',
+    })
+
+    expect(res.status).toBe(200)
+  })
+
+  it('allows a home currency change over costed entries', async () => {
+    const { cookie } = await signedIn()
+    const { trip } = await addTrip(cookie, { homeCurrency: 'USD' })
+    await addEntry(cookie, trip.id, { costMinor: 450000 })
+
+    const res = await patchTrip(cookie, trip.id, {
+      version: 1,
+      homeCurrency: 'EUR',
+    })
+
+    expect(res.status).toBe(200)
+  })
+})
+
 describe('a trip zone change', () => {
   it('moves entries in the old zone and keeps their clock times', async () => {
     const { cookie } = await signedIn()

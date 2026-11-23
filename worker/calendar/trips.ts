@@ -12,6 +12,7 @@ import {
   eq,
   exists,
   gt,
+  isNotNull,
   isNull,
   lt,
   notExists,
@@ -92,6 +93,55 @@ export function holdsEveryEntry(
   )
 }
 
+// A cost is stored in the trip currency's minor unit, so a new currency
+// would reread every cost, and no exchange rate exists to rescale them.
+function costedEntries(db: Db, tripId: string) {
+  return db
+    .select({ one: sql`1` })
+    .from(entries)
+    .where(
+      and(
+        eq(entries.tripId, tripId),
+        isNull(entries.deletedAt),
+        isNotNull(entries.costMinor),
+      ),
+    )
+}
+
+/**
+ * The conditions a trip moving from `from` to `to` meets, where a null
+ * `from` is a deleted trip coming back: every live entry inside the new
+ * dates, and no live cost when the currency changes.
+ */
+export function tripMoveHolds(
+  db: Db,
+  id: string,
+  from: TripFields | null,
+  to: TripFields,
+) {
+  const datesMoved =
+    from === null || from.startsOn !== to.startsOn || from.endsOn !== to.endsOn
+  const currencyMoved = from !== null && from.currency !== to.currency
+  return and(
+    datesMoved ? holdsEveryEntry(db, id, to) : undefined,
+    currencyMoved ? notExists(costedEntries(db, id)) : undefined,
+  )
+}
+
+/** Which rule a refused `tripMoveHolds()` broke, read from the rows now. */
+export async function brokenMoveRule(
+  db: Db,
+  id: string,
+  from: TripFields | null,
+  to: TripFields,
+): Promise<Refused> {
+  const currencyMoved = from !== null && from.currency !== to.currency
+  if (currencyMoved && (await costedEntries(db, id).get()) !== undefined) {
+    return refused('currency_has_costs')
+  }
+  return refused('entries_outside_range')
+}
+
 export function liveTrip(db: Db, id: string) {
   return db
     .select()
@@ -101,11 +151,18 @@ export function liveTrip(db: Db, id: string) {
 }
 
 // Classifies a write whose guard refused it, from the row as it stands now.
-async function whyRefused(db: Db, id: string, version: number) {
+async function whyRefused(
+  db: Db,
+  id: string,
+  version: number,
+  move?: { from: TripFields; to: TripFields },
+) {
   const row = await liveTrip(db, id)
   if (row === undefined) return refused('not_found')
-  if (row.version !== version) return refused('edit_conflict')
-  return refused('entries_outside_range')
+  if (row.version !== version || move === undefined) {
+    return refused('edit_conflict')
+  }
+  return brokenMoveRule(db, id, move.from, move.to)
 }
 
 export function listTrips(db: Db): Promise<Trip[]> {
@@ -209,8 +266,6 @@ export async function updateTrip(
   }
   if (after.endsOn < after.startsOn) return refused('validation_failed')
   const changeId = crypto.randomUUID()
-  const datesMoved =
-    after.startsOn !== before.startsOn || after.endsOn !== before.endsOn
   const zoneMoved = after.timeZone !== before.timeZone
   const inOldZone = and(
     eq(entries.tripId, id),
@@ -245,7 +300,7 @@ export async function updateTrip(
       },
       and(
         tripAt(db, id, request.version),
-        datesMoved ? holdsEveryEntry(db, id, after) : undefined,
+        tripMoveHolds(db, id, before, after),
       ) ?? sql`1`,
     ),
     db
@@ -257,7 +312,7 @@ export async function updateTrip(
   ])
   const trip = updated[0]
   if (guard.meta.changes === 0 || trip === undefined) {
-    return whyRefused(db, id, request.version)
+    return whyRefused(db, id, request.version, { from: before, to: after })
   }
   logOutcome('trip_updated', { tripId: id, changeId, byUserId: actor.userId })
   return { trip: toTrip(trip), changeId }
