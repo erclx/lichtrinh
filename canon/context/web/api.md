@@ -76,7 +76,7 @@ Holds the schemas the app, the API, and the assistant's tools all import as `@sh
 
 The Worker's two smaller folders each carry one job.
 
-- `worker/routes/`: one Hono router per API area, being health, auth, admin users, settings, trips, entries, changes, chats, voice, and the assistant's status, the admin's model write, and the bridge socket
+- `worker/routes/`: one Hono router per API area, being health, auth, admin users, settings, trips, entries, changes, chats, voice, and the assistant's status, model write, and bridge socket
 - `worker/routes/users.ts` edits an account in one `UPDATE` that counts admins itself, since a separate count lets two demotions both pass
 - `worker/test/`: the migrating setup, the test-only binding types, and builders for invented records, requests, and a scripted fake bridge. `bare()` sends the Origin `csrf()` needs on a bodiless POST.
 

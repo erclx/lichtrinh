@@ -69,8 +69,7 @@ export const chatRoutes = new Hono<AuthEnv>()
     const db = createDb(c.env.DB)
     const chat = await ownChat(db, c.var.user.id, c.req.param('id'))
     if (chat === undefined) return refuse(c, 'not_found')
-    // Marks the clip only once the message is saved, so a refused send
-    // leaves it unsent. A retried send writes the same values again.
+    // Runs only once the message is saved, so a refused send marks nothing.
     const markVoice = async () => {
       if (request.voice === undefined) return
       await markSent(db, c.var.user.id, request.voice, request.id, new Date())
