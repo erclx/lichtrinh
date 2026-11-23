@@ -9,6 +9,10 @@ const options = [
   { language: 'en', code: 'language.en', name: 'language.enName' },
 ] as const
 
+/**
+ * Each button's label leads with its visible code, so a voice user saying VI
+ * reaches it. A hidden child span would lose the space between code and name.
+ */
 export function LanguageToggle({ className }: { className?: string }) {
   const { t, i18n } = useTranslation()
 
@@ -24,8 +28,6 @@ export function LanguageToggle({ className }: { className?: string }) {
           variant="ghost"
           lang={language}
           aria-pressed={i18n.language === language}
-          // The visible code leads the spoken name, so a voice user saying VI
-          // reaches the button. A hidden child span loses the space between them.
           aria-label={`${t(code)} ${t(name)}`}
           onClick={() => void changeLanguage(language)}
           className="min-w-16 px-4 text-lg text-muted-foreground hover:bg-transparent not-aria-pressed:hover:text-foreground aria-pressed:bg-primary aria-pressed:text-primary-foreground dark:hover:bg-transparent"
