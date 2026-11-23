@@ -144,6 +144,8 @@ interface TalkScript {
   presses: readonly ('Talk' | 'Stop and write it down')[]
   /** The clip's words, or null to hold the clip at transcribing. */
   words: string | null
+  /** Refuses the microphone, as a traveler who tapped Don't Allow. */
+  denied?: boolean
 }
 
 const TALK_CHAT = '/chats/fixture-chat-today'
@@ -167,8 +169,9 @@ async function talkScript(page: Page, script: TalkScript) {
     const thread = (await response.json()) as Record<string, unknown>
     await route.fulfill({ response, json: { ...thread, messages: [] } })
   })
-  await page.addInitScript(({ presses, words }) => {
+  await page.addInitScript(({ presses, words, denied }) => {
     navigator.mediaDevices.getUserMedia = async () => {
+      if (denied === true) throw new DOMException('denied', 'NotAllowedError')
       const context = new AudioContext()
       const tone = context.createOscillator()
       const out = context.createMediaStreamDestination()
@@ -197,6 +200,22 @@ async function talkScript(page: Page, script: TalkScript) {
       }
       return realFetch(input, init)
     }
+    // A real recorder stopped in its first frame hands back no audio.
+    class StandInRecorder {
+      static isTypeSupported = (mime: string) => mime.startsWith('audio/webm')
+      state = 'inactive'
+      ondataavailable: ((event: { data: Blob }) => void) | null = null
+      onstop: (() => void) | null = null
+      start() {
+        this.state = 'recording'
+      }
+      stop() {
+        this.state = 'inactive'
+        this.ondataavailable?.({ data: new Blob([new Uint8Array([1])]) })
+        this.onstop?.()
+      }
+    }
+    Object.defineProperty(window, 'MediaRecorder', { value: StandInRecorder })
     const queue = [...presses]
     const timer = setInterval(() => {
       const label = queue[0]
@@ -533,4 +552,10 @@ export const CASES: CaptureCase[] = [
     words: '',
   }),
   ...talkCases('talk-voice-off', { voice: false, presses: [], words: null }),
+  ...talkCases('talk-denied', {
+    voice: true,
+    presses: ['Talk'],
+    words: null,
+    denied: true,
+  }),
 ]
