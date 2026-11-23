@@ -28,6 +28,8 @@ type Method = 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE'
 interface RequestOptions {
   method?: Method
   body?: unknown
+  /** Sent raw under its own type in place of a JSON body, such as a clip. */
+  blob?: Blob
 }
 
 let unauthenticated: (() => void) | null = null
@@ -75,6 +77,7 @@ export async function apiFetch(
   {
     method = 'GET',
     body,
+    blob,
     schema,
   }: RequestOptions & { schema?: z.ZodType } = {},
 ): Promise<unknown> {
@@ -85,8 +88,13 @@ export async function apiFetch(
       credentials: 'same-origin',
       // Bodyless writes too, since the dev proxy sends an empty body the API checks.
       headers:
-        method === 'GET' ? undefined : { 'content-type': 'application/json' },
-      body: body === undefined ? undefined : JSON.stringify(body),
+        method === 'GET'
+          ? undefined
+          : {
+              'content-type':
+                blob === undefined ? 'application/json' : blob.type,
+            },
+      body: blob ?? (body === undefined ? undefined : JSON.stringify(body)),
     })
   } catch {
     reportReach(false)
