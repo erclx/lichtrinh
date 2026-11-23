@@ -30,6 +30,7 @@
     "src",
     "shared",
     "cli",
+    "bridge",
     "vite.config.ts",
     "vitest.config.ts",
     "drizzle.config.ts",

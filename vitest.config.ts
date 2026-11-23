@@ -73,6 +73,14 @@ export default mergeConfig(
             include: ['cli/**/*.test.ts'],
           },
         },
+        {
+          extends: true,
+          test: {
+            name: 'bridge',
+            environment: 'node',
+            include: ['bridge/**/*.test.ts'],
+          },
+        },
       ],
     },
   }),
