@@ -216,8 +216,11 @@ function RateForm({ opens, stored }: { opens: Pair; stored?: Rate }) {
       aria-busy={pending}
       className="flex flex-col gap-3 rounded-xl border-[1.5px] border-border bg-card px-4.5 py-4 text-card-foreground"
     >
-      <div className="flex items-center gap-3">
-        <span aria-hidden="true" className="shrink-0 text-lg font-extrabold">
+      <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
+        <span
+          aria-hidden="true"
+          className="w-full text-lg font-extrabold min-[480px]:w-auto"
+        >
           {t('rates.one', { currency: pair.from })}
         </span>
         <Input
@@ -273,7 +276,7 @@ function RateForm({ opens, stored }: { opens: Pair; stored?: Rate }) {
         )}
         <Button
           type="button"
-          variant="secondary"
+          variant="outline"
           onClick={swap}
           aria-label={t('rates.swap', { currency: pair.to })}
           className="size-target ml-auto shrink-0 px-0"
