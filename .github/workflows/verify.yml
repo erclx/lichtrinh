@@ -43,6 +43,12 @@ jobs:
       - name: Check Formatting
         run: bun run check:format
 
+      - name: Canon Gate
+        run: bunx -y "@erclx/canon@$(jq -r .domains.tooling.version canon/config/config.json)" gate run --all
+
+      - name: Context Gate
+        run: bunx -y "@erclx/canon@$(jq -r .domains.tooling.version canon/config/config.json)" context audit --gate
+
   unit-tests:
     name: 🧪 Unit Tests
     runs-on: ubuntu-latest
