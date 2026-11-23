@@ -9,7 +9,7 @@ import type {
 } from '@shared/changes.ts'
 import { entryFields, tripFields } from '@shared/changes.ts'
 import type { SQL } from 'drizzle-orm'
-import { and, desc, eq, exists, isNull, lt, sql } from 'drizzle-orm'
+import { and, desc, eq, exists, inArray, isNull, lt, sql } from 'drizzle-orm'
 import { alias } from 'drizzle-orm/sqlite-core'
 import type { z } from 'zod'
 
@@ -98,6 +98,28 @@ async function readChange(db: Db, id: string) {
   if (found === undefined)
     throw new Error('A recorded change did not read back')
   return toChange(found)
+}
+
+// D1 binds at most 100 parameters to one statement.
+const IDS_PER_QUERY = 90
+
+/**
+ * The changes with these ids, keyed by id, in one query per 90 ids. An id
+ * with no change is left out, whatever trip each belongs to.
+ */
+export async function changesByIds(
+  db: Db,
+  ids: readonly string[],
+): Promise<Map<string, Change>> {
+  const unique = [...new Set(ids)]
+  const chunks: string[][] = []
+  for (let i = 0; i < unique.length; i += IDS_PER_QUERY) {
+    chunks.push(unique.slice(i, i + IDS_PER_QUERY))
+  }
+  const pages = await Promise.all(
+    chunks.map((chunk) => readChanges(db, inArray(changes.id, chunk))),
+  )
+  return new Map(pages.flat().map((row) => [row.row.id, toChange(row)]))
 }
 
 /**

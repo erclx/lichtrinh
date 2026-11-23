@@ -8,6 +8,7 @@ import { fail } from './envelope.ts'
 import { assistantRoutes } from './routes/assistant.ts'
 import { authRoutes } from './routes/auth.ts'
 import { changeRoutes } from './routes/changes.ts'
+import { chatRoutes } from './routes/chats.ts'
 import { entryRoutes } from './routes/entries.ts'
 import { healthRoutes } from './routes/health.ts'
 import { settingsRoutes } from './routes/settings.ts'
@@ -61,6 +62,7 @@ app.route('/', tripRoutes)
 app.route('/', entryRoutes)
 app.route('/', changeRoutes)
 app.route('/', assistantRoutes)
+app.route('/', chatRoutes)
 
 app.notFound((c) => c.json(fail('not_found', 'No such API route'), 404))
 
