@@ -1,4 +1,7 @@
 #!/usr/bin/env bun
+import { resolve } from 'node:path'
+
+import { resolveCheckout } from './checkout'
 import { runCli } from './program'
 
 const io = {
@@ -10,7 +13,9 @@ const io = {
 try {
   process.exitCode = await runCli(process.argv.slice(2), {
     io,
-    findCheckout: () => ({ root: io.cwd, fallback: false }),
+    // `bun link` keeps the real path here, so this is the linked checkout.
+    findCheckout: (cwd) =>
+      resolveCheckout(cwd, resolve(import.meta.dirname, '..')),
     runTask: async () => 0,
   })
 } catch (error) {
