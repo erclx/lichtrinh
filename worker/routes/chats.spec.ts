@@ -388,6 +388,37 @@ describe('a send whose text started as a clip', () => {
     })
   })
 
+  it('leaves the clip unsent when the workspace PC refuses the send', async () => {
+    const { cookie, chat, user } = await chatterWithChat()
+    const clipId = await addClip(user.id)
+
+    const res = await sendMessage(cookie, chat.id, {
+      voice: { transcriptionId: clipId, editRatio: 0.25 },
+    })
+
+    expect(res.status).toBe(503)
+    expect(await clipRow(clipId)).toMatchObject({
+      sentMessageId: null,
+      editRatio: null,
+    })
+  })
+
+  it('leaves the clip unsent when the chat has no trip to plan', async () => {
+    const { cookie, chat, user } = await chatterWithChat()
+    const clipId = await addClip(user.id)
+    await createDb(env.DB)
+      .update(trips)
+      .set({ deletedAt: new Date() })
+      .where(eq(trips.id, chat.tripId))
+
+    const res = await sendMessage(cookie, chat.id, {
+      voice: { transcriptionId: clipId, editRatio: 0.25 },
+    })
+
+    expect(res.status).toBe(409)
+    expect((await clipRow(clipId))?.sentMessageId).toBeNull()
+  })
+
   it('refuses an edit ratio outside 0 to 1', async () => {
     const { cookie, chat, user } = await chatterWithChat()
     const clipId = await addClip(user.id)
