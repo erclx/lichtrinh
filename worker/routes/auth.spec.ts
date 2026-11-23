@@ -374,8 +374,7 @@ describe('sign-in rate limit', () => {
   const FIFTEEN_MINUTES_S = 15 * 60
   let addressCount = 0
 
-  // A documentation-range address per case, since the per-address count
-  // persists across the cases in this file.
+  // A documentation-range address per case, since address counts persist.
   function freshAddress() {
     addressCount += 1
     return `203.0.113.${addressCount}`

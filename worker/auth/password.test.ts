@@ -29,8 +29,7 @@ describe('verifyPassword', () => {
     expect(await verifyPassword('abcdefghjkmn', stored)).toBe(false)
   })
 
-  // An unknown username reaches here with no hash. Skipping the derive would
-  // answer faster than a wrong password and tell a caller the name is free.
+  // An unknown name has no hash, and skipping the derive would answer faster.
   it('still derives once when there is no hash to compare', async () => {
     const derive = vi.spyOn(crypto.subtle, 'deriveBits')
 

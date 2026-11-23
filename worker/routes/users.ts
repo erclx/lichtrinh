@@ -57,8 +57,7 @@ export const userRoutes = new Hono<AuthEnv>()
     const id = c.req.param('id')
     const password = generatePassword()
     const db = createDb(c.env.DB)
-    // One batch, so the new hash and the end of every old session land
-    // together or not at all.
+    // One batch, so the new hash and the ended sessions land together or not.
     const [updated] = await db.batch([
       db
         .update(users)

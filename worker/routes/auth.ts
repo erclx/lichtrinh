@@ -23,8 +23,7 @@ export const authRoutes = new Hono<AuthEnv>()
     const body = await parseBody(c, signInRequest)
     const now = Date.now()
     const db = createDb(c.env.DB)
-    // Cloudflare's edge sets this header and overwrites a client's copy.
-    // Local development has no edge, so every attempt shares one address.
+    // Only Cloudflare's edge sets this, so every local attempt shares one key.
     const address = c.req.header('cf-connecting-ip') ?? 'local'
     const byName = usernameKey(body.username)
     const keys = [byName, addressKey(address)]
@@ -41,8 +40,7 @@ export const authRoutes = new Hono<AuthEnv>()
       .from(users)
       .where(eq(users.username, body.username))
       .get()
-    // Runs one derive whether or not the account exists, so an unknown name
-    // answers in the time a wrong password does.
+    // Derives once even with no account, so an unknown name answers as slowly.
     const valid = await verifyPassword(
       body.password,
       account?.passwordHash ?? null,
