@@ -1,6 +1,7 @@
 import type { DialogPopupProps } from '@base-ui/react/dialog'
+import { cn } from 'cn'
 import { XIcon } from 'lucide-react'
-import type { ReactNode } from 'react'
+import { type KeyboardEvent, type ReactNode, type Ref, useId } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import {
@@ -96,5 +97,67 @@ export function PickerSheet({
         {children}
       </DrawerContent>
     </Drawer>
+  )
+}
+
+interface PickerFieldProps {
+  label: string
+  /** The chosen value's text, or empty when nothing is chosen yet. */
+  value: string
+  /** Shown muted in place of an empty value. */
+  placeholder?: string
+  icon: ReactNode
+  expanded: boolean
+  onOpen: () => void
+  ref?: Ref<HTMLButtonElement>
+}
+
+/**
+ * The closed field a picker opens from, named by its label and value. It
+ * opens on a press, and on Up or Down Arrow as a combobox does.
+ */
+export function PickerField({
+  label,
+  value,
+  placeholder,
+  icon,
+  expanded,
+  onOpen,
+  ref,
+}: PickerFieldProps) {
+  const labelId = useId()
+  const valueId = useId()
+
+  function onKeyDown(event: KeyboardEvent) {
+    if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
+      event.preventDefault()
+      onOpen()
+    }
+  }
+
+  return (
+    <div className="flex min-w-0 flex-col gap-1.5">
+      <span id={labelId} className="text-sm font-extrabold">
+        {label}
+      </span>
+      <button
+        ref={ref}
+        type="button"
+        aria-haspopup="dialog"
+        aria-expanded={expanded}
+        aria-labelledby={`${labelId} ${valueId}`}
+        onClick={onOpen}
+        onKeyDown={onKeyDown}
+        className="flex h-target w-full min-w-0 items-center justify-between gap-2 rounded-lg border-2 border-input bg-card px-4 text-left text-base outline-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring aria-expanded:border-ring aria-expanded:ring-2 aria-expanded:ring-ring"
+      >
+        <span
+          id={valueId}
+          className={cn('min-w-0 truncate', !value && 'text-muted-foreground')}
+        >
+          {value || placeholder}
+        </span>
+        <span className="flex shrink-0 text-muted-foreground">{icon}</span>
+      </button>
+    </div>
   )
 }

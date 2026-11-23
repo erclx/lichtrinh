@@ -2,7 +2,7 @@ import { ChevronDownIcon } from 'lucide-react'
 import { type KeyboardEvent, useId, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
-import { PickerSheet } from '@/components/picker-sheet'
+import { PickerField, PickerSheet } from '@/components/picker-sheet'
 import { Button } from '@/components/ui/button'
 import { Field, FieldLabel } from '@/components/ui/field'
 import { Input } from '@/components/ui/input'
@@ -52,8 +52,6 @@ export function SheetList({
   const fieldRef = useRef<HTMLButtonElement>(null)
   const listRef = useRef<HTMLDivElement>(null)
   const filterRef = useRef<HTMLInputElement>(null)
-  const labelId = useId()
-  const valueId = useId()
   const titleId = useId()
   const filterId = useId()
 
@@ -74,13 +72,6 @@ export function SheetList({
     if (next !== value) onChange(next)
   }
 
-  function onFieldKeyDown(event: KeyboardEvent) {
-    if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
-      event.preventDefault()
-      openSheet()
-    }
-  }
-
   function onRowsKeyDown(event: KeyboardEvent) {
     if (event.key === 'Enter') {
       event.preventDefault()
@@ -99,28 +90,20 @@ export function SheetList({
 
   return (
     <div className="flex flex-col gap-1.5">
-      <span id={labelId} className="text-sm font-extrabold">
-        {label}
-      </span>
-      <button
+      <PickerField
         ref={fieldRef}
-        type="button"
-        aria-haspopup="dialog"
-        aria-expanded={open}
-        aria-labelledby={`${labelId} ${valueId}`}
-        onClick={openSheet}
-        onKeyDown={onFieldKeyDown}
-        className="flex h-target w-full min-w-0 items-center justify-between gap-2 rounded-lg border-2 border-input bg-card px-4 text-left text-base outline-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring aria-expanded:border-ring aria-expanded:ring-2 aria-expanded:ring-ring"
-      >
-        <span id={valueId} className="min-w-0 truncate">
-          {chosen?.label}
-        </span>
-        <ChevronDownIcon
-          aria-hidden="true"
-          className="size-[22px] shrink-0 text-muted-foreground"
-          strokeWidth={2.4}
-        />
-      </button>
+        label={label}
+        value={chosen?.label ?? ''}
+        icon={
+          <ChevronDownIcon
+            aria-hidden="true"
+            className="size-[22px]"
+            strokeWidth={2.4}
+          />
+        }
+        expanded={open}
+        onOpen={openSheet}
+      />
       <PickerSheet
         open={open}
         onOpenChange={setOpen}
