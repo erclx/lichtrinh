@@ -1,3 +1,4 @@
+import { assistantStatus } from '@shared/assistant.ts'
 import { apiError } from '@shared/errors.ts'
 import { transcription, voiceAdmin, voiceSettings } from '@shared/voice.ts'
 import { env } from 'cloudflare:workers'
@@ -304,6 +305,81 @@ describe('the audio exemption stays narrow', () => {
     )
 
     expect(res.status).toBe(415)
+  })
+})
+
+async function readVoiceStatus(cookie: string) {
+  const res = await app.request(
+    '/api/assistant/status',
+    bare('GET', cookie),
+    env,
+  )
+  expect(res.status).toBe(200)
+  return assistantStatus.parse(await res.json()).voice
+}
+
+describe('voice on the assistant status', () => {
+  it('reads voice offline with no bridge', async () => {
+    const { cookie } = await chatter()
+
+    expect((await readVoiceStatus(cookie))?.online).toBe(false)
+  })
+
+  it('reads voice offline from a bridge that does not forward clips', async () => {
+    const { cookie } = await chatter()
+    open.push(await connectBridge())
+
+    expect((await readVoiceStatus(cookie))?.online).toBe(false)
+  })
+
+  it('reads voice online once the bridge says its voice server answers', async () => {
+    const { cookie } = await chatter()
+    await voiceOnline()
+
+    expect((await readVoiceStatus(cookie))?.online).toBe(true)
+  })
+
+  it('reads voice offline again once the voice server goes down', async () => {
+    const { cookie } = await chatter()
+    const bridge = await voiceOnline()
+
+    await sayVoice(bridge, false)
+
+    expect((await readVoiceStatus(cookie))?.online).toBe(false)
+  })
+})
+
+describe('warming voice', () => {
+  function warm(cookie: string) {
+    return app.request('/api/assistant/warm', bare('POST', cookie), env)
+  }
+
+  it('asks a voice bridge to load the set speech model beside the assistant', async () => {
+    const admin = await signedIn({ role: 'admin' })
+    await setModel(admin.cookie, { model: 'phowhisper-large' })
+    const { cookie } = await chatter()
+    const bridge = await voiceOnline()
+
+    const res = await warm(cookie)
+
+    expect(res.status).toBe(202)
+    expect((await bridge.next()).type).toBe('warm')
+    expect(await bridge.next()).toEqual({
+      type: 'voice_warm',
+      model: 'phowhisper-large',
+    })
+  })
+
+  it('sends no voice frame to a bridge that does not forward clips', async () => {
+    const { cookie } = await chatter()
+    const bridge = await connectBridge()
+    open.push(bridge)
+
+    await warm(cookie)
+    await warm(cookie)
+
+    expect((await bridge.next()).type).toBe('warm')
+    expect((await bridge.next()).type).toBe('warm')
   })
 })
 

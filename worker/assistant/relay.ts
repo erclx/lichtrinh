@@ -145,6 +145,14 @@ export class AssistantRelay extends DurableObject<Env> {
     return this.voiceSocket() !== undefined
   }
 
+  /** Asks the bridge to load a speech model ahead of a clip. */
+  warmVoice(model: VoiceModel): boolean {
+    const socket = this.voiceSocket()
+    if (socket === undefined) return false
+    send(socket, { type: 'voice_warm', model })
+    return true
+  }
+
   /**
    * Sends a clip down to the bridge and waits for its text, never behind the
    * running turn. A retry of a clip still waiting joins that wait rather

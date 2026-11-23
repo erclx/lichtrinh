@@ -11,27 +11,41 @@ import { createDb } from '../db/client.ts'
 import { settings } from '../db/schema.ts'
 import { fail, parseBody, refuse } from '../envelope.ts'
 import { logOutcome } from '../log.ts'
+import { readVoiceModel } from '../voice/model.ts'
 
 export const assistantRoutes = new Hono<AuthEnv>()
   .get('/assistant/status', async (c) => {
     const db = createDb(c.env.DB)
-    const [online, answeredAt, model] = await Promise.all([
-      relayOf(c.env).online(),
-      lastAnsweredAt(db),
-      readModel(db),
-    ])
+    const relay = relayOf(c.env)
+    const [online, answeredAt, model, voiceOnline, voiceModel] =
+      await Promise.all([
+        relay.online(),
+        lastAnsweredAt(db),
+        readModel(db),
+        relay.voiceOnline(),
+        readVoiceModel(db),
+      ])
     const body: AssistantStatus = {
       online,
       lastAnsweredAt: answeredAt?.toISOString() ?? null,
       model,
+      voice: { online: voiceOnline, model: voiceModel },
     }
     return c.json(body)
   })
+  // Warms the speech model beside the assistant's, since a press of the
+  // talk button comes before the send. Voice being off refuses nothing here.
   .post('/assistant/warm', requireChat, async (c) => {
-    const model = await readModel(createDb(c.env.DB))
-    if (!(await relayOf(c.env).warm(model))) {
+    const db = createDb(c.env.DB)
+    const relay = relayOf(c.env)
+    const [model, voiceModel] = await Promise.all([
+      readModel(db),
+      readVoiceModel(db),
+    ])
+    if (!(await relay.warm(model))) {
       return refuse(c, 'assistant_unavailable')
     }
+    await relay.warmVoice(voiceModel)
     return c.body(null, 202)
   })
   // The contact route owns its own key in the same table, so each upsert

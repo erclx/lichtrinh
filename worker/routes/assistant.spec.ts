@@ -52,6 +52,7 @@ describe('GET /api/assistant/status', () => {
       online: false,
       lastAnsweredAt: null,
       model: 'lichtrinh-assistant',
+      voice: { online: false, model: 'qwen3-asr-1.7b' },
     })
   })
 
