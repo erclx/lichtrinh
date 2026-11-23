@@ -14,8 +14,10 @@ import {
 } from '@/shell/icons'
 import { PageHeader } from '@/shell/page-header'
 
-const row =
-  'flex min-h-target items-center gap-4 border-b-[1.5px] border-border py-3'
+// The divider sits on the list item, so a pressable row's rounded focus ring
+// never bends it.
+const divider = 'border-b-[1.5px] border-border'
+const row = 'flex min-h-target items-center gap-4 py-3'
 const rowIcon =
   'flex size-12 shrink-0 items-center justify-center rounded-[14px] bg-muted'
 const pressable =
@@ -53,7 +55,7 @@ export function SettingsPage() {
     <>
       <PageHeader title={t('settings.title')} backTo="/" />
       <ul>
-        <li className={cn(row, 'flex-wrap')}>
+        <li className={cn(row, divider, 'flex-wrap')}>
           <span aria-hidden="true" className={rowIcon}>
             <GlobeIcon className="size-6" />
           </span>
@@ -65,7 +67,7 @@ export function SettingsPage() {
           />
         </li>
         {user?.role === 'admin' && (
-          <li>
+          <li className={divider}>
             <Link to="/admin/accounts" className={cn(row, pressable)}>
               <span aria-hidden="true" className={rowIcon}>
                 <AccountsIcon className="size-6" />
@@ -77,7 +79,7 @@ export function SettingsPage() {
             </Link>
           </li>
         )}
-        <li>
+        <li className={divider}>
           <button
             type="button"
             onClick={() => void onSignOut()}

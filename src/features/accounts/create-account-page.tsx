@@ -250,7 +250,11 @@ export function CreateAccountPage() {
           </p>
         )}
 
-        <Button type="submit" aria-busy={pending} className="w-full">
+        <Button
+          type="submit"
+          aria-busy={pending}
+          className="h-auto min-h-target w-full py-3 whitespace-normal"
+        >
           {t(pending ? 'accounts.creating' : 'accounts.create')}
         </Button>
       </form>
