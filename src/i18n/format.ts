@@ -50,3 +50,13 @@ export function formatShortDate(date: string, language: Language): string {
     month: 'numeric',
   }).format(utcDay(date))
 }
+
+/** A full date in digits, such as `20/9/2031`, from a `YYYY-MM-DD` date. */
+export function formatNumericDate(date: string, language: Language): string {
+  return new Intl.DateTimeFormat(language, {
+    ...zone,
+    day: 'numeric',
+    month: 'numeric',
+    year: 'numeric',
+  }).format(utcDay(date))
+}

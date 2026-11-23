@@ -1,4 +1,9 @@
-import { formatMonthTitle, formatShortDate, weekdayLabels } from './format'
+import {
+  formatMonthTitle,
+  formatNumericDate,
+  formatShortDate,
+  weekdayLabels,
+} from './format'
 
 describe('formatMonthTitle', () => {
   it.each([
@@ -24,5 +29,14 @@ describe('formatShortDate', () => {
     ['en', '9/20'],
   ] as const)('gives the day and month in %s', (language, date) => {
     expect(formatShortDate('2031-09-20', language)).toBe(date)
+  })
+})
+
+describe('formatNumericDate', () => {
+  it.each([
+    ['vi', '20/9/2031'],
+    ['en', '9/20/2031'],
+  ] as const)('gives the day, month, and year in %s', (language, date) => {
+    expect(formatNumericDate('2031-09-20', language)).toBe(date)
   })
 })
