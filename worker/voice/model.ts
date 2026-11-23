@@ -21,3 +21,17 @@ export async function readVoiceModel(db: Db): Promise<VoiceModel> {
   const parsed = voiceModel.safeParse(row?.value)
   return parsed.success ? parsed.data : DEFAULT_VOICE_MODEL
 }
+
+/** Sets the speech model, owning this one key of `settings` alone. */
+export async function writeVoiceModel(
+  db: Db,
+  model: VoiceModel,
+  byUserId: string,
+  at: Date,
+) {
+  const change = { value: model, updatedAt: at, updatedBy: byUserId }
+  await db
+    .insert(settings)
+    .values({ key: VOICE_MODEL_KEY, ...change })
+    .onConflictDoUpdate({ target: settings.key, set: change })
+}

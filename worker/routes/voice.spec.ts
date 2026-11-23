@@ -1,5 +1,5 @@
 import { apiError } from '@shared/errors.ts'
-import { transcription } from '@shared/voice.ts'
+import { transcription, voiceAdmin, voiceSettings } from '@shared/voice.ts'
 import { env } from 'cloudflare:workers'
 import { eq } from 'drizzle-orm'
 import { afterEach, describe, expect, it } from 'vitest'
@@ -14,7 +14,7 @@ import {
   connectVoiceBridge,
   sayVoice,
 } from '../test/bridge.ts'
-import { json } from '../test/requests.ts'
+import { bare, json } from '../test/requests.ts'
 import { signedIn } from '../test/users.ts'
 import { FAKE_CLIP, sendClip } from '../test/voice.ts'
 
@@ -304,5 +304,108 @@ describe('the audio exemption stays narrow', () => {
     )
 
     expect(res.status).toBe(415)
+  })
+})
+
+function setModel(cookie: string, body: unknown) {
+  return app.request('/api/admin/voice', json('PUT', body, cookie), env)
+}
+
+async function readAdmin(cookie: string) {
+  const res = await app.request('/api/admin/voice', bare('GET', cookie), env)
+  expect(res.status).toBe(200)
+  return voiceAdmin.parse(await res.json())
+}
+
+describe('the admin voice routes', () => {
+  it('sets the model the next clip runs on', async () => {
+    const admin = await signedIn({ role: 'admin' })
+    const { cookie } = await chatter()
+    const bridge = await voiceOnline()
+
+    const res = await setModel(admin.cookie, {
+      model: 'whisper-large-v3-turbo',
+    })
+    const pending = sendClip(cookie)
+    const frame = await answerClip(bridge, { text: 'Invented', audioMs: 800 })
+    await pending
+
+    expect(res.status).toBe(200)
+    expect(voiceSettings.parse(await res.json())).toEqual({
+      model: 'whisper-large-v3-turbo',
+    })
+    expect(frame.model).toBe('whisper-large-v3-turbo')
+    expect((await readAdmin(admin.cookie)).model).toBe('whisper-large-v3-turbo')
+  })
+
+  it('refuses a member setting the model', async () => {
+    const { cookie } = await signedIn({ role: 'member', canChat: true })
+
+    const res = await setModel(cookie, { model: 'phowhisper-large' })
+
+    expect(res.status).toBe(403)
+  })
+
+  it('refuses a member reading the usage', async () => {
+    const { cookie } = await signedIn({ role: 'member', canChat: true })
+
+    const res = await app.request('/api/admin/voice', bare('GET', cookie), env)
+
+    expect(res.status).toBe(403)
+  })
+
+  it('refuses a model the voice server does not offer', async () => {
+    const { cookie } = await signedIn({ role: 'admin' })
+
+    const res = await setModel(cookie, { model: 'invented-model' })
+
+    expect(res.status).toBe(400)
+    expect(await errorCode(res)).toBe('validation_failed')
+  })
+
+  it('totals each model in the offered order, counting only clips that came back', async () => {
+    const { cookie, user } = await signedIn({ role: 'admin' })
+    const db = createDb(env.DB)
+    await db.delete(transcriptions)
+    const at = new Date('2031-04-11T09:00:00Z')
+    const row = (
+      model: string,
+      outcome: 'ok' | 'failed' | 'unavailable',
+      editRatio: number | null,
+    ) => ({
+      id: crypto.randomUUID(),
+      userId: user.id,
+      model,
+      outcome,
+      audioMs: 1000,
+      transcribeMs: 400,
+      characters: 10,
+      sentMessageId: editRatio === null ? null : crypto.randomUUID(),
+      editRatio,
+      createdAt: at,
+      updatedAt: at,
+    })
+    await db
+      .insert(transcriptions)
+      .values([
+        row('qwen3-asr-1.7b', 'ok', 0.1),
+        row('qwen3-asr-1.7b', 'ok', 0.3),
+        row('qwen3-asr-1.7b', 'ok', null),
+        row('qwen3-asr-1.7b', 'failed', null),
+        row('phowhisper-large', 'unavailable', null),
+      ])
+
+    const { usage } = await readAdmin(cookie)
+
+    expect(usage).toEqual([
+      { model: 'qwen3-asr-1.7b', clips: 3, sent: 2, meanEditRatio: 0.2 },
+      {
+        model: 'whisper-large-v3-turbo',
+        clips: 0,
+        sent: 0,
+        meanEditRatio: null,
+      },
+      { model: 'phowhisper-large', clips: 0, sent: 0, meanEditRatio: null },
+    ])
   })
 })
