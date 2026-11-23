@@ -1,6 +1,6 @@
 import '@/i18n/setup'
 
-import { screen, within } from '@testing-library/react'
+import { act, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 
 import { applyLanguage } from '@/i18n/setup'
@@ -34,6 +34,29 @@ afterEach(() => {
 })
 
 describe('EntryForm', () => {
+  it('reads a cost by the marks it was typed in, across a language switch', async () => {
+    const api = fakeApi({
+      'GET /auth/me': () => json(aUser()),
+      'GET /trips/trip-river': () =>
+        json({ trip: aTrip({ currency: 'EUR' }), entries: [] }),
+      'POST /entries': () =>
+        json({ entry: anEntry({ title: 'Museum' }), changeId: 'c1' }, 201),
+    })
+    const user = userEvent.setup()
+    await applyLanguage('vi')
+    renderRoute(addPath)
+
+    await user.type(await screen.findByLabelText('Tên hoạt động'), 'Museum')
+    await user.type(screen.getByLabelText('Chi phí dự tính'), '12,50')
+    await act(() => applyLanguage('en'))
+    await user.click(screen.getByRole('button', { name: 'Save' }))
+
+    await screen.findByText('Added “Museum”')
+    expect(api.requests.find(({ method }) => method === 'POST')?.body).toEqual(
+      expect.objectContaining({ costMinor: 1250 }),
+    )
+  })
+
   it('starts after the day’s last entry for an hour', async () => {
     fakeApi({
       'GET /auth/me': () => json(aUser()),
