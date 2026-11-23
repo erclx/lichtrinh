@@ -1,4 +1,4 @@
-import { signInRequest } from '@shared/auth.ts'
+import { languageUpdate, signInRequest } from '@shared/auth.ts'
 import { eq } from 'drizzle-orm'
 import { Hono } from 'hono'
 
@@ -72,3 +72,18 @@ export const authRoutes = new Hono<AuthEnv>()
     return c.body(null, 204)
   })
   .get('/auth/me', (c) => c.json(c.var.user))
+  // The row is the session's own, never one the body names.
+  .patch('/auth/me', async (c) => {
+    const { language } = await parseBody(c, languageUpdate)
+    const updated = await createDb(c.env.DB)
+      .update(users)
+      .set({ language })
+      .where(eq(users.id, c.var.user.id))
+      .returning()
+      .get()
+    if (updated === undefined) {
+      return c.json(fail('unauthenticated', 'Sign in first'), 401)
+    }
+    logOutcome('language_set', updated.id)
+    return c.json(toUser(updated))
+  })

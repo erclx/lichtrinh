@@ -4,7 +4,7 @@ import { env } from 'cloudflare:workers'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
 import { app } from '../app.ts'
-import { bare, cookieFrom } from '../test/requests.ts'
+import { bare, cookieFrom, json } from '../test/requests.ts'
 import { addUser, signedIn, signIn, TEST_PASSWORD } from '../test/users.ts'
 
 const DAY_MS = 24 * 60 * 60 * 1000
@@ -258,6 +258,68 @@ describe('GET /api/auth/me', () => {
 
     expect(res.headers.get('set-cookie')).toBeNull()
     expect(await sessionExpiry(account.id)).toBe(expiry)
+  })
+})
+
+describe('PATCH /api/auth/me', () => {
+  async function languageOf(userId: string) {
+    const row = await env.DB.prepare('select language from users where id = ?')
+      .bind(userId)
+      .first<{ language: string | null }>()
+    return row?.language
+  }
+
+  it('sets the language of the caller and answers the updated user', async () => {
+    const { user: account, cookie } = await signedIn({ language: 'vi' })
+
+    const res = await app.request(
+      '/api/auth/me',
+      json('PATCH', { language: 'en' }, cookie),
+      env,
+    )
+
+    expect(res.status).toBe(200)
+    expect(user.parse(await res.json()).language).toBe('en')
+    expect(await languageOf(account.id)).toBe('en')
+  })
+
+  it('refuses a language other than vi or en with validation_failed', async () => {
+    const { user: account, cookie } = await signedIn({ language: 'vi' })
+
+    const res = await app.request(
+      '/api/auth/me',
+      json('PATCH', { language: 'fr' }, cookie),
+      env,
+    )
+
+    expect(res.status).toBe(400)
+    expect(await errorCode(res)).toBe('validation_failed')
+    expect(await languageOf(account.id)).toBe('vi')
+  })
+
+  it('refuses a body naming another account and leaves it unchanged', async () => {
+    const other = await addUser({ language: 'vi' })
+    const { cookie } = await signedIn({ language: 'vi' })
+
+    const res = await app.request(
+      '/api/auth/me',
+      json('PATCH', { language: 'en', id: other.id }, cookie),
+      env,
+    )
+
+    expect(res.status).toBe(400)
+    expect(await errorCode(res)).toBe('validation_failed')
+    expect(await languageOf(other.id)).toBe('vi')
+  })
+
+  it('refuses a signed-out caller with unauthenticated', async () => {
+    const res = await app.request(
+      '/api/auth/me',
+      json('PATCH', { language: 'en' }),
+      env,
+    )
+
+    expect(res.status).toBe(401)
   })
 })
 
