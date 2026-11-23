@@ -60,6 +60,9 @@ interface AccountChoicesProps {
   onRole: (role: Role) => void
   onCanChat: (canChat: boolean) => void
   onLanguage: (language: Language) => void
+  /** Shows the role as text, for the admin's own account. */
+  roleFixed?: boolean
+  roleError?: string | null
 }
 
 /** The role, chat, and language groups an account is created and edited with. */
@@ -71,6 +74,8 @@ export function AccountChoices({
   onRole,
   onCanChat,
   onLanguage,
+  roleFixed = false,
+  roleError = null,
 }: AccountChoicesProps) {
   const { t } = useTranslation()
   return (
@@ -79,20 +84,37 @@ export function AccountChoices({
         <p id={`${idPrefix}-role`} className={labelClass}>
           {t('accounts.role')}
         </p>
-        <ToggleGroup
-          aria-labelledby={`${idPrefix}-role`}
-          value={[role]}
-          onValueChange={([next]) => {
-            if (next === 'member' || next === 'admin') onRole(next)
-          }}
-        >
-          <ToggleGroupItem value="member">
-            {t('accounts.roleMember')}
-          </ToggleGroupItem>
-          <ToggleGroupItem value="admin">
-            {t('accounts.roleAdmin')}
-          </ToggleGroupItem>
-        </ToggleGroup>
+        {roleFixed ? (
+          <p className="text-base">
+            {t(role === 'admin' ? 'accounts.roleAdmin' : 'accounts.roleMember')}
+            <span className="block text-sm text-muted-foreground">
+              {t('accounts.ownRole')}
+            </span>
+          </p>
+        ) : (
+          <ToggleGroup
+            aria-labelledby={`${idPrefix}-role`}
+            aria-describedby={
+              roleError !== null ? `${idPrefix}-role-error` : undefined
+            }
+            value={[role]}
+            onValueChange={([next]) => {
+              if (next === 'member' || next === 'admin') onRole(next)
+            }}
+          >
+            <ToggleGroupItem value="member">
+              {t('accounts.roleMember')}
+            </ToggleGroupItem>
+            <ToggleGroupItem value="admin">
+              {t('accounts.roleAdmin')}
+            </ToggleGroupItem>
+          </ToggleGroup>
+        )}
+        {roleError !== null && (
+          <p id={`${idPrefix}-role-error`} role="alert" className="text-sm">
+            {roleError}
+          </p>
+        )}
       </div>
 
       <div className="flex flex-col gap-2">

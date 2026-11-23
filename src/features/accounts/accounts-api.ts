@@ -2,6 +2,8 @@ import {
   createdUser,
   type CreateUserRequest,
   oneTimePassword,
+  updatedUser,
+  type UpdateUserRequest,
   userList,
 } from '@shared/users.ts'
 
@@ -18,6 +20,16 @@ export function createAccount(request: CreateUserRequest) {
     body: request,
     schema: createdUser,
   })
+}
+
+/** Sends only the fields that changed, since the API refuses an empty body. */
+export async function updateAccount(id: string, changes: UpdateUserRequest) {
+  const { user } = await apiFetch(`/admin/users/${encodeURIComponent(id)}`, {
+    method: 'PATCH',
+    body: changes,
+    schema: updatedUser,
+  })
+  return user
 }
 
 /** Ends every session the account holds and returns its new password. */

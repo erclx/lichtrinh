@@ -117,6 +117,14 @@ export const vi = {
     copied: 'Đã chép',
     copyFailed: 'Không chép được. Hãy đọc hoặc gõ lại.',
     done: 'Xong',
+    editTitle: 'Sửa tài khoản',
+    editLabel: 'Sửa {{name}}',
+    usernameFixed: 'Không đổi được tên đăng nhập.',
+    ownRole: 'Bạn không tự đổi quyền của mình được.',
+    lastAdmin:
+      'Cần giữ ít nhất một người quản trị để còn người quản lý tài khoản.',
+    save: 'Lưu',
+    saving: 'Đang lưu…',
   },
   settings: {
     title: 'Cài đặt',
