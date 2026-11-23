@@ -2,6 +2,7 @@ import { Command, CommanderError } from 'commander'
 
 import packageJson from '../package.json' with { type: 'json' }
 import { registerAdmin } from './commands/admin'
+import { registerBridge } from './commands/bridge'
 import { registerDb } from './commands/db'
 import { registerVoice } from './commands/voice'
 
@@ -54,6 +55,7 @@ export function createProgram(io: CliIo, run: RunInCheckout): Command {
   registerDb(program, run)
   registerAdmin(program, run, io)
   registerVoice(program, run, io)
+  registerBridge(program, run)
   return program
 }
 
