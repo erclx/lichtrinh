@@ -28,6 +28,8 @@ LOAD_ERRORS = (OSError, RuntimeError, ValueError, ImportError)
 def serve(load: Callable[[], Transcriber]) -> int:
     """Runs one worker to its end and returns the process exit code."""
     logging.basicConfig(level=logging.INFO, format='%(name)s %(message)s')
+    # `voice models` downloads every model ahead, so a worker never reaches the network.
+    os.environ.setdefault('HF_HUB_OFFLINE', '1')
     channel = _claim_stdout()
     requests = sys.stdin.buffer
     started = time.perf_counter()
