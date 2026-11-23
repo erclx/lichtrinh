@@ -17,7 +17,7 @@ Holds the React entry and the route table. `main.tsx` loads `src/i18n/setup.ts` 
 
 - `app.tsx` renders `SessionProvider` around a React Router data router built once from `router.tsx`
 - `router.tsx` is the one route table, the session gate over the shell over `/`, `/trips`, `/calendar`, `/settings`, and `/admin/accounts`, which screen rows extend and never rename
-- Light values sit on `:root` and dark on `:root[data-theme='dark']`, and the `dark:` variant reads the same attribute, which the head script in `index.html` sets from the device scheme
+- Light values sit on `:root` and dark on `:root[data-theme='dark']`, and the `dark:` variant reads the same attribute, which the head script in `index.html` sets from Appearance or the device
 - Tailwind v4 runs through `@tailwindcss/vite`, so there is no `tailwind.config` file
 
 ### `src/i18n/`
@@ -54,7 +54,8 @@ Holds one folder per screen feature, each importing the session and the shell bu
 
 - `sign-in/` is the card a signed-out visitor sees, with no shell around it
 - `accounts/` is the admin's list, create, reset confirm, and the password shown once, which lives in component state alone
-- `settings/` holds Language, Manage accounts for the admin, and Sign out, and later rows add their own rows
+- `settings/` holds Language, Appearance, Manage accounts for the admin, and Sign out, and later rows add their own rows
+- `settings/appearance.ts` keeps the device's Auto, Light, or Dark under `lichtrinh.theme`, the key and values the head script repeats since it cannot import the module
 
 ### `src/components/ui/`
 
