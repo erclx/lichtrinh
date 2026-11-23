@@ -1,7 +1,4 @@
-import type {
-  CreateEntryRequest,
-  UpdateEntryRequest,
-} from '@shared/entries.ts'
+import type { CreateEntryRequest, UpdateEntryRequest } from '@shared/entries.ts'
 import type { CreateTripRequest } from '@shared/trips.ts'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 

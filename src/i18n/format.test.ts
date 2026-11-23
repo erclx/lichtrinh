@@ -62,9 +62,12 @@ describe('formatDuration', () => {
     ['en', 75, '1 hr 15 min'],
     ['vi', 120, '2 giờ'],
     ['en', 15, '15 min'],
-  ] as const)('gives the hours and minutes in %s', (language, minutes, text) => {
-    expect(formatDuration(minutes, language)).toBe(text)
-  })
+  ] as const)(
+    'gives the hours and minutes in %s',
+    (language, minutes, text) => {
+      expect(formatDuration(minutes, language)).toBe(text)
+    },
+  )
 
   it('names a length of nothing in minutes', () => {
     expect(formatDuration(0, 'en')).toBe('0 min')
