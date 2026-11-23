@@ -15,8 +15,8 @@ Owns the browser app the traveler and the family open, from `index.html` and `sr
 
 Holds the React entry and the route table. `main.tsx` loads `src/i18n/setup.ts` and then mounts the named `App` export from `app.tsx`, and `index.css` holds the color roles, the Nunito font, the five type steps, the 64px `--spacing-target`, and the radius roles that `canon/DESIGN.md` describes.
 
-- `app.tsx` renders `SessionProvider` around a React Router data router built once from `router.tsx`
-- `router.tsx` is the one route table, the session gate over the shell over `/`, `/trips`, `/calendar`, `/settings`, and `/admin/accounts`, which screen rows extend and never rename
+- `app.tsx` renders `SessionProvider`, then the query cache from `canon/context/web/calendar-data.md`, then `UndoProvider`, around a React Router data router built once from `router.tsx`
+- `router.tsx` is the one route table, the session gate over the shell over every page, which screen rows extend and never rename
 - Light values sit on `:root` and dark on `:root[data-theme='dark']`, and the `dark:` variant reads the same attribute, which the head script in `index.html` sets from Appearance or the device
 - Tailwind v4 runs through `@tailwindcss/vite`, so there is no `tailwind.config` file
 
@@ -28,7 +28,7 @@ Holds the translation layer every screen reads its copy through, on i18next and 
 - `language.ts` picks the opening language, a device choice first, then the account's, then Vietnamese in production and English in development, and never the browser's
 - `setup.ts` starts the instance before the first render and keeps `<html lang>` in step, and its `chooseLanguage` stores a press while `applyLanguage` never does
 - `i18next.d.ts` types every `t()` key against `en.ts`, and `resources.test.ts` checks both modules hold the same keys with none empty
-- `format.ts` holds the `Intl` date formatters, each taking the language, and formats a `YYYY-MM-DD` day in UTC so the device zone never moves it
+- `format.ts` holds the `Intl` date, time, length, and money formatters, each taking the language from `useLanguage()`, and formats a `YYYY-MM-DD` day in UTC so the device zone never moves it
 
 ### `src/session/`
 
@@ -46,11 +46,11 @@ Holds the frame around every signed-in page, built against `canon/design/shell/`
 - `app-shell.tsx` owns the `main` landmark, the gutters, and the breakpoints, phone under 480, tablet to 1023, and desktop from 1024
 - `nav.tsx` draws the hideable desktop sidebar, the labeled tablet rail, and the phone tabs, which leave out admin entries
 - A new place is one entry in `destinations.ts`, never markup in `nav.tsx`, and `placement: 'header'` puts it on the top bar's one button
-- A page renders its own `page-header.tsx` and content, while `placeholder-page.tsx` holds Today, Trips, and Calendar until their rows replace each element
+- A page renders its own `page-header.tsx` and content, while `placeholder-page.tsx` holds Calendar until its row replaces the element
 
 ### `src/features/`
 
-Holds one folder per screen feature, each importing the session and the shell but never another feature.
+Holds one folder per screen feature, each importing the session and the shell. Today renders the day's view and the day list opens the entry's delete sheet, and no other feature imports another.
 
 - `sign-in/` is the card a signed-out visitor sees, with no shell around it
 - `accounts/` is the admin's list, the create and edit pages sharing `account-fields.tsx`, the reset confirm, and the password shown once, which lives in component state alone
@@ -67,7 +67,7 @@ Holds the shadcn kit on Base UI with the Nova preset, owned and edited in place.
 
 ### `src/components/`
 
-Holds the app's own components, being the mark, the language toggle, and the hand-built pickers the screens consume unchanged.
+Holds the app's own components, being the mark, the language toggle, the hand-built pickers the screens consume unchanged, and what more than one calendar feature shows, such as the kind icons, the save error, and the undo status.
 
 - `picker-sheet.tsx` opens a drawer under 480px and a dialog from there up, under one title and close control
 - `sheet-list.tsx` is the one select, with radio rows and an optional filter that ignores diacritics
@@ -77,8 +77,9 @@ Holds the app's own components, being the mark, the language toggle, and the han
 
 Holds one folder per screen area, its rules and controls landing before its screens do.
 
-- `entries/lengths.ts` holds the half-hour start times, the six lengths, and the end a length makes
-- `day/swipe-row.tsx` reveals a row's Delete on a left drag under 1024px, never the only route to it
+- `trips/` holds the list, the new trip form, and the overview, and `today/` picks the trip under way in its own zone
+- `day/` marks each entry done, now, or upcoming on its own zone's clock, and its `swipe-row.tsx` reveals Delete under 1024px, never the only route to it
+- `entries/` holds the detail, the shared add and edit form, its prefill and cost parsing, and `lengths.ts` for the start times and lengths
 
 ### `canon/design/`
 
@@ -91,10 +92,10 @@ Holds the accepted board frames a screen builds against, one group folder per ap
 
 The folders below each carry one small job.
 
-- `src/hooks/`: shared hooks, being `useMediaQuery`, which reads every query as unmatched in the test DOM
+- `src/hooks/`: shared hooks, being `useMediaQuery`, which reads every query as unmatched in the test DOM, and `useNow`, renewed every 30 seconds
 - `public/`: the favicon, the PNG icons from 16 to 512, and the light and dark social cards, while the web manifest is not written yet
-- `src/lib/`: shared helpers, being `cn`, `month-cells.ts` for the Monday-first month, and `api.ts`, whose `apiFetch` parses through a `shared/` schema and throws `ApiFailure`
-- `src/test/`: the Vitest setup file and `fake-api.ts`, which stands in for the API behind `fetch` in component tests
+- `src/lib/`: shared helpers, being `cn`, `month-cells.ts`, `trip-days.ts` for a trip's dates, and `api.ts`, whose `apiFetch` parses through a `shared/` schema and throws `ApiFailure`
+- `src/test/`: the Vitest setup, `fake-api.ts` standing in for the API behind `fetch`, invented trip and entry builders, and `render-route.tsx`, which mounts the routes inside every provider
 - `e2e/`: the Playwright specs and the screenshot harness, with its cases in `e2e/capture/cases.ts` and committed frames in `e2e/evidence/`
 
 ## Gotchas

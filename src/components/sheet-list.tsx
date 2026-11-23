@@ -87,6 +87,12 @@ export function SheetList({
     return row ?? true
   }
 
+  // A filterable list opens ready to type, its chosen row still in view.
+  function initialFocus() {
+    const row = focusChosenRow()
+    return filterable ? (filterRef.current ?? row) : row
+  }
+
   return (
     <div className="flex flex-col gap-1.5">
       <PickerField
@@ -108,7 +114,7 @@ export function SheetList({
         onOpenChange={setOpen}
         title={label}
         titleId={titleId}
-        initialFocus={focusChosenRow}
+        initialFocus={initialFocus}
         finalFocus={fieldRef}
       >
         {filterable && (

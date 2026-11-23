@@ -184,7 +184,7 @@ export function DateRangeSheet({
             </div>
             <div
               aria-hidden="true"
-              className="grid shrink-0 grid-cols-7 text-center text-sm font-extrabold text-muted-foreground"
+              className="grid shrink-0 grid-cols-7 px-1.5 text-center text-sm font-extrabold text-muted-foreground"
             >
               {weekdayLabels(language).map((weekday) => (
                 <span key={weekday} className="py-1.5">
@@ -196,7 +196,7 @@ export function DateRangeSheet({
               ref={daysRef}
               role="group"
               aria-labelledby={monthId}
-              className="grid shrink-0 grid-cols-7"
+              className="grid shrink-0 grid-cols-7 px-1.5"
             >
               {monthCells(view.year, view.month)
                 .flat()

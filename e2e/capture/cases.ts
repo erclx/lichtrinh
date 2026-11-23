@@ -1,6 +1,6 @@
 import type { Page } from '@playwright/test'
 
-import { FIXTURE_ACCOUNTS } from '../../scripts/seed'
+import { DEMO_DAY, DEMO_INSTANT, FIXTURE_ACCOUNTS } from '../../scripts/seed'
 import type { CaptureCase } from '../capture-types'
 
 /** Where a case flagged `evidence: true` writes its committed frames. */
@@ -42,6 +42,47 @@ async function assistantOnline(page: Page) {
   )
 }
 
+// Pins the date inside the demo day's flower market, so Today, the now card,
+// and every trip's countdown read the same on every run. Timers keep real
+// time, so the page still loads and refreshes.
+async function atDemoInstant(page: Page) {
+  await page.clock.setFixedTime(new Date(DEMO_INSTANT))
+  await flowTabs(page)
+  await asAdmin(page)
+}
+
+// A full-page frame draws the phone tab bar where the window ends, over the
+// middle of a long page, so it flows to the page's end as it reads at the
+// bottom of a scroll.
+async function flowTabs(page: Page) {
+  await page.addInitScript(() => {
+    document.addEventListener('DOMContentLoaded', () => {
+      const style = document.createElement('style')
+      style.textContent = 'nav.sticky.bottom-0 { position: static !important }'
+      document.head.append(style)
+    })
+  })
+}
+
+const tripPath = `/trips/${DEMO_DAY.tripId}`
+
+/** A calendar route as the admin at the demo instant, light and dark. */
+function calendarCases(section: string, route: string): CaptureCase[] {
+  return [
+    { section, theme: 'default', route, evidence: true, setup: atDemoInstant },
+    {
+      section,
+      theme: 'dark',
+      route,
+      evidence: true,
+      setup: async (page) => {
+        await dark(page)
+        await atDemoInstant(page)
+      },
+    },
+  ]
+}
+
 export const CASES: CaptureCase[] = [
   { section: 'home', theme: 'default', route: '/', evidence: true },
   { section: 'home', theme: 'dark', route: '/', evidence: true, setup: dark },
@@ -50,7 +91,8 @@ export const CASES: CaptureCase[] = [
     theme: 'default',
     route: '/',
     evidence: true,
-    setup: asAdmin,
+    // Today opens on the seeded trips, so the shell pins the date too.
+    setup: atDemoInstant,
   },
   {
     section: 'shell',
@@ -59,7 +101,7 @@ export const CASES: CaptureCase[] = [
     evidence: true,
     setup: async (page) => {
       await dark(page)
-      await asAdmin(page)
+      await atDemoInstant(page)
     },
   },
   {
@@ -175,4 +217,11 @@ export const CASES: CaptureCase[] = [
       await asAdmin(page)
     },
   },
+  ...calendarCases('trips', '/trips'),
+  ...calendarCases('trip-overview', tripPath),
+  ...calendarCases('day', `${tripPath}/days/${DEMO_DAY.date}`),
+  ...calendarCases(
+    'entry-add',
+    `/entries/new?trip=${DEMO_DAY.tripId}&date=${DEMO_DAY.date}`,
+  ),
 ]
