@@ -1,6 +1,7 @@
 import { z } from 'zod'
 
 import { assistantModel } from './assistant.ts'
+import { clipType, MAX_CLIP_BYTES, voiceModel } from './voice.ts'
 
 // The relay and the workspace PC's bridge deploy apart, so the bridge opens
 // with this version and the relay closes a socket speaking another. A change
@@ -14,6 +15,10 @@ export const PROTOCOL_MISMATCH = 4000
 export const REPLACED = 4001
 
 const turnId = z.string().min(1)
+const transcriptionId = z.uuid()
+
+// A frame is JSON text, so a clip rides it as base64.
+const MAX_CLIP_BASE64 = Math.ceil(MAX_CLIP_BYTES / 3) * 4
 
 export const turnMessage = z.strictObject({
   role: z.enum(['system', 'user', 'assistant']),
@@ -42,6 +47,16 @@ export const downFrame = z.discriminatedUnion('type', [
   }),
   z.strictObject({ type: z.literal('cancel'), turnId }),
   z.strictObject({ type: z.literal('warm'), model: assistantModel }),
+  // Sent only to a bridge whose hello said `voice`, so an older bridge never
+  // reads a frame it cannot parse.
+  z.strictObject({
+    type: z.literal('transcribe'),
+    transcriptionId,
+    model: voiceModel,
+    contentType: clipType,
+    audio: z.base64().max(MAX_CLIP_BASE64),
+  }),
+  z.strictObject({ type: z.literal('voice_warm'), model: voiceModel }),
 ])
 export type DownFrame = z.infer<typeof downFrame>
 
@@ -55,9 +70,21 @@ export const failReason = z.enum([
 ])
 export type FailReason = z.infer<typeof failReason>
 
+/**
+ * Why a clip came back without text. `unavailable` means the voice server
+ * did not answer, so the app shows voice off rather than an error.
+ */
+export const clipFailReason = z.enum(['unavailable', 'failed'])
+export type ClipFailReason = z.infer<typeof clipFailReason>
+
 /** Frames the bridge sends up to the relay. */
 export const upFrame = z.discriminatedUnion('type', [
-  z.strictObject({ type: z.literal('hello'), protocol: z.number().int() }),
+  z.strictObject({
+    type: z.literal('hello'),
+    protocol: z.number().int(),
+    // The bridge forwards clips to the voice server on the workspace PC.
+    voice: z.literal(true).optional(),
+  }),
   z.strictObject({ type: z.literal('delta'), turnId, text: z.string() }),
   z.strictObject({
     type: z.literal('tool_call'),
@@ -74,6 +101,19 @@ export const upFrame = z.discriminatedUnion('type', [
     heldRemoval: z.boolean(),
   }),
   z.strictObject({ type: z.literal('failed'), turnId, reason: failReason }),
+  z.strictObject({
+    type: z.literal('transcript'),
+    transcriptionId,
+    text: z.string(),
+    audioMs: z.int().nonnegative(),
+  }),
+  z.strictObject({
+    type: z.literal('transcribe_failed'),
+    transcriptionId,
+    reason: clipFailReason,
+  }),
+  // Sent when the voice server's health changes, and once after each ready.
+  z.strictObject({ type: z.literal('voice_status'), online: z.boolean() }),
 ])
 export type UpFrame = z.infer<typeof upFrame>
 

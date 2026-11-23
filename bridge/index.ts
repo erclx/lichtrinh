@@ -94,6 +94,7 @@ function onFrame(opened: BridgeSocket, frame: DownFrame) {
     )
     return
   }
+  if (frame.type !== 'turn') return
   const startedAt = Date.now()
   lastModel = frame.model
   log('turn_started', { turnId: frame.turnId, model: frame.model })

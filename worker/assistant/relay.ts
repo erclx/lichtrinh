@@ -125,6 +125,7 @@ export class AssistantRelay extends DurableObject<Env> {
       logOutcome('bridge_ready')
       return
     }
+    if (!('turnId' in frame)) return
     const turn = this.turn
     if (turn?.socket !== ws || frame.turnId !== turn.input.messageId) return
     this.enqueue(turn, () => this.receive(turn, frame))
