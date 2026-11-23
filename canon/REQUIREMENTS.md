@@ -19,7 +19,7 @@ This record holds at most 600 words.
 - **Vietnamese first.** Every screen exists in Vietnamese and English. Each account opens in its own language, Vietnamese unless the admin sets otherwise, and development opens in English, with a toggle in both.
 - **Learn safely.** A guided tutorial walks through each control, and a practice trip lets the traveler try everything without touching real plans.
 - **Readable offline.** The traveler can read the last loaded plan without a connection.
-- **Accurate voice.** Speech recognition is picked by measuring the candidates on the traveler's own northern Vietnamese speech, not on a vendor's claim.
+- **Accurate voice.** The admin switches among the offered speech models, ranked by how much the traveler edits each one's transcripts in use, not by a vendor's claim.
 
 ## Non-goals
 
