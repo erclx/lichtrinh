@@ -8,6 +8,7 @@ import {
   upFrame,
 } from '@shared/bridge-frames.ts'
 import type { ChatEvent, ChatMessage, MessageStatus } from '@shared/chats.ts'
+import type { ClipType, VoiceModel } from '@shared/voice.ts'
 import { DurableObject } from 'cloudflare:workers'
 
 import { createDb } from '../db/client.ts'
@@ -24,9 +25,36 @@ const SILENT_AFTER_MS = 60_000
 // went quiet still ends and frees the relay.
 const TURN_TIMEOUT_MS = 120_000
 
+// Covers a cold model load after a reboot and a 60 second clip's inference.
+const CLIP_TIMEOUT_MS = 60_000
+
+// Kept on the socket, so it survives the relay hibernating between clips.
 interface Attachment {
   // Set once the bridge said hello in this protocol.
   readyAt: number | null
+  // The bridge forwards clips, and its voice server last answered.
+  voice?: boolean
+  voiceOnline?: boolean
+}
+
+/** A clip the voice route hands the relay, held in memory for one request. */
+export interface ClipInput {
+  id: string
+  model: VoiceModel
+  contentType: ClipType
+  audio: ArrayBuffer
+}
+
+export type ClipEnd =
+  | { kind: 'text'; text: string; audioMs: number }
+  | { kind: 'unavailable' }
+  | { kind: 'failed' }
+
+interface PendingClip {
+  socket: WebSocket
+  done: Promise<ClipEnd>
+  resolve: (end: ClipEnd) => void
+  timer: ReturnType<typeof setTimeout>
 }
 
 /** What the send route hands the relay for one turn, read fresh from D1. */
@@ -74,10 +102,14 @@ export function relayOf(env: Env) {
 
 /**
  * Holds the bridge's hibernatable socket, idle at no cost with pings answered
- * by the runtime, and the one open turn, whose response keeps it in memory.
+ * by the runtime, the one open turn, and any clips waiting beside it, each
+ * of whose requests keeps it in memory.
  */
 export class AssistantRelay extends DurableObject<Env> {
   private turn: OpenTurn | undefined
+  private clips = new Map<string, PendingClip>()
+  // A field rather than the constant, so a spec can shorten the wait.
+  clipTimeoutMs = CLIP_TIMEOUT_MS
 
   constructor(ctx: DurableObjectState, env: Env) {
     super(ctx, env)
@@ -108,6 +140,48 @@ export class AssistantRelay extends DurableObject<Env> {
     return true
   }
 
+  /** Whether a clip sent now would reach a voice server that answers. */
+  voiceOnline(): boolean {
+    return this.voiceSocket() !== undefined
+  }
+
+  /** Asks the bridge to load a speech model ahead of a clip. */
+  warmVoice(model: VoiceModel): boolean {
+    const socket = this.voiceSocket()
+    if (socket === undefined) return false
+    send(socket, { type: 'voice_warm', model })
+    return true
+  }
+
+  /**
+   * Sends a clip down to the bridge and waits for its text, never behind the
+   * running turn. A retry of a clip still waiting joins that wait rather
+   * than sending the clip twice.
+   */
+  transcribe(clip: ClipInput): Promise<ClipEnd> {
+    const waiting = this.clips.get(clip.id)
+    if (waiting !== undefined) return waiting.done
+    const socket = this.voiceSocket()
+    if (socket === undefined) return Promise.resolve({ kind: 'unavailable' })
+    let resolve: (end: ClipEnd) => void = () => {}
+    const done = new Promise<ClipEnd>((settle) => {
+      resolve = settle
+    })
+    const timer = setTimeout(() => {
+      logOutcome('clip_timed_out', { transcriptionId: clip.id })
+      this.endClip(clip.id, { kind: 'failed' })
+    }, this.clipTimeoutMs)
+    this.clips.set(clip.id, { socket, done, resolve, timer })
+    send(socket, {
+      type: 'transcribe',
+      transcriptionId: clip.id,
+      model: clip.model,
+      contentType: clip.contentType,
+      audio: toBase64(new Uint8Array(clip.audio)),
+    })
+    return done
+  }
+
   override webSocketMessage(ws: WebSocket, data: string | ArrayBuffer) {
     const frame = readFrame(upFrame, data)
     if (frame === undefined) {
@@ -120,9 +194,32 @@ export class AssistantRelay extends DurableObject<Env> {
         ws.close(PROTOCOL_MISMATCH, `Relay speaks protocol ${BRIDGE_PROTOCOL}`)
         return
       }
-      ws.serializeAttachment({ readyAt: Date.now() } satisfies Attachment)
+      ws.serializeAttachment({
+        readyAt: Date.now(),
+        voice: frame.voice === true,
+        voiceOnline: false,
+      } satisfies Attachment)
       send(ws, { type: 'ready' })
       logOutcome('bridge_ready')
+      return
+    }
+    if (frame.type === 'voice_status') {
+      const attachment = ws.deserializeAttachment() as Attachment
+      ws.serializeAttachment({
+        ...attachment,
+        voiceOnline: frame.online,
+      } satisfies Attachment)
+      logOutcome(frame.online ? 'voice_online' : 'voice_offline')
+      return
+    }
+    if (frame.type === 'transcript' || frame.type === 'transcribe_failed') {
+      if (this.clips.get(frame.transcriptionId)?.socket !== ws) return
+      this.endClip(
+        frame.transcriptionId,
+        frame.type === 'transcript'
+          ? { kind: 'text', text: frame.text, audioMs: frame.audioMs }
+          : { kind: frame.reason },
+      )
       return
     }
     const turn = this.turn
@@ -132,6 +229,7 @@ export class AssistantRelay extends DurableObject<Env> {
 
   override webSocketClose(ws: WebSocket, code: number, reason: string) {
     logOutcome('bridge_closed')
+    this.failClipsOn(ws)
     const turn = this.turn
     if (turn?.socket === ws) {
       this.enqueue(turn, () => this.finish(turn, { kind: 'closed' }))
@@ -144,6 +242,7 @@ export class AssistantRelay extends DurableObject<Env> {
 
   override webSocketError(ws: WebSocket) {
     logOutcome('bridge_errored')
+    this.failClipsOn(ws)
     const turn = this.turn
     if (turn?.socket === ws) {
       this.enqueue(turn, () => this.finish(turn, { kind: 'closed' }))
@@ -170,6 +269,28 @@ export class AssistantRelay extends DurableObject<Env> {
       const pinged = this.ctx.getWebSocketAutoResponseTimestamp(ws)?.getTime()
       return now - Math.max(readyAt, pinged ?? 0) < SILENT_AFTER_MS
     })
+  }
+
+  private voiceSocket(): WebSocket | undefined {
+    const socket = this.liveSocket()
+    if (socket === undefined) return undefined
+    const { voice, voiceOnline } = socket.deserializeAttachment() as Attachment
+    return voice === true && voiceOnline === true ? socket : undefined
+  }
+
+  private endClip(id: string, end: ClipEnd) {
+    const clip = this.clips.get(id)
+    if (clip === undefined) return
+    clearTimeout(clip.timer)
+    this.clips.delete(id)
+    clip.resolve(end)
+  }
+
+  // A clip on a socket that went away fails at once, never at the timeout.
+  private failClipsOn(ws: WebSocket) {
+    for (const [id, clip] of this.clips) {
+      if (clip.socket === ws) this.endClip(id, { kind: 'failed' })
+    }
   }
 
   // The turn is claimed before the first await, so a second send arriving
@@ -373,4 +494,13 @@ function send(ws: WebSocket, frame: DownFrame) {
 
 function sendIfOpen(ws: WebSocket, frame: DownFrame) {
   if (ws.readyState === WebSocket.OPEN) send(ws, frame)
+}
+
+// Spread in chunks, since one call with every byte overflows the stack.
+function toBase64(bytes: Uint8Array): string {
+  let binary = ''
+  for (let start = 0; start < bytes.length; start += 0x8000) {
+    binary += String.fromCharCode(...bytes.subarray(start, start + 0x8000))
+  }
+  return btoa(binary)
 }

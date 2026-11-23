@@ -1,6 +1,6 @@
-// Dials out to the relay, runs each turn on the local model, and redials
-// with backoff. It writes nothing to disk and logs ids, the alias, and
-// durations, never message text or tool arguments.
+// Dials out to the relay, runs turns and forwards clips, and redials with
+// backoff. It writes nothing to disk and logs ids, models, and durations,
+// never message text, tool arguments, clips, or transcripts.
 import type { AssistantModel } from '@shared/assistant.ts'
 import type { DownFrame } from '@shared/bridge-frames.ts'
 import { PROTOCOL_MISMATCH } from '@shared/bridge-frames.ts'
@@ -11,6 +11,7 @@ import type { BridgeSocket } from './socket.ts'
 import { openSocket } from './socket.ts'
 import type { RunningTurn } from './turn.ts'
 import { runTurn } from './turn.ts'
+import { transcribe, voiceHealthy, warmVoice, watchVoice } from './voice.ts'
 
 const FIRST_RETRY_MS = 1_000
 const LAST_RETRY_MS = 30_000
@@ -32,6 +33,13 @@ let current: { turnId: string; running: RunningTurn } | undefined
 let lastModel: AssistantModel | undefined
 let retryMs = FIRST_RETRY_MS
 let stopping = false
+const voiceWatch = watchVoice(
+  () => voiceHealthy(config.voiceUrl),
+  (online) => {
+    log(online ? 'voice_online' : 'voice_offline')
+    socket?.send({ type: 'voice_status', online })
+  },
+)
 const pending = new Map<
   string,
   {
@@ -75,6 +83,29 @@ function onFrame(opened: BridgeSocket, frame: DownFrame) {
   if (frame.type === 'ready') {
     retryMs = FIRST_RETRY_MS
     log('ready')
+    // A new socket starts with voice unknown to the relay, so say it again.
+    voiceWatch.reset()
+    void voiceWatch.check()
+    return
+  }
+  if (frame.type === 'transcribe') {
+    const startedAt = Date.now()
+    const { transcriptionId, model } = frame
+    void transcribe(config.voiceUrl, frame).then((answer) => {
+      log('clip_ended', {
+        transcriptionId,
+        model,
+        outcome: answer.type === 'transcript' ? 'ok' : answer.reason,
+        ms: Date.now() - startedAt,
+      })
+      opened.send(answer)
+    })
+    return
+  }
+  if (frame.type === 'voice_warm') {
+    warmVoice(config.voiceUrl, frame.model).catch(() =>
+      log('voice_warm_failed', { model: frame.model }),
+    )
     return
   }
   if (frame.type === 'tool_result') {
@@ -115,6 +146,7 @@ function onFrame(opened: BridgeSocket, frame: DownFrame) {
 
 async function stop() {
   stopping = true
+  voiceWatch.stop()
   current?.running.cancel()
   socket?.close()
   if (lastModel !== undefined) {

@@ -3,6 +3,7 @@ import { z } from 'zod'
 import { assistantModel } from './assistant.ts'
 import { change } from './changes.ts'
 import { localDate } from './trip-time.ts'
+import { voiceSend } from './voice.ts'
 
 // Read by the chat screens, so every field added here is optional and none
 // is renamed once it ships.
@@ -71,6 +72,8 @@ export type ChatThread = z.infer<typeof chatThread>
 export const sendMessageRequest = z.strictObject({
   id: z.uuid(),
   text: z.string().trim().min(1).max(4000),
+  // Set when the text started as a clip's transcript.
+  voice: voiceSend.optional(),
 })
 export type SendMessageRequest = z.infer<typeof sendMessageRequest>
 

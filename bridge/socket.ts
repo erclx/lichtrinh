@@ -19,8 +19,8 @@ interface Handlers {
 
 /**
  * Dials out to the relay with the secret in the `Authorization` header,
- * never in the URL, so it stays out of request logs. It says hello on open
- * and pings until the socket closes.
+ * never in the URL, so it stays out of request logs. It says hello on open,
+ * naming itself a forwarder of clips, and pings until the socket closes.
  */
 export function openSocket(
   config: BridgeConfig,
@@ -34,7 +34,7 @@ export function openSocket(
     if (ws.readyState === WebSocket.OPEN) ws.send(JSON.stringify(frame))
   }
   ws.addEventListener('open', () => {
-    send({ type: 'hello', protocol: BRIDGE_PROTOCOL })
+    send({ type: 'hello', protocol: BRIDGE_PROTOCOL, voice: true })
     ping = setInterval(() => ws.send('ping'), PING_EVERY_MS)
   })
   ws.addEventListener('message', (event) => {

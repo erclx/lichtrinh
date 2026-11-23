@@ -1,16 +1,22 @@
 import type { DownFrame } from '@shared/bridge-frames.ts'
 import { chatThread } from '@shared/chats.ts'
 import { apiError } from '@shared/errors.ts'
+import { runInDurableObject } from 'cloudflare:test'
 import { env } from 'cloudflare:workers'
 import { afterEach, describe, expect, it } from 'vitest'
 
 import { app } from '../app.ts'
 import type { FakeBridge } from '../test/bridge.ts'
-import { connectBridge } from '../test/bridge.ts'
+import {
+  answerClip,
+  connectBridge,
+  connectVoiceBridge,
+} from '../test/bridge.ts'
 import { chatterWithChat, readEvents, sendMessage } from '../test/chats.ts'
 import { bare } from '../test/requests.ts'
+import { sendClip } from '../test/voice.ts'
 import type { TurnInput } from './relay.ts'
-import { relayOf } from './relay.ts'
+import { AssistantRelay, relayOf } from './relay.ts'
 
 const open: FakeBridge[] = []
 
@@ -349,5 +355,97 @@ describe('a turn that breaks off', () => {
       heldRemoval: false,
     })
     await readEvents(second)
+  })
+})
+
+describe('a clip beside the turn', () => {
+  async function voiceOnline() {
+    const bridge = await connectVoiceBridge()
+    open.push(bridge)
+    return bridge
+  }
+
+  async function errorCode(res: Response) {
+    return apiError.parse(await res.json()).error.code
+  }
+
+  it('answers a clip while a turn runs, without waiting for the turn', async () => {
+    const { cookie, chat } = await chatterWithChat()
+    const bridge = await voiceOnline()
+    const reply = await sendMessage(cookie, chat.id)
+    const turn = await nextOf(bridge, 'turn')
+
+    const clip = sendClip(cookie)
+    await answerClip(bridge, { text: 'Invented', audioMs: 700 })
+    const res = await clip
+
+    expect(res.status).toBe(200)
+    bridge.send({
+      type: 'final',
+      turnId: turn.turnId,
+      text: 'Done.',
+      heldRemoval: false,
+    })
+    expect((await readEvents(reply)).at(-1)?.type).toBe('done')
+  })
+
+  it('answers voice_failed when the model could not transcribe the clip', async () => {
+    const { cookie } = await chatterWithChat()
+    const bridge = await voiceOnline()
+
+    const clip = sendClip(cookie)
+    await answerClip(bridge, { failed: 'failed' })
+    const res = await clip
+
+    expect(res.status).toBe(502)
+    expect(await errorCode(res)).toBe('voice_failed')
+  })
+
+  it('answers voice_failed once the clip outlasts its wait', async () => {
+    const { cookie } = await chatterWithChat()
+    const bridge = await voiceOnline()
+    await runInDurableObject(relayOf(env), (relay: AssistantRelay) => {
+      relay.clipTimeoutMs = 50
+    })
+
+    const clip = sendClip(cookie)
+    await nextOf(bridge, 'transcribe')
+    const res = await clip
+
+    await runInDurableObject(relayOf(env), (relay: AssistantRelay) => {
+      relay.clipTimeoutMs = 60_000
+    })
+    expect(res.status).toBe(502)
+    expect(await errorCode(res)).toBe('voice_failed')
+  })
+
+  it('answers voice_failed at once when the socket closes with a clip pending', async () => {
+    const { cookie } = await chatterWithChat()
+    const bridge = await connectVoiceBridge()
+    const clip = sendClip(cookie)
+    await nextOf(bridge, 'transcribe')
+
+    await bridge.close()
+    const res = await clip
+
+    expect(res.status).toBe(502)
+    expect(await errorCode(res)).toBe('voice_failed')
+  })
+
+  it('ignores a transcript for a clip nobody sent', async () => {
+    const { cookie } = await chatterWithChat()
+    const bridge = await voiceOnline()
+    bridge.send({
+      type: 'transcript',
+      transcriptionId: crypto.randomUUID(),
+      text: 'Stray',
+      audioMs: 10,
+    })
+
+    const clip = sendClip(cookie)
+    await answerClip(bridge, { text: 'Invented', audioMs: 700 })
+    const res = await clip
+
+    expect(res.status).toBe(200)
   })
 })

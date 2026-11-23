@@ -1,5 +1,7 @@
 import { z } from 'zod'
 
+import { voiceStatus } from './voice.ts'
+
 /**
  * The local model aliases the workspace PC serves, each made from a
  * Modelfile under `bridge/models/`. They share a prefix so a later panel can
@@ -22,6 +24,8 @@ export const assistantStatus = z.strictObject({
   online: z.boolean(),
   lastAnsweredAt: z.iso.datetime().nullable(),
   model: assistantModel,
+  // Optional, since a reader built before voice ignores it.
+  voice: voiceStatus.optional(),
 })
 export type AssistantStatus = z.infer<typeof assistantStatus>
 

@@ -1,7 +1,7 @@
 /**
  * One log line naming what happened and to whom, by account id alone. It
  * takes no free text, so no username, password, token, body, chat message,
- * or tool argument reaches a log.
+ * tool argument, clip, or transcript reaches a log.
  */
 export function logOutcome(
   outcome: string,
@@ -13,8 +13,10 @@ export function logOutcome(
     changeId?: string
     chatId?: string
     messageId?: string
+    transcriptionId?: string
     model?: string
     changes?: number
+    audioMs?: number
     ms?: number
   } = {},
 ) {

@@ -28,6 +28,7 @@ import { liveTrip, toTrip } from '../calendar/trips.ts'
 import { createDb } from '../db/client.ts'
 import { parseBody, refuse } from '../envelope.ts'
 import { logOutcome } from '../log.ts'
+import { markSent } from '../voice/transcriptions.ts'
 
 // Each route reads chats of the signed-in account alone, so another
 // account's chat answers not found and reveals nothing.
@@ -68,6 +69,11 @@ export const chatRoutes = new Hono<AuthEnv>()
     const db = createDb(c.env.DB)
     const chat = await ownChat(db, c.var.user.id, c.req.param('id'))
     if (chat === undefined) return refuse(c, 'not_found')
+    // Runs only once the message is saved, so a refused send marks nothing.
+    const markVoice = async () => {
+      if (request.voice === undefined) return
+      await markSent(db, c.var.user.id, request.voice, request.id, new Date())
+    }
     const saved = await findMessage(db, request.id)
     if (saved !== undefined) {
       const sameSend =
@@ -76,7 +82,10 @@ export const chatRoutes = new Hono<AuthEnv>()
         saved.text === request.text
       if (!sameSend) return refuse(c, 'id_conflict')
       const reply = await replyTo(db, saved.id)
-      if (reply !== undefined) return eventStream([replayOf(reply)])
+      if (reply !== undefined) {
+        await markVoice()
+        return eventStream([replayOf(reply)])
+      }
     }
     const trip = await liveTrip(db, chat.tripId)
     if (trip === undefined) return refuse(c, 'no_trip')
@@ -103,10 +112,12 @@ export const chatRoutes = new Hono<AuthEnv>()
       versions: Object.fromEntries(entries.map((e) => [e.id, e.version])),
       removalAsked: history.at(-1)?.heldRemoval ?? false,
     }
-    return relayOf(c.env).fetch('https://relay/turn', {
+    const res = await relayOf(c.env).fetch('https://relay/turn', {
       method: 'POST',
       body: JSON.stringify(input),
     })
+    if (res.ok) await markVoice()
+    return res
   })
 
 // The saved reply ends the replay as the live stream ended it, so a

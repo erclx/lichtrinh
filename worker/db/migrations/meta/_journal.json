@@ -29,6 +29,13 @@
       "when": 1795422718160,
       "tag": "0003_chats",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "6",
+      "when": 1795423779911,
+      "tag": "0004_transcriptions",
+      "breakpoints": true
     }
   ]
 }
