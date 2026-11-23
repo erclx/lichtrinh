@@ -108,8 +108,7 @@ export function EntryForm({
       ? ''
       : costText(initial.costMinor, trip.currency, language),
   )
-  // The marks a cost reads by are the ones it was typed in, since the toggle
-  // can switch the language between typing and Save.
+  // A cost reads by the marks it was typed in, even after a language switch.
   const [costLanguage, setCostLanguage] = useState(language)
   const [notes, setNotes] = useState(initial?.notes ?? '')
   const [errors, setErrors] = useState<FieldErrors>({})
