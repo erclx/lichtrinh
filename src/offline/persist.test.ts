@@ -89,6 +89,27 @@ describe('the saved plan', () => {
     expect(stored).not.toContain('chat-1')
   })
 
+  it('keeps a saved read whose refresh failed offline', async () => {
+    // A restored read refreshes on the next launch and fails with no network,
+    // keeping its data under an error status.
+    const client = new QueryClient()
+    client.setQueryData(tripsKey, savedTrips)
+    await client.prefetchQuery({
+      queryKey: tripsKey,
+      queryFn: () => Promise.reject(new Error('offline')),
+      retry: false,
+      staleTime: 0,
+    })
+    expect(client.getQueryState(tripsKey)?.status).toBe('error')
+
+    await persistQueryClientSave({
+      queryClient: client,
+      ...calendarPersistOptions(),
+    })
+
+    expect(await restoreAPlan()).toEqual(savedTrips)
+  })
+
   it('is forgotten on the device and in memory at sign-out', async () => {
     const client = await saveAPlan()
 

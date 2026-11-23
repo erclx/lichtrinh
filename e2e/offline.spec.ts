@@ -14,7 +14,9 @@ test('a day loaded once reads the same entries after an offline reload', async (
   // Linux WebKit drops Secure cookies on http://localhost, unlike iPhone Safari.
   test.skip(browserName === 'webkit', 'Linux WebKit drops the Secure cookie')
   if (fixtureAdmin === undefined) throw new Error('The seed holds no admin')
-  await page.clock.setFixedTime(new Date(DEMO_INSTANT))
+  // An installed clock rather than a pinned one, so the saved plan can go
+  // stale and its refresh fail offline, as it does on a phone reopened later.
+  await page.clock.install({ time: new Date(DEMO_INSTANT) })
   const signIn = await page.request.post('/api/auth/sign-in', {
     data: { username: fixtureAdmin.username, password: fixtureAdmin.password },
   })
@@ -27,6 +29,7 @@ test('a day loaded once reads the same entries after an offline reload', async (
       page.evaluate(() => localStorage.getItem('lichtrinh.calendarCache')),
     )
     .toContain('Sunset boat trip')
+  await page.clock.fastForward('01:00')
 
   await page.route('**/api/**', (route) => route.abort('internetdisconnected'))
   await page.reload()
@@ -39,4 +42,29 @@ test('a day loaded once reads the same entries after an offline reload', async (
   await expect(
     page.getByRole('button', { name: /^Add an activity on/ }),
   ).toHaveAttribute('aria-disabled', 'true')
+
+  // A second launch offline reads the same plan, since the first one's failed
+  // refresh must not have saved over it. The refresh retries a lost answer
+  // twice, so the clock steps on until that failure reaches the device.
+  await expect
+    .poll(
+      async () => {
+        await page.clock.fastForward('00:05')
+        const saved = await page.evaluate(
+          () => localStorage.getItem('lichtrinh.calendarCache') ?? '',
+        )
+        return (
+          saved.includes('"status":"error"') ||
+          !saved.includes('Sunset boat trip')
+        )
+      },
+      { timeout: 15_000 },
+    )
+    .toBe(true)
+  await page.reload()
+
+  await expect(
+    page.getByRole('status').getByText('No connection'),
+  ).toBeVisible()
+  await expect(page.getByText('Sunset boat trip')).toBeVisible()
 })

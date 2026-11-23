@@ -57,9 +57,11 @@ export function calendarPersistOptions(): Omit<
     maxAge: calendarCacheMaxAge,
     buster: __APP_VERSION__,
     dehydrateOptions: {
+      // Any read holding data, since a refresh failing offline keeps the data
+      // under an error status, and dropping it would save an empty plan.
       shouldDehydrateQuery: (query) =>
         query.queryKey[0] === calendarKeys.all[0] &&
-        query.state.status === 'success',
+        query.state.data !== undefined,
     },
   }
 }
