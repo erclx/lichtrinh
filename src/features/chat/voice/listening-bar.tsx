@@ -26,14 +26,16 @@ export function ListeningBar({ state, stream, onStop }: ListeningBarProps) {
   const { t } = useTranslation()
   const still = useMediaQuery('(prefers-reduced-motion: reduce)')
   const bars = useRef<HTMLSpanElement>(null)
+  const listening = state.phase === 'listening'
 
+  // The bars mount only once listening starts, after the stream arrives.
   useEffect(() => {
     const row = bars.current
-    if (still || stream === null || row === null) return
+    if (still || !listening || stream === null || row === null) return
     return watchLevel(stream, (level) => {
       row.style.setProperty('--level', String(level))
     })
-  }, [still, stream])
+  }, [still, listening, stream])
 
   if (state.phase === 'transcribing') {
     return (
@@ -55,8 +57,6 @@ export function ListeningBar({ state, stream, onStop }: ListeningBarProps) {
       </div>
     )
   }
-
-  const listening = state.phase === 'listening'
 
   return (
     <div className="flex min-w-0 flex-1 items-center gap-3">

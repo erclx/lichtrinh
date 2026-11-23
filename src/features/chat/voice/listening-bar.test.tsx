@@ -1,6 +1,6 @@
 import '@/i18n/setup'
 
-import { render, screen } from '@testing-library/react'
+import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 
 import { ListeningBar } from '@/features/chat/voice/listening-bar'
@@ -27,6 +27,33 @@ function preferReducedMotion() {
     addEventListener: () => undefined,
     removeEventListener: () => undefined,
   }))
+}
+
+/**
+ * An audio context hearing a loud voice, and one animation frame, which is
+ * all a level read needs to show.
+ */
+function hearLoudVoice() {
+  class LoudContext {
+    resume = () => Promise.resolve()
+    close = () => Promise.resolve()
+    createMediaStreamSource = () => ({
+      connect: () => undefined,
+      disconnect: () => undefined,
+    })
+    createAnalyser = () => ({
+      fftSize: 0,
+      getByteTimeDomainData: (samples: Uint8Array) => samples.fill(255),
+    })
+  }
+  let frames = 0
+  vi.stubGlobal('AudioContext', LoudContext)
+  vi.stubGlobal('requestAnimationFrame', (tick: (time: number) => void) => {
+    frames += 1
+    if (frames === 1) setTimeout(() => tick(0), 0)
+    return frames
+  })
+  vi.stubGlobal('cancelAnimationFrame', () => undefined)
 }
 
 beforeEach(async () => {
@@ -74,6 +101,23 @@ describe('ListeningBar', () => {
     expect(
       screen.getByText('The first one after a break takes a little longer.'),
     ).toBeInTheDocument()
+  })
+
+  it('reads the level once the opening mic starts listening', async () => {
+    hearLoudVoice()
+    const { stream } = aFakeStream()
+    const bar = (state: TalkState) => (
+      <ListeningBar state={state} stream={stream} onStop={() => undefined} />
+    )
+    const { rerender } = render(bar({ phase: 'starting' }))
+
+    rerender(bar({ phase: 'listening' }))
+
+    await waitFor(() =>
+      expect(
+        screen.getByTestId('level-bar').style.getPropertyValue('--level'),
+      ).toBe('1'),
+    )
   })
 
   it('holds the bar and the dot still under reduced motion', () => {
