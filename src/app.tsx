@@ -10,7 +10,7 @@ export function App() {
     <div className="flex min-h-svh flex-col bg-background text-foreground">
       <header className="flex items-center gap-2.5 px-4 py-2.5">
         <BrandMark className="size-[34px] shrink-0" />
-        <span className="font-heading text-lg font-extrabold">
+        <span className="font-heading text-lg font-extrabold whitespace-nowrap">
           {t('app.name')}
         </span>
         <LanguageToggle className="ml-auto" />
