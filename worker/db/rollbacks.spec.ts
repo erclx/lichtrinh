@@ -64,8 +64,46 @@ describe('migrations', () => {
   })
 })
 
+describe('rolling back the chats migration', () => {
+  it('leaves the calendar schema and no chat table', async () => {
+    await rollBack('0003_chats.sql')
+
+    expect((await appTables()).sort()).toEqual([
+      'auth_sessions',
+      'changes',
+      'entries',
+      'settings',
+      'sign_in_attempts',
+      'trips',
+      'users',
+    ])
+  })
+
+  it('leaves no chat index', async () => {
+    await rollBack('0003_chats.sql')
+
+    const { results } = await env.DB.prepare(
+      "select name from sqlite_master where type = 'index' and (tbl_name in ('chats', 'chat_messages'))",
+    ).all<{ name: string }>()
+    expect(results).toEqual([])
+  })
+
+  it('removes its own d1_migrations row alone', async () => {
+    await rollBack('0003_chats.sql')
+
+    expect(await appliedMigrations()).toEqual([
+      '0000_init.sql',
+      '0001_accounts.sql',
+      '0002_trips_entries.sql',
+    ])
+  })
+})
+
+// The chat tables reference trips, so the calendar rollback runs after the
+// one above it, as an operator rolling back in order would.
 describe('rolling back the trips and entries migration', () => {
   it('leaves the accounts schema and no calendar table', async () => {
+    await rollBack('0003_chats.sql')
     await rollBack('0002_trips_entries.sql')
 
     expect((await appTables()).sort()).toEqual([
@@ -77,6 +115,7 @@ describe('rolling back the trips and entries migration', () => {
   })
 
   it('leaves no calendar index', async () => {
+    await rollBack('0003_chats.sql')
     await rollBack('0002_trips_entries.sql')
 
     const { results } = await env.DB.prepare(
@@ -86,6 +125,7 @@ describe('rolling back the trips and entries migration', () => {
   })
 
   it('removes its own d1_migrations row alone', async () => {
+    await rollBack('0003_chats.sql')
     await rollBack('0002_trips_entries.sql')
 
     expect(await appliedMigrations()).toEqual([
@@ -99,6 +139,7 @@ describe('rolling back the trips and entries migration', () => {
 // the one above it, as an operator rolling back in order would.
 describe('rolling back the accounts migration', () => {
   it('leaves the users table alone', async () => {
+    await rollBack('0003_chats.sql')
     await rollBack('0002_trips_entries.sql')
     await rollBack('0001_accounts.sql')
 
@@ -106,6 +147,7 @@ describe('rolling back the accounts migration', () => {
   })
 
   it('drops the sign-in, chat, and language columns from users', async () => {
+    await rollBack('0003_chats.sql')
     await rollBack('0002_trips_entries.sql')
     await rollBack('0001_accounts.sql')
 
@@ -119,6 +161,7 @@ describe('rolling back the accounts migration', () => {
   })
 
   it('removes its own d1_migrations row alone', async () => {
+    await rollBack('0003_chats.sql')
     await rollBack('0002_trips_entries.sql')
     await rollBack('0001_accounts.sql')
 

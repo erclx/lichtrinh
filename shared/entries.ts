@@ -35,6 +35,26 @@ export function endsBeforeStart(span: Span) {
   return `${span.endsOn}T${span.endTime}` < `${span.startsOn}T${span.startTime}`
 }
 
+const LAST_START_HOUR = 23
+
+/**
+ * The first whole hour after the last of `day`'s entries ends, 09:00 on an
+ * empty day, and never past 23:00, for a new entry nobody named a time for.
+ */
+export function firstFreeHour(day: Span[]): string {
+  if (day.length === 0) return '09:00'
+  const last = day.reduce((latest, span) =>
+    `${span.endsOn}T${span.endTime}` > `${latest.endsOn}T${latest.endTime}`
+      ? span
+      : latest,
+  )
+  const [hour, minute] = last.endTime.split(':').map(Number)
+  const free = minute === 0 ? hour : hour + 1
+  const pastMidnight = last.endsOn > last.startsOn
+  const start = pastMidnight ? LAST_START_HOUR : Math.min(free, LAST_START_HOUR)
+  return `${String(start).padStart(2, '0')}:00`
+}
+
 const endAfterStart = {
   message: 'An entry ends at or after its start',
   path: ['endTime'],

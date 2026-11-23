@@ -52,6 +52,20 @@ function wallAsUtc({ date, time }: LocalClock) {
   return Date.UTC(year, month - 1, day, hour, minute)
 }
 
+/** The wall clock `minutes` later, read with no zone, so no shift applies. */
+export function shiftClock(clock: LocalClock, minutes: number): LocalClock {
+  const shifted = new Date(wallAsUtc(clock) + minutes * MINUTE_MS)
+  return {
+    date: shifted.toISOString().slice(0, 10),
+    time: shifted.toISOString().slice(11, 16),
+  }
+}
+
+/** The wall clock minutes from `from` to `to`, read with no zone. */
+export function minutesBetween(from: LocalClock, to: LocalClock): number {
+  return (wallAsUtc(to) - wallAsUtc(from)) / MINUTE_MS
+}
+
 function offsetAt(instant: number, timeZone: string) {
   const whole = instant - (instant % MINUTE_MS)
   return wallAsUtc(wallClock(whole, timeZone)) - whole

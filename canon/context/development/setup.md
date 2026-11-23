@@ -40,8 +40,18 @@ Holds the `lichtrinh` command for the product's own services, which the owner in
 - `program.ts` builds the commander program from an injected output, task runner, and checkout lookup, so tests drive it with no process
 - `checkout.ts` picks the git top level of the working folder when it is a lichtrinh checkout, a linked worktree included, else the command's own checkout
 - `task.ts` prints `› <command>`, runs it with inherited output, and returns its exit code
-- `commands/` holds one file per verb group, being `db` over the local database, `admin`, whose `create --remote` asks before it writes, and `voice`, which hands off to `uv run --group gpu`
+- `commands/` holds one file per verb group, being `db` over the local database, `admin`, whose `create --remote` asks before it writes, `voice` over `uv run --group gpu`, and `bridge`, below
 - `admin/` makes the first admin, as `lichtrinh admin create <username> --local` after `bun run db:migrate`. It prints the password once, and the operator's own account passes `--language en`.
+
+### `bridge/`
+
+Holds the process the workspace PC runs beside Ollama, which dials out to the app's relay and answers chats with a local model. It imports `shared/` alone, writes nothing to disk, and logs ids and durations, never message text.
+
+- Upgrade Ollama, then run `lichtrinh bridge models` to make the `lichtrinh-assistant` and `lichtrinh-assistant-gemma` aliases from `bridge/models/`
+- Put `LICHTRINH_URL` and `BRIDGE_SECRET` in `~/.config/lichtrinh/bridge.env`, source it, and start `lichtrinh bridge run`. The secret matches the Worker's, a `.dev.vars` line locally.
+- `bun run dev` passes the socket upgrade through to the relay, so `LICHTRINH_URL=http://localhost:5173` plus the worktree offset serves a local run
+- `lichtrinh bridge eval` scores an alias live on the invented asks in `bridge/fixtures/requests.json` and exits non-zero under 26 of 30
+- `turn.ts` is the tool loop, capped at six rounds and 110 seconds. It sends every tool call up to the relay and refuses a second removal in a turn unless it held the turn before for a yes.
 
 ### `voice/`
 

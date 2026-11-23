@@ -141,3 +141,58 @@ export const changes = sqliteTable(
     index('changes_trip_id_seq_idx').on(table.tripId, table.seq),
   ],
 )
+
+// A chat keeps the trip it was bound to when created, since the tools take
+// no trip id and act on this one alone.
+export const chats = sqliteTable(
+  'chats',
+  {
+    id: text('id').primaryKey(),
+    ownerId: text('owner_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    tripId: text('trip_id')
+      .notNull()
+      .references(() => trips.id),
+    // The start of the first message, null until one is sent.
+    title: text('title'),
+    createdAt: integer('created_at', { mode: 'timestamp_ms' }).notNull(),
+    updatedAt: integer('updated_at', { mode: 'timestamp_ms' }).notNull(),
+  },
+  (table) => [
+    index('chats_owner_id_updated_at_idx').on(table.ownerId, table.updatedAt),
+  ],
+)
+
+// A reply names the message it answers in `reply_to`, which is unique, so a
+// retried send finds its saved reply and no message gets two.
+export const chatMessages = sqliteTable(
+  'chat_messages',
+  {
+    id: text('id').primaryKey(),
+    chatId: text('chat_id')
+      .notNull()
+      .references(() => chats.id, { onDelete: 'cascade' }),
+    role: text('role', { enum: ['user', 'assistant'] }).notNull(),
+    text: text('text').notNull(),
+    status: text('status', {
+      enum: ['complete', 'failed', 'stopped'],
+    }).notNull(),
+    model: text('model'),
+    // A JSON array of the change ids the reply wrote, oldest first.
+    changeIds: text('change_ids').notNull().default('[]'),
+    replyTo: text('reply_to'),
+    // The bridge held several removals for a yes, which the next turn reads.
+    heldRemoval: integer('held_removal', { mode: 'boolean' })
+      .notNull()
+      .default(false),
+    createdAt: integer('created_at', { mode: 'timestamp_ms' }).notNull(),
+  },
+  (table) => [
+    index('chat_messages_chat_id_created_at_idx').on(
+      table.chatId,
+      table.createdAt,
+    ),
+    uniqueIndex('chat_messages_reply_to_idx').on(table.replyTo),
+  ],
+)

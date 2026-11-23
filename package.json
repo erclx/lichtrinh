@@ -73,6 +73,8 @@
     "eslint-plugin-simple-import-sort": "^14.0.0",
     "husky": "^9.1.7",
     "jsdom": "^31.0.1",
+    "msw": "^3.0.7",
+    "ollama": "^0.6.4",
     "oxfmt": "0.72.0",
     "oxlint": "^1.90.0",
     "tailwindcss": "^4.3.5",

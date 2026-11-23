@@ -1,0 +1,166 @@
+{
+  "trip": {
+    "name": "Chuyến thử Vịnh Sương",
+    "startsOn": "2031-04-07",
+    "endsOn": "2031-04-13",
+    "timeZone": "Asia/Ho_Chi_Minh",
+    "currency": "VND",
+    "now": "2031-04-01T03:00:00Z",
+    "entries": [
+      {
+        "id": "e1",
+        "title": "Tham quan chùa Đá Xanh",
+        "date": "2031-04-09",
+        "start": "09:00",
+        "end": "11:00",
+        "cost": null
+      },
+      {
+        "id": "e2",
+        "title": "Đi thuyền vịnh Sương",
+        "date": "2031-04-10",
+        "start": "19:00",
+        "end": "21:00",
+        "cost": 300000
+      },
+      {
+        "id": "e3",
+        "title": "Vé bảo tàng Hải Đăng",
+        "date": "2031-04-10",
+        "start": "08:00",
+        "end": "10:00",
+        "cost": 120000
+      },
+      {
+        "id": "e4",
+        "title": "Ăn sáng",
+        "date": "2031-04-12",
+        "start": "07:00",
+        "end": "08:00",
+        "cost": null
+      },
+      {
+        "id": "e5",
+        "title": "Dạo phố đêm",
+        "date": "2031-04-12",
+        "start": "20:00",
+        "end": "21:00",
+        "cost": null
+      }
+    ]
+  },
+  "requests": [
+    {
+      "id": "r01",
+      "text": "Thứ bảy đi chợ Bến Mây lúc chín giờ sáng",
+      "expect": {
+        "action": "add",
+        "date": "2031-04-12",
+        "start": "09:00",
+        "keywords": ["chợ", "bến mây"]
+      }
+    },
+    {
+      "id": "r02",
+      "text": "Thêm ăn trưa ở nhà hàng Cô Lụa lúc mười hai giờ trưa thứ hai, khoảng hai trăm nghìn đồng",
+      "expect": {
+        "action": "add",
+        "date": "2031-04-07",
+        "start": "12:00",
+        "cost": 200000,
+        "keywords": ["trưa"]
+      }
+    },
+    {
+      "id": "r03",
+      "text": "Dời buổi tham quan chùa Đá Xanh sang ba giờ chiều",
+      "expect": {
+        "action": "move",
+        "target": "e1",
+        "date": "2031-04-09",
+        "start": "15:00"
+      }
+    },
+    {
+      "id": "r04",
+      "text": "Xóa lịch đi thuyền tối thứ năm",
+      "expect": { "action": "remove", "target": "e2" }
+    },
+    {
+      "id": "r05",
+      "text": "Chủ nhật bay về lúc sáu giờ bốn mươi lăm sáng",
+      "expect": {
+        "action": "add",
+        "date": "2031-04-13",
+        "start": "06:45",
+        "keywords": ["bay"]
+      }
+    },
+    {
+      "id": "r06",
+      "text": "Thứ sáu từ hai giờ đến năm giờ chiều đi spa, giá năm trăm nghìn",
+      "expect": {
+        "action": "add",
+        "date": "2031-04-11",
+        "start": "14:00",
+        "end": "17:00",
+        "cost": 500000,
+        "keywords": ["spa"]
+      }
+    },
+    {
+      "id": "r07",
+      "text": "Đổi giá vé bảo tàng Hải Đăng thành một trăm năm mươi nghìn",
+      "expect": { "action": "update", "target": "e3", "cost": 150000 }
+    },
+    {
+      "id": "r08",
+      "text": "Thứ ba đi tắm biển ở bãi Cát Vàng",
+      "expect": {
+        "action": "add",
+        "date": "2031-04-08",
+        "keywords": ["cát vàng"]
+      }
+    },
+    {
+      "id": "r09",
+      "text": "Đổi tên lịch ăn sáng thứ bảy thành ăn phở",
+      "expect": { "action": "update", "target": "e4", "keywords": ["phở"] }
+    },
+    {
+      "id": "r10",
+      "text": "Tối thứ ba bảy giờ rưỡi ăn tối với cả nhà",
+      "expect": {
+        "action": "add",
+        "date": "2031-04-08",
+        "start": "19:30",
+        "keywords": ["tối"]
+      }
+    },
+    {
+      "id": "q01",
+      "text": "Thứ năm có những lịch gì?",
+      "expect": { "action": "answer", "mentions": ["thuyền", "hải đăng"] }
+    },
+    {
+      "id": "q02",
+      "text": "Tổng chi phí dự kiến của chuyến đi là bao nhiêu?",
+      "expect": { "action": "answer", "mentions": ["420"] }
+    },
+    {
+      "id": "q03",
+      "text": "Thứ bảy tôi ăn sáng lúc mấy giờ?",
+      "expect": { "action": "answer", "mentions": ["7"] }
+    },
+    {
+      "id": "a01",
+      "text": "Dời lịch đó sang chiều mai",
+      "expect": { "action": "ask" }
+    },
+    {
+      "id": "c01",
+      "text": "Xóa hết lịch thứ bảy",
+      "expect": { "action": "ask" }
+    }
+  ]
+}

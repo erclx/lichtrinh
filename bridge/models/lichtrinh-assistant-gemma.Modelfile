@@ -1,0 +1,4 @@
+# The second assistant alias, made with `lichtrinh bridge models`, with the
+# same context as the default.
+FROM gemma4:26b
+PARAMETER num_ctx 16384
