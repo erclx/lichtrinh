@@ -189,20 +189,34 @@ export function AccountsPage() {
                   key={account.id}
                   className="flex items-center gap-4 border-b-[1.5px] border-border py-3"
                 >
-                  <span
-                    aria-hidden="true"
-                    className="flex size-12 shrink-0 items-center justify-center rounded-full bg-muted text-lg font-extrabold"
+                  <Link
+                    to={account.id}
+                    aria-label={t('accounts.editLabel', {
+                      name: account.displayName,
+                    })}
+                    aria-describedby={`account-${account.id}-subtitle`}
+                    className="-my-3 flex min-h-16 min-w-0 flex-1 items-center gap-4 rounded-xl py-3 outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
                   >
-                    {Array.from(account.displayName)[0]?.toLocaleUpperCase(
-                      i18n.language,
-                    )}
-                  </span>
-                  <div className="min-w-0 flex-1">
-                    <p className="font-extrabold break-words">
-                      {account.displayName}
-                    </p>
-                    <p className="text-sm text-muted-foreground">{subtitle}</p>
-                  </div>
+                    <span
+                      aria-hidden="true"
+                      className="flex size-12 shrink-0 items-center justify-center rounded-full bg-muted text-lg font-extrabold"
+                    >
+                      {Array.from(account.displayName)[0]?.toLocaleUpperCase(
+                        i18n.language,
+                      )}
+                    </span>
+                    <div className="min-w-0 flex-1">
+                      <p className="font-extrabold break-words">
+                        {account.displayName}
+                      </p>
+                      <p
+                        id={`account-${account.id}-subtitle`}
+                        className="text-sm text-muted-foreground"
+                      >
+                        {subtitle}
+                      </p>
+                    </div>
+                  </Link>
                   {!own && (
                     <Button
                       variant="ghost"
