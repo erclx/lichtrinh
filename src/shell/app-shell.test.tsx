@@ -5,6 +5,7 @@ import userEvent from '@testing-library/user-event'
 
 import { applyLanguage } from '@/i18n/setup'
 import { apiFetch } from '@/lib/api'
+import { lastUserKey } from '@/session/provider'
 import { aUser, failure, fakeApi, json, offline } from '@/test/fake-api'
 import { renderRoute } from '@/test/render-route'
 
@@ -174,5 +175,40 @@ describe('the session gate', () => {
     expect(
       screen.queryByRole('button', { name: 'Sign in' }),
     ).not.toBeInTheDocument()
+  })
+})
+
+describe('the shell offline', () => {
+  it('opens the remembered person on the shell with the offline card', async () => {
+    localStorage.setItem(
+      lastUserKey,
+      JSON.stringify({
+        id: 'user-member',
+        displayName: 'Thành viên',
+        role: 'member',
+        language: null,
+      }),
+    )
+    fakeApi({ 'GET /auth/me': offline })
+
+    renderAt('/trips')
+
+    expect(await screen.findByText('No connection')).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: 'Trips' })).toBeInTheDocument()
+    expect(
+      screen.queryByRole('button', { name: 'Try again' }),
+    ).not.toBeInTheDocument()
+  })
+
+  it('shows no offline card while the API answers', async () => {
+    fakeApi({
+      'GET /auth/me': () => json(aUser()),
+      'GET /trips': () => json([]),
+    })
+
+    renderAt('/trips')
+    await screen.findByRole('heading', { name: 'Trips' })
+
+    expect(screen.queryByText('No connection')).not.toBeInTheDocument()
   })
 })
