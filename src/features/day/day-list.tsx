@@ -46,7 +46,7 @@ export function DayList({ rows, currency, addTo }: DayListProps) {
     return (
       <div className="flex flex-col items-center gap-4 rounded-xl border-[2.5px] border-dashed border-border p-6 text-center">
         <p className="text-base text-muted-foreground">{t('day.empty')}</p>
-        <Link to={addTo} className={buttonVariants()}>
+        <Link to={addTo} className={cn(buttonVariants())}>
           <PlusIcon />
           {t('day.add')}
         </Link>

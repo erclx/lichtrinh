@@ -186,7 +186,7 @@ export function TripForm() {
           </p>
         </div>
 
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid gap-3 min-[480px]:grid-cols-2">
           <SheetList
             label={t('trips.tripCurrency')}
             value={chosenCurrency}

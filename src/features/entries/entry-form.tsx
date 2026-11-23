@@ -252,7 +252,7 @@ export function EntryForm({
               const parsed = entryKind.safeParse(next)
               setKind(parsed.success ? parsed.data : null)
             }}
-            className="grid grid-cols-5 gap-1.5"
+            className="grid grid-cols-3 gap-1.5 min-[480px]:grid-cols-5"
           >
             {entryKind.options.map((option) => (
               <Toggle

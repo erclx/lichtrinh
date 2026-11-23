@@ -53,7 +53,7 @@ export function TripOverview() {
             <p className="text-base text-muted-foreground">
               {t('trips.notFound')}
             </p>
-            <Link to="/trips" className={buttonVariants()}>
+            <Link to="/trips" className={cn(buttonVariants())}>
               {t('trips.allTrips')}
             </Link>
           </div>

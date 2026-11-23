@@ -149,7 +149,7 @@ export function EntryDetail() {
       <div className="flex flex-col gap-3 pt-5">
         <Link
           to={`/entries/${encodeURIComponent(item.id)}/edit`}
-          className={buttonVariants()}
+          className={cn(buttonVariants())}
         >
           {t('entries.edit')}
         </Link>
