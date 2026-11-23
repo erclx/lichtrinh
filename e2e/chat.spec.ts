@@ -77,3 +77,80 @@ test('the traveler reads the offline card, then chats with the assistant and und
     await bridge.close()
   }
 })
+
+// Runs after the journey above in the same worker, since the relay holds one
+// bridge per server and a second spec file would run beside it.
+test('the traveler speaks a request, fixes the transcript, sends it, and types while voice is off', async ({
+  page,
+  browserName,
+  baseURL,
+}) => {
+  test.skip(
+    browserName !== 'chromium',
+    'Chromium alone has a fake microphone, and the relay holds one bridge per server',
+  )
+  if (traveler === undefined) throw new Error('The seed holds no traveler')
+  if (baseURL === undefined) throw new Error('The config names no base URL')
+  await page.addInitScript(() =>
+    localStorage.setItem('lichtrinh.language', 'en'),
+  )
+  await page.clock.setFixedTime(new Date(DEMO_INSTANT))
+  const signIn = await page.request.post('/api/auth/sign-in', {
+    data: { username: traveler.username, password: traveler.password },
+  })
+  expect(signIn.ok()).toBe(true)
+
+  const bridge = await connectFakeBridge(baseURL, { voice: true })
+  try {
+    await page.goto('/chats/fixture-chat-today')
+    await page.getByRole('button', { name: 'Talk' }).click()
+    const stop = page.getByRole('button', { name: 'Stop and write it down' })
+    await expect(stop).toBeVisible()
+    await expect(
+      page.getByText('Listening…', { exact: true }).first(),
+    ).toBeVisible()
+    // The traveler speaks for a second. A Stop within the recorder's first
+    // frame sends an empty clip, which the app answers with the retry line.
+    await page.waitForTimeout(1000)
+
+    const transcribed = bridge.answerClip('doi an toi sang 8 gio', 800)
+    await stop.click()
+    await expect(
+      page.getByText('Writing down what you said…').first(),
+    ).toBeVisible()
+    await transcribed
+
+    const box = page.getByLabel('Message the assistant')
+    await expect(box).toHaveValue('doi an toi sang 8 gio')
+    await expect(
+      page.getByText('This is what you said. Fix it if needed, then send.'),
+    ).toBeVisible()
+
+    await box.fill('dời ăn tối sang 8 giờ')
+    const replied = bridge.answerWithReply('Xong, mình đã dời ăn tối.')
+    await box.press('Enter')
+    await replied
+    await expect(
+      page.locator('ol').getByText('Xong, mình đã dời ăn tối.'),
+    ).toBeVisible()
+
+    bridge.setVoice(false)
+    await page.reload()
+    await expect(
+      page.getByRole('heading', { name: 'Voice is offline' }),
+    ).toBeVisible()
+    await expect(page.getByRole('button', { name: 'Talk' })).toHaveAttribute(
+      'aria-disabled',
+      'true',
+    )
+    const typedReply = bridge.answerWithReply('Hôm nay khoảng 1.200.000 ₫.')
+    await box.fill('hom nay ton bao nhieu')
+    await box.press('Enter')
+    await typedReply
+    await expect(
+      page.locator('ol').getByText('Hôm nay khoảng 1.200.000 ₫.'),
+    ).toBeVisible()
+  } finally {
+    await bridge.close()
+  }
+})

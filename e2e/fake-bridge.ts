@@ -13,14 +13,31 @@ export interface FakeBridge {
    * workspace PC's model would.
    */
   answerWithAdd: (args: Record<string, unknown>, reply: string) => Promise<void>
+  /** Answers the next turn with a reply and no change. */
+  answerWithReply: (reply: string) => Promise<void>
+  /**
+   * Answers the next clip with `text` after `delayMs`, the way the voice
+   * server would, so the transcribing line has time to show.
+   */
+  answerClip: (text: string, delayMs: number) => Promise<void>
+  /** Reports the voice server's health, as the bridge does when it changes. */
+  setVoice: (online: boolean) => void
   close: () => Promise<void>
+}
+
+interface FakeBridgeOptions {
+  /** Says hello as a bridge forwarding clips, with its voice server up. */
+  voice?: boolean
 }
 
 /**
  * Dials the dev Worker's relay as the workspace PC does, says hello, and
  * waits for `ready`, so a test starts with the assistant online.
  */
-export async function connectFakeBridge(baseURL: string): Promise<FakeBridge> {
+export async function connectFakeBridge(
+  baseURL: string,
+  { voice = false }: FakeBridgeOptions = {},
+): Promise<FakeBridge> {
   const url = new URL('/api/bridge/connect', baseURL)
   url.protocol = url.protocol === 'https:' ? 'wss:' : 'ws:'
   // Node takes headers here, which the DOM typing reads as subprotocols.
@@ -63,8 +80,13 @@ export async function connectFakeBridge(baseURL: string): Promise<FakeBridge> {
       ),
     )
   })
-  send({ type: 'hello', protocol: BRIDGE_PROTOCOL })
+  send(
+    voice
+      ? { type: 'hello', protocol: BRIDGE_PROTOCOL, voice: true }
+      : { type: 'hello', protocol: BRIDGE_PROTOCOL },
+  )
   await nextOf('ready')
+  if (voice) send({ type: 'voice_status', online: true })
 
   return {
     answerWithAdd: async (args, reply) => {
@@ -83,6 +105,17 @@ export async function connectFakeBridge(baseURL: string): Promise<FakeBridge> {
       send({ type: 'delta', turnId, text: reply })
       send({ type: 'final', turnId, text: reply, heldRemoval: false })
     },
+    answerWithReply: async (reply) => {
+      const { turnId } = await nextOf('turn')
+      send({ type: 'delta', turnId, text: reply })
+      send({ type: 'final', turnId, text: reply, heldRemoval: false })
+    },
+    answerClip: async (text, delayMs) => {
+      const { transcriptionId } = await nextOf('transcribe')
+      await new Promise((resolve) => setTimeout(resolve, delayMs))
+      send({ type: 'transcript', transcriptionId, text, audioMs: 2100 })
+    },
+    setVoice: (online) => send({ type: 'voice_status', online }),
     close: () => {
       ws.close(1000, 'done')
       return closed
