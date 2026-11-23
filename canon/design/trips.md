@@ -7,6 +7,8 @@ description: The trip list, one trip's overview, creating a trip, and the week a
 
 Row v01.3 builds these screens. These frames are a reference, and where that row's plan differs from a frame, the plan wins.
 
+English dates follow `Intl` in the build, as 9/20, 9/20/2031, and Mon to Sun, where the English frames draw 20/9, 20/9/2031, and Mo to Su.
+
 ## Code
 
 - `src/components/date-range-sheet.tsx`: the Trip dates range sheet setting From and To together
