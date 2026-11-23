@@ -1,6 +1,7 @@
 import {
   index,
   integer,
+  real,
   sqliteTable,
   text,
   uniqueIndex,
@@ -195,4 +196,31 @@ export const chatMessages = sqliteTable(
     ),
     uniqueIndex('chat_messages_reply_to_idx').on(table.replyTo),
   ],
+)
+
+// One row per clip under the id the client sent it with, so the admin can
+// rank the speech models by how much the traveler edits their text. No
+// column holds audio or text, and the length is the transcript's only trace.
+export const transcriptions = sqliteTable(
+  'transcriptions',
+  {
+    id: text('id').primaryKey(),
+    userId: text('user_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    model: text('model').notNull(),
+    outcome: text('outcome', {
+      enum: ['ok', 'failed', 'unavailable'],
+    }).notNull(),
+    audioMs: integer('audio_ms'),
+    transcribeMs: integer('transcribe_ms').notNull(),
+    characters: integer('characters'),
+    // Set by the send whose text started as this transcript, with 0 for
+    // text sent untouched and 1 for text rewritten.
+    sentMessageId: text('sent_message_id'),
+    editRatio: real('edit_ratio'),
+    createdAt: integer('created_at', { mode: 'timestamp_ms' }).notNull(),
+    updatedAt: integer('updated_at', { mode: 'timestamp_ms' }).notNull(),
+  },
+  (table) => [index('transcriptions_model_idx').on(table.model)],
 )
