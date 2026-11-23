@@ -1,3 +1,4 @@
+import { ArrowLeftRight } from 'lucide-react'
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link, useNavigate } from 'react-router'
@@ -87,6 +88,19 @@ export function SettingsPage() {
               </span>
               <span className="flex-1 text-base font-extrabold">
                 {t('settings.manageAccounts')}
+              </span>
+              <ChevronIcon className="size-6 text-muted-foreground" />
+            </Link>
+          </li>
+        )}
+        {user?.role === 'admin' && (
+          <li className={divider}>
+            <Link to="/admin/rates" className={cn(row, pressable)}>
+              <span aria-hidden="true" className={rowIcon}>
+                <ArrowLeftRight className="size-6" />
+              </span>
+              <span className="flex-1 text-base font-extrabold">
+                {t('rates.title')}
               </span>
               <ChevronIcon className="size-6 text-muted-foreground" />
             </Link>

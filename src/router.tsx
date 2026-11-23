@@ -10,6 +10,7 @@ import { ThreadPage } from '@/features/chat/thread-page'
 import { DayPage } from '@/features/day/day-view'
 import { EntryDetail } from '@/features/entries/entry-detail'
 import { AddEntryPage, EditEntryPage } from '@/features/entries/entry-form'
+import { RatesPage } from '@/features/rates/rates-page'
 import { SettingsPage } from '@/features/settings/settings-page'
 import { TodayScreen } from '@/features/today/today-screen'
 import { TripForm } from '@/features/trips/trip-form'
@@ -57,6 +58,7 @@ export const routes: RouteObject[] = [
               { path: 'accounts/new', element: <CreateAccountPage /> },
               { path: 'accounts/:id', element: <EditAccountPage /> },
               { path: 'assistant', element: <AssistantSettingsPage /> },
+              { path: 'rates', element: <RatesPage /> },
             ],
           },
           { path: '*', element: <NotFoundPage /> },
