@@ -15,6 +15,13 @@
       "when": 1795413605689,
       "tag": "0001_accounts",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1795416606259,
+      "tag": "0002_trips_entries",
+      "breakpoints": true
     }
   ]
 }

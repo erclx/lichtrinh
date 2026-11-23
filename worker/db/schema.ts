@@ -1,4 +1,10 @@
-import { index, integer, sqliteTable, text } from 'drizzle-orm/sqlite-core'
+import {
+  index,
+  integer,
+  sqliteTable,
+  text,
+  uniqueIndex,
+} from 'drizzle-orm/sqlite-core'
 
 export const users = sqliteTable('users', {
   id: text('id').primaryKey(),
@@ -45,3 +51,93 @@ export const settings = sqliteTable('settings', {
     onDelete: 'set null',
   }),
 })
+
+const SOURCES = ['person', 'assistant'] as const
+
+// Calendar rows are soft-deleted, so undo restores a row rather than
+// rebuilding it, and every read filters on `deleted_at is null`. Dates are
+// local `YYYY-MM-DD` and times local `HH:MM`, read in the row's own zone.
+export const trips = sqliteTable('trips', {
+  id: text('id').primaryKey(),
+  name: text('name').notNull(),
+  startsOn: text('starts_on').notNull(),
+  endsOn: text('ends_on').notNull(),
+  timeZone: text('time_zone').notNull(),
+  currency: text('currency').notNull(),
+  homeCurrency: text('home_currency').notNull(),
+  version: integer('version').notNull(),
+  deletedAt: integer('deleted_at', { mode: 'timestamp_ms' }),
+})
+
+export const entries = sqliteTable(
+  'entries',
+  {
+    id: text('id').primaryKey(),
+    tripId: text('trip_id')
+      .notNull()
+      .references(() => trips.id),
+    title: text('title').notNull(),
+    notes: text('notes'),
+    kind: text('kind', {
+      enum: ['food', 'sights', 'rest', 'transport', 'activity'],
+    }),
+    startsOn: text('starts_on').notNull(),
+    startTime: text('start_time').notNull(),
+    endsOn: text('ends_on').notNull(),
+    endTime: text('end_time').notNull(),
+    timeZone: text('time_zone').notNull(),
+    // In the trip currency's minor unit, so VND 200000 is 200000 and
+    // USD 12.50 is 1250.
+    costMinor: integer('cost_minor'),
+    version: integer('version').notNull(),
+    createdBy: text('created_by')
+      .notNull()
+      .references(() => users.id),
+    createdSource: text('created_source', { enum: SOURCES }).notNull(),
+    createdAt: integer('created_at', { mode: 'timestamp_ms' }).notNull(),
+    updatedBy: text('updated_by')
+      .notNull()
+      .references(() => users.id),
+    updatedSource: text('updated_source', { enum: SOURCES }).notNull(),
+    updatedAt: integer('updated_at', { mode: 'timestamp_ms' }).notNull(),
+    deletedAt: integer('deleted_at', { mode: 'timestamp_ms' }),
+  },
+  (table) => [
+    index('entries_trip_id_starts_on_idx').on(table.tripId, table.startsOn),
+  ],
+)
+
+// One row per write. `seq` orders the log, since two writes can share a
+// millisecond. `undoes` is unique, so a change is undone at most once even
+// when two undos race.
+export const changes = sqliteTable(
+  'changes',
+  {
+    id: text('id').primaryKey(),
+    seq: integer('seq').notNull(),
+    tripId: text('trip_id')
+      .notNull()
+      .references(() => trips.id),
+    userId: text('user_id')
+      .notNull()
+      .references(() => users.id),
+    source: text('source', { enum: SOURCES }).notNull(),
+    op: text('op', { enum: ['create', 'update', 'delete', 'undo'] }).notNull(),
+    entity: text('entity', { enum: ['trip', 'entry'] }).notNull(),
+    entityId: text('entity_id').notNull(),
+    // JSON snapshots of the fields a person sets, null on the side of the
+    // change where the row is absent or deleted.
+    before: text('before'),
+    after: text('after'),
+    undoes: text('undoes'),
+    // A JSON array of the entries a trip's zone change moved with it, so
+    // undoing that change moves the same entries back.
+    rezonedEntryIds: text('rezoned_entry_ids'),
+    createdAt: integer('created_at', { mode: 'timestamp_ms' }).notNull(),
+  },
+  (table) => [
+    uniqueIndex('changes_seq_idx').on(table.seq),
+    uniqueIndex('changes_undoes_idx').on(table.undoes),
+    index('changes_trip_id_seq_idx').on(table.tripId, table.seq),
+  ],
+)
