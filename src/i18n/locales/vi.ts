@@ -174,8 +174,8 @@ export const vi = {
       unused: 'Chưa dùng',
       unsent_one: '{{count}} đoạn · chưa gửi đoạn nào',
       unsent_other: '{{count}} đoạn · chưa gửi đoạn nào',
-      usage_one: '{{count}} đoạn · sửa {{share}} số chữ trước khi gửi',
-      usage_other: '{{count}} đoạn · sửa {{share}} số chữ trước khi gửi',
+      usage_one: 'Đã gửi {{sent}}/{{count}} đoạn · sửa {{share}} số chữ',
+      usage_other: 'Đã gửi {{sent}}/{{count}} đoạn · sửa {{share}} số chữ',
       saved:
         'Đã lưu. Đoạn sau sẽ dùng mô hình này và có thể lâu hơn một chút khi nạp.',
     },

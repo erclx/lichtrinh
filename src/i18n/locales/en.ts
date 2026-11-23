@@ -176,9 +176,9 @@ export const en = {
       unused: 'Not used yet',
       unsent_one: '{{count}} clip · none sent yet',
       unsent_other: '{{count}} clips · none sent yet',
-      usage_one: '{{count}} clip · {{share}} of words changed before sending',
+      usage_one: '{{sent}} of {{count}} clip sent · {{share}} of words changed',
       usage_other:
-        '{{count}} clips · {{share}} of words changed before sending',
+        '{{sent}} of {{count}} clips sent · {{share}} of words changed',
       saved:
         'Saved. The next clip uses this model and may take a little longer while it loads.',
     },

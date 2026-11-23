@@ -373,7 +373,7 @@ function SpeechPicker({ voice }: { voice: VoiceAdmin }) {
   )
 }
 
-/** How a model did in use: its clips and the share of words changed. */
+/** How a model did in use: its clips, how many went out, and the edits to those. */
 function UsageLine({ usage }: { usage: VoiceUsage | undefined }) {
   const { t, i18n } = useTranslation()
   if (usage === undefined || usage.clips === 0) {
@@ -386,7 +386,11 @@ function UsageLine({ usage }: { usage: VoiceUsage | undefined }) {
     style: 'percent',
     maximumFractionDigits: 0,
   }).format(usage.meanEditRatio)
-  return t('assistantSettings.speech.usage', { count: usage.clips, share })
+  return t('assistantSettings.speech.usage', {
+    count: usage.clips,
+    sent: usage.sent,
+    share,
+  })
 }
 
 function ContactForm({ saved }: { saved: string | null }) {

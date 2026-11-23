@@ -276,9 +276,7 @@ describe('AssistantSettingsPage', () => {
       renderPage()
 
       expect(
-        await screen.findByText(
-          '12 clips · 8% of words changed before sending',
-        ),
+        await screen.findByText('10 of 12 clips sent · 8% of words changed'),
       ).toBeInTheDocument()
       expect(screen.getByText('1 clip · none sent yet')).toBeInTheDocument()
     })
