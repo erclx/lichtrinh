@@ -15,8 +15,8 @@ My mom is traveling to Vietnam. Calendar apps ask her to learn them first. This 
 
 - A web app installed to the iPhone home screen, in Vietnamese and English
 - A shared calendar with trips, entries, estimated costs, and a budget, editable by hand
-- A chat with Claude that changes the calendar through a narrow set of tools, with Undo on every change
-- Claude and Vietnamese speech recognition run on my own computer, so the app costs nothing to run beyond the subscription I already pay for
+- A chat with an assistant that changes the calendar through four calendar tools alone, with Undo on every change
+- The assistant's local model and Vietnamese speech recognition run on my own computer, so the app costs nothing to run
 
 ## Status
 
