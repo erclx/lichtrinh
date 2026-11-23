@@ -424,6 +424,93 @@ describe('POST /api/changes/:id/undo', () => {
     expect(await errorCode(res)).toBe('currency_has_costs')
   })
 
+  it('applies two concurrent undos under one undo id once', async () => {
+    const { cookie } = await signedIn()
+    const { trip } = await addTrip(cookie)
+    const { entry } = await addEntry(cookie, trip.id, { title: 'Before' })
+    const edit = entryWrite.parse(
+      await (
+        await patch(cookie, `/api/entries/${entry.id}`, {
+          version: 1,
+          title: 'After',
+        })
+      ).json(),
+    )
+    const undoId = crypto.randomUUID()
+
+    const [first, second] = await Promise.all([
+      undo(cookie, edit.changeId, undoId),
+      undo(cookie, edit.changeId, undoId),
+    ])
+
+    expect([first.status, second.status]).toEqual([201, 201])
+    const stored = entryRead.parse(
+      await (await readEntry(cookie, entry.id)).json(),
+    ).entry
+    expect(stored).toMatchObject({ title: 'Before', version: 3 })
+    const undos = (await history(cookie, trip.id)).changes.filter(
+      (c) => c.op === 'undo',
+    )
+    expect(undos.map((c) => c.id)).toEqual([undoId])
+  })
+
+  it('refuses restoring a deleted cost after a currency change', async () => {
+    const { cookie } = await signedIn()
+    const { trip } = await addTrip(cookie, { currency: 'VND' })
+    const { entry } = await addEntry(cookie, trip.id, { costMinor: 450000 })
+    const res = await remove(cookie, `/api/entries/${entry.id}`, 1)
+    const { changeId } = removed.parse(await res.json())
+    await patch(cookie, `/api/trips/${trip.id}`, {
+      version: 1,
+      currency: 'USD',
+    })
+
+    const undone = await undo(cookie, changeId)
+
+    expect(undone.status).toBe(409)
+    expect(await errorCode(undone)).toBe('currency_has_costs')
+    expect((await readEntry(cookie, entry.id)).status).toBe(404)
+  })
+
+  it('refuses undoing an update that cleared a cost after a currency change', async () => {
+    const { cookie } = await signedIn()
+    const { trip } = await addTrip(cookie, { currency: 'VND' })
+    const { entry } = await addEntry(cookie, trip.id, { costMinor: 450000 })
+    const cleared = entryWrite.parse(
+      await (
+        await patch(cookie, `/api/entries/${entry.id}`, {
+          version: 1,
+          costMinor: null,
+        })
+      ).json(),
+    )
+    await patch(cookie, `/api/trips/${trip.id}`, {
+      version: 1,
+      currency: 'USD',
+    })
+
+    const res = await undo(cookie, cleared.changeId)
+
+    expect(res.status).toBe(409)
+    expect(await errorCode(res)).toBe('currency_has_costs')
+  })
+
+  it('restores an entry with no cost after a currency change', async () => {
+    const { cookie } = await signedIn()
+    const { trip } = await addTrip(cookie, { currency: 'VND' })
+    const { entry } = await addEntry(cookie, trip.id, { costMinor: null })
+    const res = await remove(cookie, `/api/entries/${entry.id}`, 1)
+    const { changeId } = removed.parse(await res.json())
+    await patch(cookie, `/api/trips/${trip.id}`, {
+      version: 1,
+      currency: 'USD',
+    })
+
+    const restored = await undo(cookie, changeId)
+
+    expect(restored.status).toBe(201)
+  })
+
   it('refuses an undo id another change holds with id_conflict', async () => {
     const { cookie } = await signedIn()
     const { trip } = await addTrip(cookie)

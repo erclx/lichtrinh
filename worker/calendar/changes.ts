@@ -9,7 +9,7 @@ import type {
 } from '@shared/changes.ts'
 import { entryFields, tripFields } from '@shared/changes.ts'
 import type { SQL } from 'drizzle-orm'
-import { and, desc, eq, exists, isNull, lt, notExists, sql } from 'drizzle-orm'
+import { and, desc, eq, exists, isNull, lt, sql } from 'drizzle-orm'
 import { alias } from 'drizzle-orm/sqlite-core'
 import type { z } from 'zod'
 
@@ -18,8 +18,9 @@ import { logOutcome } from '../log.ts'
 import { entryFieldsOf, tripHolds } from './entries.ts'
 import type { Actor, Db, Refused } from './record.ts'
 import {
+  claimChange,
   deferForeignKeys,
-  recordChange,
+  isConstraintFailure,
   recorded,
   refused,
   sameFields,
@@ -167,9 +168,9 @@ function findChange(db: Db, where: SQL) {
 }
 
 /**
- * Undoes one change by writing its `before` back as a new `undo` change.
- * Refuses with `undo_conflict` unless the row still holds what the change
- * left, since restoring over a later edit would erase it.
+ * Writes a change's `before` back as an `undo` change, refusing unless the row
+ * still holds what it left. The `undoes` index and the undo id's key abort a
+ * second undo of it, so concurrent retries apply once.
  */
 export async function undoChange(
   db: Db,
@@ -204,37 +205,32 @@ export async function undoChange(
           target,
           state,
           parseSide(entryFields, target.before),
+          await tripCurrencyAt(db, target),
         )
-  const [, guard] = await db.batch([
-    deferForeignKeys(db),
-    recordChange(
-      db,
-      actor,
-      at,
-      {
-        id: undoId,
-        tripId: target.tripId,
-        op: 'undo',
-        entity: target.entity,
-        entityId: target.entityId,
-        before: state.current,
-        after: plan.restore,
-        undoes: target.id,
-        rezoned: plan.rezoned,
-      },
-      and(
+  try {
+    await db.batch([
+      deferForeignKeys(db),
+      claimChange(
+        db,
+        actor,
+        at,
+        {
+          id: undoId,
+          tripId: target.tripId,
+          op: 'undo',
+          entity: target.entity,
+          entityId: target.entityId,
+          before: state.current,
+          after: plan.restore,
+          undoes: target.id,
+          rezoned: plan.rezoned,
+        },
         plan.condition,
-        notExists(
-          db
-            .select({ one: sql`1` })
-            .from(undoer)
-            .where(eq(undoer.undoes, target.id)),
-        ),
-      ) ?? plan.condition,
-    ),
-    ...plan.writes(recorded(db, undoId)),
-  ])
-  if (guard.meta.changes === 0) {
+      ),
+      ...plan.writes(recorded(db, undoId)),
+    ])
+  } catch (error) {
+    if (!isConstraintFailure(error)) throw error
     const raced = await settledUndo(db, target.id, undoId)
     if (raced !== undefined) return raced
     const now = await stateOf(db, target)
@@ -337,6 +333,26 @@ function undoTrip(
   }
 }
 
+// The trip currency in force when the target change was made, read off the
+// trip's last change before it, which every trip has from its create.
+async function tripCurrencyAt(db: Db, target: ChangeRow) {
+  const last = await db
+    .select({ before: changes.before, after: changes.after })
+    .from(changes)
+    .where(
+      and(
+        eq(changes.entity, 'trip'),
+        eq(changes.entityId, target.tripId),
+        lt(changes.seq, target.seq),
+      ),
+    )
+    .orderBy(desc(changes.seq))
+    .get()
+  return parseSide(tripFields, last?.after ?? last?.before ?? null)?.currency
+}
+
+// A restored cost was written in the currency of its own change, so it lands
+// only while the trip still uses that currency.
 function undoEntry(
   db: Db,
   actor: Actor,
@@ -344,6 +360,7 @@ function undoEntry(
   target: ChangeRow,
   state: RowState,
   restore: EntryFields | null,
+  currencyThen: string | undefined,
 ) {
   const id = target.entityId
   const atVersion = exists(
@@ -352,15 +369,49 @@ function undoEntry(
       .from(entries)
       .where(and(eq(entries.id, id), eq(entries.version, state.version))),
   )
+  const costCurrency =
+    restore?.costMinor != null && currencyThen !== undefined
+      ? currencyThen
+      : undefined
+  const stillPriced =
+    restore === null || costCurrency === undefined
+      ? undefined
+      : exists(
+          db
+            .select({ one: sql`1` })
+            .from(trips)
+            .where(
+              and(
+                eq(trips.id, restore.tripId),
+                eq(trips.currency, costCurrency),
+              ),
+            ),
+        )
   return {
     restore,
     condition:
       restore === null
         ? atVersion
-        : (and(atVersion, tripHolds(db, restore.tripId, restore.startsOn)) ??
-          atVersion),
-    brokenRule: (): Promise<Refused> =>
-      Promise.resolve(refused('entries_outside_range')),
+        : (and(
+            atVersion,
+            tripHolds(db, restore.tripId, restore.startsOn),
+            stillPriced,
+          ) ?? atVersion),
+    brokenRule: async (): Promise<Refused> => {
+      if (restore === null || costCurrency === undefined) {
+        return refused('entries_outside_range')
+      }
+      const trip = await db
+        .select({ currency: trips.currency })
+        .from(trips)
+        .where(eq(trips.id, restore.tripId))
+        .get()
+      return refused(
+        trip?.currency === costCurrency
+          ? 'entries_outside_range'
+          : 'currency_has_costs',
+      )
+    },
     rezoned: undefined,
     writes: (landed: SQL) => [
       db

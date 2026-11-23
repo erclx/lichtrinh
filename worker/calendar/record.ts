@@ -98,36 +98,65 @@ export function recordChange(
   change: ChangeRecord,
   condition: SQL,
 ) {
-  const snapshot = (fields: object | null) =>
-    fields === null ? null : JSON.stringify(fields)
   return insertWhen(
     db,
     changes,
-    {
-      id: change.id,
-      seq: sql`(select coalesce(max(${changes.seq}), 0) + 1 from ${changes})`,
-      tripId: change.tripId,
-      userId: actor.userId,
-      source: actor.source,
-      op: change.op,
-      entity: change.entity,
-      entityId: change.entityId,
-      before: snapshot(change.before),
-      after: snapshot(change.after),
-      undoes: change.undoes ?? null,
-      rezonedEntryIds: change.rezoned ?? null,
-      createdAt: at.getTime(),
-    },
-    and(
-      condition,
-      notExists(
-        db
-          .select({ one: sql`1` })
-          .from(changes)
-          .where(eq(changes.id, change.id)),
-      ),
-    ) ?? condition,
+    changeRow(actor, at, change, nextSeq),
+    and(condition, notExists(changeWithId(db, change.id))) ?? condition,
   )
+}
+
+/**
+ * The opening statement for a change under a client-chosen id. A refused
+ * `condition` nulls `seq` and a taken id breaks the key, so either aborts the
+ * whole batch, since `recorded()` cannot tell this batch's row from a retry's.
+ */
+export function claimChange(
+  db: Db,
+  actor: Actor,
+  at: Date,
+  change: ChangeRecord,
+  condition: SQL,
+) {
+  const seq = sql`case when ${condition} then ${nextSeq} end`
+  return insertWhen(db, changes, changeRow(actor, at, change, seq), sql`1`)
+}
+
+/** Whether a batch failed on a constraint, as `claimChange()` aborts one. */
+export function isConstraintFailure(error: unknown) {
+  for (let cause = error; cause instanceof Error; cause = cause.cause) {
+    if (/constraint failed/i.test(cause.message)) return true
+  }
+  return false
+}
+
+const nextSeq = sql`(select coalesce(max(${changes.seq}), 0) + 1 from ${changes})`
+
+function changeWithId(db: Db, id: string) {
+  return db
+    .select({ one: sql`1` })
+    .from(changes)
+    .where(eq(changes.id, id))
+}
+
+function changeRow(actor: Actor, at: Date, change: ChangeRecord, seq: SQL) {
+  const snapshot = (fields: object | null) =>
+    fields === null ? null : JSON.stringify(fields)
+  return {
+    id: change.id,
+    seq,
+    tripId: change.tripId,
+    userId: actor.userId,
+    source: actor.source,
+    op: change.op,
+    entity: change.entity,
+    entityId: change.entityId,
+    before: snapshot(change.before),
+    after: snapshot(change.after),
+    undoes: change.undoes ?? null,
+    rezonedEntryIds: change.rezoned ?? null,
+    createdAt: at.getTime(),
+  }
 }
 
 /** Holds a statement to the batch's change row having landed. */
