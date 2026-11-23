@@ -23,8 +23,7 @@ export function formatMonthTitle(
   return title.charAt(0).toLocaleUpperCase(language) + title.slice(1)
 }
 
-// English narrow repeats T and S, while Vietnamese short spells `Thứ 2`, too
-// wide for a seventh of a phone, so each language takes its own width.
+// English narrow repeats T and S, and Vietnamese short is too wide for a phone.
 const weekdayWidth = {
   vi: 'narrow',
   en: 'short',
@@ -36,9 +35,9 @@ export function weekdayLabels(language: Language): string[] {
     ...zone,
     weekday: weekdayWidth[language],
   })
-  // 2031-09-01 is a Monday.
+  const aMonday = Date.UTC(2031, 8, 1)
   return Array.from({ length: 7 }, (_, offset) =>
-    format.format(new Date(Date.UTC(2031, 8, 1 + offset))),
+    format.format(new Date(aMonday + offset * 86_400_000)),
   )
 }
 

@@ -46,8 +46,7 @@ export function SheetList({
   const { t } = useTranslation()
   const [open, setOpen] = useState(false)
   const [query, setQuery] = useState('')
-  // Arrow keys move the checked row before Enter commits it, so the row a
-  // person is on is kept apart from the value the caller holds.
+  // The row Arrow keys reach, held apart from `value` until Enter commits it.
   const [current, setCurrent] = useState(value)
   const fieldRef = useRef<HTMLButtonElement>(null)
   const listRef = useRef<HTMLDivElement>(null)
