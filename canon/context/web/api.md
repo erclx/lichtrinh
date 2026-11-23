@@ -1,13 +1,13 @@
 ---
 title: API
-description: The Worker serving the app and the Hono API, its D1 database, and the schemas the app and the API share
+description: The Worker serving the app and the Hono API, its sign-in, the assistant relay and voice, and the schemas the app and the API share
 ---
 
 # API
 
 ## Overview
 
-Owns the Cloudflare Worker that serves the built app and answers `/api/*`, the local D1 database behind it, and the zod schemas both sides parse with. The React front end it serves is the subject of `canon/context/web/app.md`.
+Owns the Cloudflare Worker that serves the built app and answers `/api/*`, and the zod schemas both sides parse with. The D1 database and the calendar rules over it are the subject of `canon/context/web/database.md`, and the React front end it serves is `canon/context/web/app.md`.
 
 ## Layout
 
@@ -29,24 +29,6 @@ Holds sign-in and the guard every route sits behind. The app runs the body limit
 - `session.ts` issues a 180-day `__Host-session` cookie, stores only the SHA-256 of its token, and slides the expiry at most once a day
 - `attempts.ts` refuses past 10 failures per username or 50 per `CF-Connecting-IP` in 15 minutes. Only the edge sets that header, so a local spec counting failures passes its own.
 - `password.ts` verifies PBKDF2 hashes from `shared/password-hash.ts`, whose exception to the installed hash rule is `.claude/rules/project/code/passwords.md`
-
-### `worker/db/`
-
-Holds the Drizzle schema, the client a route gets its database from, the migrations `drizzle-kit` writes, and a rollback for each.
-
-- Edit the schema and run `bun run db:generate` for the next migration, since an applied migration is never edited
-- Each migration takes a rollback of the same file name under `rollbacks/`, and a spec fails when one is missing or leaves a table behind
-- `bun run db:migrate` and `bun run dev` read the same local database under `.wrangler/state/v3/d1`
-
-### `worker/calendar/`
-
-Holds the trip, entry, and history rules the routes call as `person` and the assistant's tools call as `assistant`.
-
-- Every write is one D1 batch opening on its change row, inserted only while the version, range, and id checks hold, and every later statement waits on that row, so a refused check writes nothing
-- Rows are soft-deleted, so a read never returns a deleted trip, a deleted entry, or an entry of a deleted trip
-- Update and delete take the version the caller read and answer `edit_conflict` on a stale one. Create takes a client id, and a retry with the same body answers the stored row.
-- Undo writes a change's `before` back as an `undo` change, refusing `undo_conflict` unless the row still holds that change's `after`, and `already_undone` on a second try
-- A trip's zone change moves the entries in its old zone, keeping their clock times, and records which, so undoing it moves the same ones back
 
 ### `worker/assistant/`
 
@@ -83,7 +65,5 @@ The Worker's two smaller folders each carry one job.
 ## Gotchas
 
 - `worker/worker-configuration.d.ts` is generated and gitignored, and `bun run typecheck` regenerates it before compiling the Worker
-- Storage resets per spec file rather than per test, so a case that writes or rolls back hands its state to the next case in that file
 - `vitest.config.ts` merges `vite.config.ts`, so `cloudflare()` loads in both test projects. Suspect it first when `bun run test:run` hangs after a plugin upgrade.
 - Coverage runs on V8, which Cloudflare's known-issues page calls unsupported. Switch to Istanbul and exclude `worker/db/migrations/` if CI reports `worker/` at zero.
-- Drizzle's D1 batch throws on a `db.run()` carrying parameters, so a guarded insert goes through `insertWhen()` in `worker/calendar/record.ts`, with `deferForeignKeys()` ahead of it
