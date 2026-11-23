@@ -4,7 +4,13 @@
  */
 export function logOutcome(
   outcome: string,
-  ids: { userId?: string; byUserId?: string } = {},
+  ids: {
+    userId?: string
+    byUserId?: string
+    tripId?: string
+    entryId?: string
+    changeId?: string
+  } = {},
 ) {
   console.log(JSON.stringify({ outcome, ...ids }))
 }

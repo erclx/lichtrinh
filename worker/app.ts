@@ -6,8 +6,11 @@ import { HTTPException } from 'hono/http-exception'
 import { type AuthEnv, requireAdmin, requireSession } from './auth/guard.ts'
 import { fail } from './envelope.ts'
 import { authRoutes } from './routes/auth.ts'
+import { changeRoutes } from './routes/changes.ts'
+import { entryRoutes } from './routes/entries.ts'
 import { healthRoutes } from './routes/health.ts'
 import { settingsRoutes } from './routes/settings.ts'
+import { tripRoutes } from './routes/trips.ts'
 import { userRoutes } from './routes/users.ts'
 
 export const MAX_BODY_BYTES = 64 * 1024
@@ -53,6 +56,9 @@ app.route('/', healthRoutes)
 app.route('/', authRoutes)
 app.route('/', userRoutes)
 app.route('/', settingsRoutes)
+app.route('/', tripRoutes)
+app.route('/', entryRoutes)
+app.route('/', changeRoutes)
 
 app.notFound((c) => c.json(fail('not_found', 'No such API route'), 404))
 
