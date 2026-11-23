@@ -6,7 +6,7 @@ import { describe, expect, it } from 'vitest'
 import { type ProgramContext, runCli, type Task } from '../program'
 
 // The indented line the password prints on, never a run of words around it.
-const GROUPED_PASSWORD = /^  ([a-z2-9]{4} [a-z2-9]{4} [a-z2-9]{4})$/m
+const GROUPED_PASSWORD = /^ {2}([a-z2-9]{4} [a-z2-9]{4} [a-z2-9]{4})$/m
 
 // Reads the SQL file each task names while it still exists, since the verb
 // removes it once the task ends.
