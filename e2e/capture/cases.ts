@@ -80,6 +80,23 @@ export const CASES: CaptureCase[] = [
     },
   },
   {
+    section: 'accounts-edit',
+    theme: 'default',
+    route: '/admin/accounts/fixture-traveler',
+    evidence: true,
+    setup: asAdmin,
+  },
+  {
+    section: 'accounts-edit',
+    theme: 'dark',
+    route: '/admin/accounts/fixture-traveler',
+    evidence: true,
+    setup: async (page) => {
+      await dark(page)
+      await asAdmin(page)
+    },
+  },
+  {
     section: 'settings',
     theme: 'default',
     route: '/settings',
