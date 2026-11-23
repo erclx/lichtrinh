@@ -32,6 +32,15 @@ These run and test the app, its local database, and the generated Worker types.
 | `bun run db:migrate`   | Apply pending migrations to the local D1 database under `.wrangler/`       |
 | `bun run types:worker` | Regenerate the Worker types from `wrangler.jsonc`, which typecheck runs    |
 
+### `cli/`
+
+Holds the `lichtrinh` command for the product's own services, which the owner installs once with `bun link` and runs from any folder. The development loop above stays on `bun run`.
+
+- `program.ts` builds the commander program from an injected output, task runner, and checkout lookup, so tests drive it with no process
+- `checkout.ts` picks the git top level of the working folder when it is a lichtrinh checkout, a linked worktree included, else the command's own checkout
+- `task.ts` prints `› <command>`, runs it with inherited output, and returns its exit code
+- `commands/` holds one file per verb group, starting with `db status` and `db migrate` over the local database
+
 ### `voice/`
 
 Holds the Python project, synced from canon's python stack with `--skip base`, so husky, oxfmt, and commitlint stay at the root. It needs [uv](https://docs.astral.sh/uv/) and one `uv sync` inside `voice/`, since `bun run check` runs these too. Run them from inside `voice/`.
@@ -58,3 +67,4 @@ Holds the git hooks that run the checks before a commit or a push leaves.
 - The root `check` chains into `voice/scripts/verify.ts`, held through every sync by `canon tooling customize package.json:check`, since base overrides that script
 - `uv add` in `voice/` writes TOML that root oxfmt rejects, so run `bun run format` at the root after a dependency change
 - Local D1 state lives under `.wrangler/state/v3/d1`, and deleting `.wrangler/` resets it until the next `bun run db:migrate`
+- `bun link` links the checkout it ran in, so a verb added on a branch stays invisible to `lichtrinh` until it merges and that checkout pulls
