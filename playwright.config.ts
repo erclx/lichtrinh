@@ -1,7 +1,14 @@
+import { tmpdir } from 'node:os'
+import { join } from 'node:path'
+
 import { defineConfig, devices } from '@playwright/test'
 
 const isCI = !!process.env.CI
-const baseURL = `http://localhost:${5173 + (Number(process.env.WORKTREE_PORT_OFFSET) || 0)}`
+const portOffset = Number(process.env.WORKTREE_PORT_OFFSET) || 0
+const baseURL = `http://localhost:${5173 + portOffset}`
+// One folder per worktree, wiped and seeded before the server starts, so a
+// run never reads the developer's database or the last run's accounts.
+const stateRoot = join(tmpdir(), `lichtrinh-e2e-${portOffset}`)
 
 export default defineConfig({
   testDir: 'e2e',
@@ -24,7 +31,10 @@ export default defineConfig({
     { name: 'webkit', use: { ...devices['Desktop Safari'] } },
   ],
   webServer: {
-    command: 'bun run dev',
+    // Seeded here rather than in a global setup, which Playwright runs only
+    // after the server is already up and holding the database.
+    command: `rm -rf "${stateRoot}" && bun scripts/seed.ts && bun run dev`,
+    env: { LICHTRINH_STATE_ROOT: stateRoot },
     url: baseURL,
     reuseExistingServer: false,
   },
