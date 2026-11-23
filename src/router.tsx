@@ -5,6 +5,8 @@ import { CreateAccountPage } from '@/features/accounts/create-account-page'
 import { EditAccountPage } from '@/features/accounts/edit-account-page'
 import { AssistantSettingsPage } from '@/features/assistant-settings/assistant-settings-page'
 import { DayPage } from '@/features/day/day-view'
+import { EntryDetail } from '@/features/entries/entry-detail'
+import { AddEntryPage, EditEntryPage } from '@/features/entries/entry-form'
 import { SettingsPage } from '@/features/settings/settings-page'
 import { TodayScreen } from '@/features/today/today-screen'
 import { TripForm } from '@/features/trips/trip-form'
@@ -32,6 +34,9 @@ export const routes: RouteObject[] = [
           { path: 'trips/new', element: <TripForm /> },
           { path: 'trips/:tripId', element: <TripOverview /> },
           { path: 'trips/:tripId/days/:date', element: <DayPage /> },
+          { path: 'entries/new', element: <AddEntryPage /> },
+          { path: 'entries/:entryId', element: <EntryDetail /> },
+          { path: 'entries/:entryId/edit', element: <EditEntryPage /> },
           {
             path: 'calendar',
             element: <PlaceholderPage titleKey="nav.calendar" />,
