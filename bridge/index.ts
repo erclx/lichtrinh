@@ -1,7 +1,6 @@
-// Dials out to the relay, runs each turn on the local model, forwards each
-// clip to the voice server, and redials with backoff. It writes nothing to
-// disk and logs ids, the model, and durations, never message text, tool
-// arguments, clips, or transcripts.
+// Dials out to the relay, runs turns and forwards clips, and redials with
+// backoff. It writes nothing to disk and logs ids, models, and durations,
+// never message text, tool arguments, clips, or transcripts.
 import type { AssistantModel } from '@shared/assistant.ts'
 import type { DownFrame } from '@shared/bridge-frames.ts'
 import { PROTOCOL_MISMATCH } from '@shared/bridge-frames.ts'

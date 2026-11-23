@@ -50,10 +50,8 @@ export const voiceSettings = z.strictObject({ model: voiceModel })
 export type VoiceSettings = z.infer<typeof voiceSettings>
 
 /**
- * How one model did in use. `clips` counts the clips it transcribed and
- * `sent` those sent as a message, and `meanEditRatio` runs from 0 when the
- * traveler sent its text untouched to 1 when they rewrote it, or is null
- * before the first send.
+ * How one model did in use. `meanEditRatio` runs from 0 for text sent
+ * untouched to 1 for text rewritten, and is null before the first send.
  */
 export const voiceUsage = z.strictObject({
   model: voiceModel,
