@@ -1,4 +1,4 @@
-import { createUserRequest } from '@shared/users'
+import { username as usernameRule } from '@shared/users'
 import { type Command, Option } from 'commander'
 
 import { createAdmin } from '../admin/create'
@@ -33,7 +33,7 @@ export function registerAdmin(
         options: { local?: boolean; remote?: boolean; language: 'vi' | 'en' },
         command: Command,
       ) => {
-        const username = createUserRequest.shape.username.safeParse(name)
+        const username = usernameRule.safeParse(name)
         if (!username.success) {
           command.error(
             'error: a username takes 2 to 32 lowercase letters, digits, dots, dashes, or underscores',

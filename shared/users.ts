@@ -2,14 +2,17 @@ import { z } from 'zod'
 
 import { language, role, user } from './auth.ts'
 
+/** The rule a new username meets, shared by the API, the screens, and the CLI. */
+export const username = z
+  .string()
+  .trim()
+  .toLowerCase()
+  .regex(/^[a-z0-9][a-z0-9._-]{1,31}$/)
+
 // Role and chat default to the least access, so an admin who names neither
 // makes a member who cannot chat.
 export const createUserRequest = z.strictObject({
-  username: z
-    .string()
-    .trim()
-    .toLowerCase()
-    .regex(/^[a-z0-9][a-z0-9._-]{1,31}$/),
+  username,
   displayName: z.string().trim().min(1).max(60),
   role: role.default('member'),
   canChat: z.boolean().default(false),
