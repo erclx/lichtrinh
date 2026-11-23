@@ -36,6 +36,7 @@ function renderAccounts() {
       <RouterProvider router={router} />
     </SessionProvider>,
   )
+  return router
 }
 
 beforeEach(async () => {
@@ -242,5 +243,31 @@ describe('resetting a password', () => {
     expect(
       await within(screen.getByRole('alertdialog')).findByRole('alert'),
     ).toHaveTextContent('Something went wrong')
+  })
+
+  it('opens the edit page from a row', async () => {
+    const user = userEvent.setup()
+    fakeApi({
+      'GET /auth/me': () => json(admin),
+      'GET /admin/users': () => json({ users: [admin, traveler] }),
+    })
+    const router = renderAccounts()
+
+    await user.click(await screen.findByRole('link', { name: 'Edit Du khách' }))
+
+    expect(router.state.location.pathname).toBe('/admin/accounts/user-traveler')
+  })
+
+  it('links the admin’s own row to its edit page too', async () => {
+    fakeApi({
+      'GET /auth/me': () => json(admin),
+      'GET /admin/users': () => json({ users: [admin, traveler] }),
+    })
+
+    renderAccounts()
+
+    expect(
+      await screen.findByRole('link', { name: 'Edit Admin' }),
+    ).toHaveAttribute('href', '/admin/accounts/user-admin')
   })
 })

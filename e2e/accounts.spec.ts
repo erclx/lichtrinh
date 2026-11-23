@@ -57,6 +57,14 @@ test('the admin creates a member, who signs in and is refused the accounts page'
   await page.getByRole('button', { name: 'Done' }).click()
   await expect(page.getByText(displayName, { exact: true })).toBeVisible()
 
+  await page.getByRole('link', { name: `Edit ${displayName}` }).click()
+  await page.getByRole('button', { name: 'On' }).click()
+  await page.getByRole('button', { name: 'Save' }).click()
+  await expect(page).toHaveURL(/\/admin\/accounts$/)
+  await expect(
+    page.getByRole('listitem').filter({ hasText: displayName }),
+  ).toContainText('can chat')
+
   await page.getByRole('link', { name: 'Settings' }).click()
   await page.getByRole('button', { name: 'Sign out' }).click()
   await signIn(page, username, password)

@@ -120,6 +120,13 @@ export const en = {
     copied: 'Copied',
     copyFailed: "Couldn't copy. Read it out or type it instead.",
     done: 'Done',
+    editTitle: 'Edit account',
+    editLabel: 'Edit {{name}}',
+    usernameFixed: "A username can't be changed.",
+    ownRole: "You can't change your own role.",
+    lastAdmin: 'Keep at least one admin, so someone can still manage accounts.',
+    save: 'Save',
+    saving: 'Saving…',
   },
   settings: {
     title: 'Settings',

@@ -1,5 +1,5 @@
 import type { Language, Role } from '@shared/auth.ts'
-import { createUserRequest, username as usernameRule } from '@shared/users.ts'
+import { username as usernameRule } from '@shared/users.ts'
 import { type FormEvent, useId, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link, useNavigate } from 'react-router'
@@ -7,28 +7,24 @@ import { Link, useNavigate } from 'react-router'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group'
+import {
+  AccountChoices,
+  DisplayNameField,
+} from '@/features/accounts/account-fields'
 import { createAccount } from '@/features/accounts/accounts-api'
+import {
+  type DisplayNameError,
+  displayNameError,
+} from '@/features/accounts/display-name'
 import { PasswordOnce } from '@/features/accounts/password-once'
 import { ApiFailure } from '@/lib/api'
 import { useSession } from '@/session/session-context'
 import { PageHeader } from '@/shell/page-header'
 
 interface FieldErrors {
-  displayName?: 'required' | 'tooLong'
+  displayName?: DisplayNameError
   username?: 'invalid' | 'taken'
 }
-
-// The API's own rule, so the form refuses what the API would answer with
-// validation_failed.
-function displayNameError(name: string): FieldErrors['displayName'] {
-  if (name === '') return 'required'
-  return createUserRequest.shape.displayName.safeParse(name).success
-    ? undefined
-    : 'tooLong'
-}
-
-const labelClass = 'text-sm leading-none font-extrabold'
 
 export function CreateAccountPage() {
   const { t } = useTranslation()
@@ -117,34 +113,18 @@ export function CreateAccountPage() {
     <>
       <PageHeader title={t('accounts.createTitle')} backTo="/admin/accounts" />
       <form noValidate onSubmit={onSubmit} className="flex flex-col gap-5">
-        <div className="flex flex-col gap-2">
-          <Label htmlFor={`${ids}-name`}>{t('accounts.displayName')}</Label>
-          <Input
-            ref={displayNameRef}
-            id={`${ids}-name`}
-            autoComplete="off"
-            value={displayName}
-            onChange={(event) => {
-              setDisplayName(event.target.value)
-              if (displayNameError(event.target.value.trim()) === undefined) {
-                setErrors((current) => ({ ...current, displayName: undefined }))
-              }
-            }}
-            aria-invalid={errors.displayName !== undefined}
-            aria-describedby={
-              errors.displayName !== undefined ? `${ids}-name-error` : undefined
+        <DisplayNameField
+          idPrefix={ids}
+          value={displayName}
+          error={errors.displayName}
+          inputRef={displayNameRef}
+          onChange={(value) => {
+            setDisplayName(value)
+            if (displayNameError(value.trim()) === undefined) {
+              setErrors((current) => ({ ...current, displayName: undefined }))
             }
-          />
-          {errors.displayName !== undefined && (
-            <p id={`${ids}-name-error`} className="text-sm">
-              {t(
-                errors.displayName === 'tooLong'
-                  ? 'accounts.displayNameTooLong'
-                  : 'accounts.displayNameRequired',
-              )}
-            </p>
-          )}
-        </div>
+          }}
+        />
 
         <div className="flex flex-col gap-2">
           <Label htmlFor={`${ids}-username`}>{t('accounts.username')}</Label>
@@ -196,68 +176,15 @@ export function CreateAccountPage() {
           )}
         </div>
 
-        <div className="flex flex-col gap-2">
-          <p id={`${ids}-role`} className={labelClass}>
-            {t('accounts.role')}
-          </p>
-          <ToggleGroup
-            aria-labelledby={`${ids}-role`}
-            value={[role]}
-            onValueChange={([next]) => {
-              if (next === 'member' || next === 'admin') setRole(next)
-            }}
-          >
-            <ToggleGroupItem value="member">
-              {t('accounts.roleMember')}
-            </ToggleGroupItem>
-            <ToggleGroupItem value="admin">
-              {t('accounts.roleAdmin')}
-            </ToggleGroupItem>
-          </ToggleGroup>
-        </div>
-
-        <div className="flex flex-col gap-2">
-          <p id={`${ids}-chat`} className={labelClass}>
-            {t('accounts.canChatLabel')}
-          </p>
-          <ToggleGroup
-            aria-labelledby={`${ids}-chat`}
-            aria-describedby={`${ids}-chat-hint`}
-            value={[canChat ? 'on' : 'off']}
-            onValueChange={([next]) => {
-              if (next === 'on' || next === 'off') setCanChat(next === 'on')
-            }}
-          >
-            <ToggleGroupItem value="on">{t('accounts.on')}</ToggleGroupItem>
-            <ToggleGroupItem value="off">{t('accounts.off')}</ToggleGroupItem>
-          </ToggleGroup>
-          <p
-            id={`${ids}-chat-hint`}
-            className="text-center text-sm text-muted-foreground"
-          >
-            {t('accounts.canChatHint')}
-          </p>
-        </div>
-
-        <div className="flex flex-col gap-2">
-          <p id={`${ids}-language`} className={labelClass}>
-            {t('accounts.language')}
-          </p>
-          <ToggleGroup
-            aria-labelledby={`${ids}-language`}
-            value={[language]}
-            onValueChange={([next]) => {
-              if (next === 'vi' || next === 'en') setLanguage(next)
-            }}
-          >
-            <ToggleGroupItem value="vi" lang="vi">
-              {t('language.viName')}
-            </ToggleGroupItem>
-            <ToggleGroupItem value="en" lang="en">
-              {t('language.enName')}
-            </ToggleGroupItem>
-          </ToggleGroup>
-        </div>
+        <AccountChoices
+          idPrefix={ids}
+          role={role}
+          canChat={canChat}
+          language={language}
+          onRole={setRole}
+          onCanChat={setCanChat}
+          onLanguage={setLanguage}
+        />
 
         <p className="text-base text-muted-foreground">
           {t('accounts.passwordNote')}

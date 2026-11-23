@@ -1,7 +1,12 @@
 import { generatePassword } from '@shared/generated-password.ts'
 import { hashPassword } from '@shared/password-hash.ts'
-import type { CreatedUser, OneTimePassword, UserList } from '@shared/users.ts'
-import { createUserRequest } from '@shared/users.ts'
+import type {
+  CreatedUser,
+  OneTimePassword,
+  UpdatedUser,
+  UserList,
+} from '@shared/users.ts'
+import { createUserRequest, updateUserRequest } from '@shared/users.ts'
 import { asc, eq } from 'drizzle-orm'
 import { Hono } from 'hono'
 
@@ -9,7 +14,7 @@ import type { AuthEnv } from '../auth/guard.ts'
 import { endAllSessions } from '../auth/session.ts'
 import { createDb } from '../db/client.ts'
 import { users } from '../db/schema.ts'
-import { toUser } from '../db/users.ts'
+import { toUser, updateUserKeepingAnAdmin } from '../db/users.ts'
 import { fail, parseBody } from '../envelope.ts'
 import { logOutcome } from '../log.ts'
 
@@ -52,6 +57,27 @@ export const userRoutes = new Hono<AuthEnv>()
       password,
     }
     return c.json(body, 201)
+  })
+  .patch('/admin/users/:id', async (c) => {
+    const id = c.req.param('id')
+    const changes = await parseBody(c, updateUserRequest)
+    const db = createDb(c.env.DB)
+    const updated = await updateUserKeepingAnAdmin(db, id, changes)
+    if (updated === undefined) {
+      const exists = await db
+        .select({ id: users.id })
+        .from(users)
+        .where(eq(users.id, id))
+        .get()
+      if (exists === undefined) {
+        return c.json(fail('not_found', 'No such account'), 404)
+      }
+      logOutcome('user_update_refused', { userId: id, byUserId: c.var.user.id })
+      return c.json(fail('last_admin', 'The app needs one admin'), 409)
+    }
+    logOutcome('user_updated', { userId: id, byUserId: c.var.user.id })
+    const body: UpdatedUser = { user: toUser(updated) }
+    return c.json(body)
   })
   .post('/admin/users/:id/password', async (c) => {
     const id = c.req.param('id')
