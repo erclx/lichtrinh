@@ -32,7 +32,6 @@ gpu = [
   "ctranslate2>=4.9.1",
   "faster-whisper==1.2.1",
   "nvidia-cublas-cu12>=12.9.3.13",
-  "nvidia-cudnn-cu12>=9.28.1.4",
   "qwen-asr==0.0.6",
   "torch==2.15.0",
 ]
