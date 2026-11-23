@@ -87,6 +87,8 @@ function SwipeArea({ children, onDelete }: SwipeRowProps) {
       if (Math.abs(dx) < claimDistance || Math.abs(dx) < Math.abs(dy)) return
       drag.claimed = true
       setDragging(true)
+      // A mouse released off the row would otherwise never end the drag.
+      event.currentTarget.setPointerCapture?.(event.pointerId)
     }
     setOffset(Math.max(-revealWidth, Math.min(0, drag.from + dx)))
   }
