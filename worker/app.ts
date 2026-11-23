@@ -3,10 +3,11 @@ import { bodyLimit } from 'hono/body-limit'
 import { csrf } from 'hono/csrf'
 import { HTTPException } from 'hono/http-exception'
 
-import { type AuthEnv, requireSession } from './auth/guard.ts'
+import { type AuthEnv, requireAdmin, requireSession } from './auth/guard.ts'
 import { fail } from './envelope.ts'
 import { authRoutes } from './routes/auth.ts'
 import { healthRoutes } from './routes/health.ts'
+import { userRoutes } from './routes/users.ts'
 
 export const MAX_BODY_BYTES = 64 * 1024
 
@@ -45,9 +46,11 @@ app.use('*', async (c, next) => {
 })
 
 app.use('*', requireSession)
+app.use('/admin/*', requireAdmin)
 
 app.route('/', healthRoutes)
 app.route('/', authRoutes)
+app.route('/', userRoutes)
 
 app.notFound((c) => c.json(fail('not_found', 'No such API route'), 404))
 
