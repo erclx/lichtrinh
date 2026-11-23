@@ -30,7 +30,6 @@ const renamed: Record<string, string> = {
   'Europe/Kiev': 'Kyiv',
 }
 
-/** A zone's label, its city and its offset at `at`, such as `New York (GMT-4)`. */
 export function zoneLabel(zone: string, language: Language, at: Date) {
   const city = cityOf(zone)
   const current = renamed[zone]
