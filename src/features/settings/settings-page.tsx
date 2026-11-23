@@ -8,6 +8,7 @@ import { cn } from '@/lib/utils'
 import { useSession } from '@/session/session-context'
 import {
   AccountsIcon,
+  AssistantIcon,
   ChevronIcon,
   GlobeIcon,
   SignOutIcon,
@@ -86,6 +87,19 @@ export function SettingsPage() {
               </span>
               <span className="flex-1 text-base font-extrabold">
                 {t('settings.manageAccounts')}
+              </span>
+              <ChevronIcon className="size-6 text-muted-foreground" />
+            </Link>
+          </li>
+        )}
+        {user?.role === 'admin' && (
+          <li className={divider}>
+            <Link to="/admin/assistant" className={cn(row, pressable)}>
+              <span aria-hidden="true" className={rowIcon}>
+                <AssistantIcon className="size-6" />
+              </span>
+              <span className="flex-1 text-base font-extrabold">
+                {t('settings.assistant')}
               </span>
               <ChevronIcon className="size-6 text-muted-foreground" />
             </Link>

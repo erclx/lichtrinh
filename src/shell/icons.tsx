@@ -58,6 +58,15 @@ export function AccountsIcon(props: IconProps) {
   )
 }
 
+export function AssistantIcon(props: IconProps) {
+  return (
+    <Icon {...props}>
+      <path d="M5 4.5h14a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2h-8l-4.5 3.5v-3.5H5a2 2 0 0 1-2-2v-9a2 2 0 0 1 2-2z" />
+      <path d="M8 11h.01M12 11h.01M16 11h.01" />
+    </Icon>
+  )
+}
+
 export function SettingsIcon(props: IconProps) {
   return (
     <Icon {...props}>
