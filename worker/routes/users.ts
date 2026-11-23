@@ -62,8 +62,7 @@ export const userRoutes = new Hono<AuthEnv>()
     const id = c.req.param('id')
     const changes = await parseBody(c, updateUserRequest)
     const db = createDb(c.env.DB)
-    // The count sits inside the one statement, so two demotions racing past
-    // a separate read cannot both pass and leave no admin.
+    // The count sits in this one statement, so racing demotions cannot both pass.
     const keepsAnAdmin =
       changes.role === 'member'
         ? sql`not (${users.role} = ${'admin'} and (select count(*) from ${users} where ${users.role} = ${'admin'}) = 1)`

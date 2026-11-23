@@ -100,8 +100,7 @@ function EditAccountForm({ account }: { account: User }) {
   const [displayName, setDisplayName] = useState(account.displayName)
   const [role, setRole] = useState<Role>(account.role)
   const [canChat, setCanChat] = useState(account.canChat)
-  // An account that never picked a language shows the default one, and sends
-  // it only when the admin picks one.
+  // A never-picked language shows as vi and is sent only once changed.
   const shownLanguage = account.language ?? 'vi'
   const [language, setLanguage] = useState<Language>(shownLanguage)
   const [nameError, setNameError] = useState<DisplayNameError | undefined>()

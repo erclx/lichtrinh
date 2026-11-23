@@ -236,8 +236,7 @@ describe('PATCH /api/admin/users/:id', () => {
     )
   }
 
-  // Storage persists across the tests in a file, so an earlier test's admins
-  // would hide the last-admin case. This leaves exactly the admins it signs in.
+  // Storage outlives each test in a file, so earlier admins are demoted first.
   async function onlyAdmins(count: number) {
     await createDb(env.DB)
       .update(users)
