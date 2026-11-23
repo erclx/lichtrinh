@@ -23,8 +23,8 @@ const traveler = aUser({
 })
 const cousin = aUser({
   id: 'user-cousin',
-  username: 'minh',
-  displayName: 'Minh',
+  username: 'family',
+  displayName: 'Gia đình',
 })
 
 function renderAccounts() {
@@ -58,7 +58,9 @@ describe('AccountsPage', () => {
 
     const row = (await screen.findByText('Du khách')).closest('li')
     expect(row).toHaveTextContent('Family · can chat')
-    expect(screen.getByText('Minh').closest('li')).toHaveTextContent('Family')
+    expect(screen.getByText('Gia đình').closest('li')).toHaveTextContent(
+      'Family',
+    )
   })
 
   it('offers no Reset on the admin’s own row', async () => {

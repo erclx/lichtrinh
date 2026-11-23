@@ -51,11 +51,11 @@ describe('SignInPage', () => {
     })
     await renderSignIn()
 
-    await submit(user, '  mai ', 'abcdefghjkmn')
+    await submit(user, '  member ', 'abcdefghjkmn')
 
     expect(await screen.findByText('status: signed-in')).toBeInTheDocument()
     expect(api.requests.at(-1)?.body).toEqual({
-      username: 'mai',
+      username: 'member',
       password: 'abcdefghjkmn',
     })
   })
@@ -68,7 +68,7 @@ describe('SignInPage', () => {
     })
     await renderSignIn()
 
-    await submit(user, 'mai', 'wrongpassword')
+    await submit(user, 'member', 'wrongpassword')
 
     const message = await screen.findByRole('alert')
     expect(message).toHaveTextContent("That username and password don't match")
@@ -90,7 +90,7 @@ describe('SignInPage', () => {
     })
     await renderSignIn()
 
-    await submit(user, 'mai', 'wrongpassword')
+    await submit(user, 'member', 'wrongpassword')
 
     expect(await screen.findByRole('alert')).toHaveFocus()
   })
@@ -104,10 +104,10 @@ describe('SignInPage', () => {
     })
     await renderSignIn()
 
-    await submit(user, 'mai', 'wrongpassword')
+    await submit(user, 'member', 'wrongpassword')
 
     expect(await screen.findByRole('alert')).toHaveTextContent('Sign-in paused')
-    expect(screen.getByLabelText('Username')).toHaveValue('mai')
+    expect(screen.getByLabelText('Username')).toHaveValue('member')
     expect(screen.getByLabelText('Password')).toHaveValue('wrongpassword')
     expect(screen.getByRole('button', { name: 'Sign in' })).toBeEnabled()
   })
@@ -120,7 +120,7 @@ describe('SignInPage', () => {
     })
     await renderSignIn()
 
-    await submit(user, 'mai', 'abcdefghjkmn')
+    await submit(user, 'member', 'abcdefghjkmn')
 
     expect(await screen.findByRole('alert')).toHaveTextContent("Can't connect")
   })
@@ -159,11 +159,11 @@ describe('SignInPage', () => {
     await renderSignIn()
 
     await user.click(screen.getByLabelText('Username'))
-    await user.paste('mai')
+    await user.paste('member')
     await user.click(screen.getByLabelText('Password'))
     await user.paste('abcd efgh jkmn')
 
-    expect(screen.getByLabelText('Username')).toHaveValue('mai')
+    expect(screen.getByLabelText('Username')).toHaveValue('member')
     expect(screen.getByLabelText('Password')).toHaveValue('abcd efgh jkmn')
   })
 

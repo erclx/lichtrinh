@@ -19,7 +19,7 @@ function Probe() {
       <p>user: {session.user?.displayName ?? 'none'}</p>
       <button
         onClick={() =>
-          session.signIn({ username: 'mai', password: 'abcd efgh jkmn' })
+          session.signIn({ username: 'member', password: 'abcd efgh jkmn' })
         }
       >
         sign in
@@ -60,12 +60,14 @@ describe('SessionProvider', () => {
   })
 
   it('reads signed in with the account when the session is live', async () => {
-    fakeApi({ 'GET /auth/me': () => json(aUser({ displayName: 'Mai' })) })
+    fakeApi({
+      'GET /auth/me': () => json(aUser({ displayName: 'Thành viên' })),
+    })
 
     renderSession()
 
     expect(await screen.findByText('status: signed-in')).toBeInTheDocument()
-    expect(screen.getByText('user: Mai')).toBeInTheDocument()
+    expect(screen.getByText('user: Thành viên')).toBeInTheDocument()
   })
 
   it('reads signed out when the API refuses the session', async () => {
@@ -111,16 +113,16 @@ describe('SessionProvider', () => {
     const user = userEvent.setup()
     const api = fakeApi({
       'GET /auth/me': () => failure('unauthenticated', 401),
-      'POST /auth/sign-in': () => json(aUser({ displayName: 'Mai' })),
+      'POST /auth/sign-in': () => json(aUser({ displayName: 'Thành viên' })),
     })
     renderSession()
     await screen.findByText('status: signed-out')
 
     await user.click(screen.getByRole('button', { name: 'sign in' }))
 
-    expect(await screen.findByText('user: Mai')).toBeInTheDocument()
+    expect(await screen.findByText('user: Thành viên')).toBeInTheDocument()
     expect(api.requests.at(-1)?.body).toEqual({
-      username: 'mai',
+      username: 'member',
       password: 'abcd efgh jkmn',
     })
   })

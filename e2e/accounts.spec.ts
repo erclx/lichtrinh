@@ -28,7 +28,7 @@ test('the admin creates a member, who signs in and is refused the accounts page'
   if (fixtureAdmin === undefined) throw new Error('The seed holds no admin')
   // Each browser runs the journey against one server, so each makes its own.
   const username = `e2e-${browserName}-${Date.now().toString(36)}`
-  const displayName = `Minh ${browserName}`
+  const displayName = `Thành viên ${browserName}`
 
   await page.goto('/admin/accounts')
   await expect(page.getByRole('navigation')).toHaveCount(0)

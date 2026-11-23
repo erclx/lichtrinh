@@ -143,7 +143,7 @@ describe('the session gate', () => {
     })
     const router = renderAt('/calendar')
 
-    await user.type(await screen.findByLabelText('Username'), 'mai')
+    await user.type(await screen.findByLabelText('Username'), 'member')
     await user.type(screen.getByLabelText('Password'), 'abcdefghjkmn')
     await user.click(screen.getByRole('button', { name: 'Sign in' }))
 

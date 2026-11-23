@@ -59,8 +59,8 @@ export function offline(): never {
 export function aUser(overrides: Partial<User> = {}): User {
   return {
     id: 'user-member',
-    username: 'mai',
-    displayName: 'Mai',
+    username: 'member',
+    displayName: 'Thành viên',
     role: 'member',
     canChat: false,
     language: null,

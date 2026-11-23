@@ -105,8 +105,8 @@ describe('CreateAccountPage', () => {
     })
     renderCreate()
 
-    await user.type(await screen.findByLabelText('Display name'), 'Mai')
-    await user.type(screen.getByLabelText('Username'), 'mai')
+    await user.type(await screen.findByLabelText('Display name'), 'Thành viên')
+    await user.type(screen.getByLabelText('Username'), 'member')
     await user.click(
       screen.getByRole('button', { name: 'Create and get the password' }),
     )
@@ -128,8 +128,8 @@ describe('CreateAccountPage', () => {
     })
     renderCreate()
 
-    await user.type(await screen.findByLabelText('Display name'), 'Mai')
-    await user.type(screen.getByLabelText('Username'), 'mai')
+    await user.type(await screen.findByLabelText('Display name'), 'Thành viên')
+    await user.type(screen.getByLabelText('Username'), 'member')
     await user.click(
       screen.getByRole('button', { name: 'Create and get the password' }),
     )
@@ -148,8 +148,8 @@ describe('CreateAccountPage', () => {
         json({ user: aUser(), password: 'mapekrytuvha' }, 201),
     })
     const router = renderCreate()
-    await user.type(await screen.findByLabelText('Display name'), 'Mai')
-    await user.type(screen.getByLabelText('Username'), 'mai')
+    await user.type(await screen.findByLabelText('Display name'), 'Thành viên')
+    await user.type(screen.getByLabelText('Username'), 'member')
     await user.click(
       screen.getByRole('button', { name: 'Create and get the password' }),
     )
@@ -173,7 +173,7 @@ describe('CreateAccountPage', () => {
       await screen.findByLabelText('Display name'),
       'a'.repeat(61),
     )
-    await user.type(screen.getByLabelText('Username'), 'mai')
+    await user.type(screen.getByLabelText('Username'), 'member')
     await user.click(
       screen.getByRole('button', { name: 'Create and get the password' }),
     )
@@ -215,8 +215,8 @@ describe('CreateAccountPage', () => {
     })
     renderCreate()
 
-    await user.type(await screen.findByLabelText('Display name'), 'Mai')
-    await user.type(screen.getByLabelText('Username'), 'mai')
+    await user.type(await screen.findByLabelText('Display name'), 'Thành viên')
+    await user.type(screen.getByLabelText('Username'), 'member')
     await user.click(
       screen.getByRole('button', { name: 'Create and get the password' }),
     )
@@ -239,13 +239,16 @@ describe('CreateAccountPage', () => {
       'GET /auth/me': () => json(admin),
       'GET /admin/users': () =>
         json({
-          users: [admin, aUser({ username: 'mai', displayName: 'Mai' })],
+          users: [
+            admin,
+            aUser({ username: 'member', displayName: 'Thành viên' }),
+          ],
         }),
       'POST /admin/users': () => failure('username_taken', 409),
     })
     renderCreate()
-    await user.type(await screen.findByLabelText('Display name'), 'Mai')
-    await user.type(screen.getByLabelText('Username'), 'mai')
+    await user.type(await screen.findByLabelText('Display name'), 'Thành viên')
+    await user.type(screen.getByLabelText('Username'), 'member')
     await user.click(
       screen.getByRole('button', { name: 'Create and get the password' }),
     )
@@ -255,7 +258,7 @@ describe('CreateAccountPage', () => {
     )
 
     expect(await screen.findByRole('alertdialog')).toHaveTextContent(
-      "Reset Mai's password?",
+      "Reset Thành viên's password?",
     )
   })
 })
