@@ -20,8 +20,7 @@ test.describe('the pressed language keeps its fill under the pointer', () => {
     test(`in ${colorScheme}`, async ({ page }) => {
       await page.emulateMedia({ colorScheme })
       await page.goto('/')
-      // Without transitions every computed color is the settled one, so the
-      // read after the hover cannot pass on the first frame of a fade.
+      // No transitions, so the hover read cannot pass on a fade's first frame.
       await page.addStyleTag({
         content: '* { transition: none !important; }',
       })
