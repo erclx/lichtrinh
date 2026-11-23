@@ -40,7 +40,7 @@ export function LanguageToggle({ className, onChange }: LanguageToggleProps) {
             await chooseLanguage(language)
             onChange?.(language)
           }}
-          className="min-w-16 px-4 text-lg text-muted-foreground hover:bg-transparent not-aria-pressed:hover:text-foreground aria-pressed:bg-primary aria-pressed:text-primary-foreground dark:hover:bg-transparent"
+          className="min-w-16 px-4 text-lg text-muted-foreground hover:bg-transparent not-aria-pressed:hover:text-foreground aria-pressed:bg-primary aria-pressed:text-primary-foreground aria-pressed:hover:bg-primary dark:hover:bg-transparent"
         >
           {t(code)}
         </Button>
