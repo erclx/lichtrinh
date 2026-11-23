@@ -3,6 +3,7 @@ import type { RouteObject } from 'react-router'
 import { AccountsPage } from '@/features/accounts/accounts-page'
 import { CreateAccountPage } from '@/features/accounts/create-account-page'
 import { EditAccountPage } from '@/features/accounts/edit-account-page'
+import { AssistantSettingsPage } from '@/features/assistant-settings/assistant-settings-page'
 import { SettingsPage } from '@/features/settings/settings-page'
 import { SessionGate } from '@/session/gate'
 import { RequireAdmin } from '@/session/require-admin'
@@ -39,6 +40,7 @@ export const routes: RouteObject[] = [
               { path: 'accounts', element: <AccountsPage /> },
               { path: 'accounts/new', element: <CreateAccountPage /> },
               { path: 'accounts/:id', element: <EditAccountPage /> },
+              { path: 'assistant', element: <AssistantSettingsPage /> },
             ],
           },
           { path: '*', element: <NotFoundPage /> },
