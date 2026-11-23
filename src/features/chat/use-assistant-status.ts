@@ -6,10 +6,8 @@ import { chatKeys, readStatus, warm } from '@/features/chat/chat-api'
 const statusMs = 30_000
 
 /**
- * Whether the workspace PC can answer, read on open and every 30 seconds
- * while the page is visible, and asked once to load the model when it first
- * reads online. Null until the first read lands. `voiceOnline` stays null
- * from an API that reports no voice, so the mic stays on there.
+ * Whether the workspace PC and its voice answer, read every 30 seconds while
+ * visible, warming the model on the first online read. Each is null unread.
  */
 export function useAssistantStatus(): {
   online: boolean | null

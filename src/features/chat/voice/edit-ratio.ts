@@ -1,8 +1,6 @@
 /**
- * The share of words the traveler changed between the box right after a
- * transcript landed and the text sent, from 0 untouched to 1 rewritten.
- * It counts words rather than letters, as a word error rate does, so a
- * diacritic added to a word counts that word as changed.
+ * The share of words changed between the landed box and the text sent, from
+ * 0 to 1. Words, as a word error rate counts, so a diacritic changes a word.
  */
 export function editRatio(landed: string, sent: string): number {
   const before = words(landed)

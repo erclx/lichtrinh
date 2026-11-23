@@ -36,10 +36,7 @@ export function useTurn(chatId: string) {
   const refreshCalendar = () =>
     void client.invalidateQueries({ queryKey: calendarKeys.all })
 
-  /**
-   * Resolves false when the send was turned away before it saved. `voice`
-   * rides a send whose text started as a transcript.
-   */
+  /** Resolves false when turned away. `voice` rides a transcript's send. */
   async function send(text: string, voice?: VoiceSend): Promise<boolean> {
     if (turn !== null && isRunning(turn)) return false
     const abort = new AbortController()
