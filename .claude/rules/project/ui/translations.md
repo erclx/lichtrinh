@@ -20,5 +20,5 @@ paths:
 - Never cast a message module through `as` or `any`, since a cast lets a missing key past `tsc`.
 - Read copy through `useTranslation()` from `react-i18next` and a typed key, never a literal string.
 - Format numbers, money, and dates through `Intl` with the active language, never by hand.
-- Switch the language through `changeLanguage` in `src/i18n/setup.ts`, the one seam that sets `<html lang>` and remembers the choice.
+- Switch the language through `src/i18n/setup.ts`, with `chooseLanguage` for a person's press, which remembers it on the device, and `applyLanguage` for an account's language, which never does.
 - Never read the browser's language. A device choice wins, then the account's language, then the build default.
