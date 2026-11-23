@@ -24,8 +24,8 @@ Holds the Worker entry and the Hono app mounted on `/api`. The root `wrangler.js
 
 Holds sign-in and the guard every route sits behind. The app runs the body limit, then `csrf()`, then a check that answers `415 unsupported_media_type` to any unsafe-method body other than JSON, then the guard.
 
-- `guard.ts` lets a signed-out caller reach `GET /api/health` and `POST /api/auth/sign-in` alone, so a new route, an unknown path included, answers `401 unauthenticated` until signed in
-- `guard.ts` puts `user` and `sessionId` on the Hono context, which later routes read, and `requireAdmin` answers `403 forbidden` on `/api/admin/*`
+- `guard.ts` lets a signed-out caller reach health, sign-in, and the bridge's `GET /api/bridge/connect` alone, so a new route, an unknown path included, answers `401 unauthenticated`
+- `guard.ts` puts `user` and `sessionId` on the Hono context. `requireAdmin` answers `403 forbidden` on `/api/admin/*`, and `requireChat` does so for an account whose `canChat` is off.
 - `session.ts` issues a 180-day `__Host-session` cookie, stores only the SHA-256 of its token, and slides the expiry at most once a day
 - `attempts.ts` refuses past 10 failures per username or 50 per `CF-Connecting-IP` in 15 minutes. Only the edge sets that header, so a local spec counting failures passes its own.
 - `password.ts` verifies PBKDF2 hashes from `shared/password-hash.ts`, whose exception to the installed hash rule is `.claude/rules/project/code/passwords.md`
@@ -40,7 +40,7 @@ Holds the Drizzle schema, the client a route gets its database from, the migrati
 
 ### `worker/calendar/`
 
-Holds the trip, entry, and history rules the routes call as `person`, which the assistant's bridge will call as `assistant`.
+Holds the trip, entry, and history rules the routes call as `person` and the assistant's tools call as `assistant`.
 
 - Every write is one D1 batch opening on its change row, inserted only while the version, range, and id checks hold, and every later statement waits on that row, so a refused check writes nothing
 - Rows are soft-deleted, so a read never returns a deleted trip, a deleted entry, or an entry of a deleted trip
@@ -48,9 +48,19 @@ Holds the trip, entry, and history rules the routes call as `person`, which the 
 - Undo writes a change's `before` back as an `undo` change, refusing `undo_conflict` unless the row still holds that change's `after`, and `already_undone` on a second try
 - A trip's zone change moves the entries in its old zone, keeping their clock times, and records which, so undoing it moves the same ones back
 
+### `worker/assistant/`
+
+Holds the chat store, the calendar tools, and the `AssistantRelay` Durable Object. The workspace PC's bridge dials into the relay and runs the model there, and the relay runs every tool call here as the chat's owner.
+
+- `relay.ts` keeps the bridge socket through the hibernation API and holds one turn at a time. A second send answers `409 assistant_busy`, and no live socket answers `503 assistant_unavailable`.
+- A turn streams NDJSON chat events to the send's response and saves the reply on `final`. A dropped socket, a cancel, or the 120-second backstop saves it `failed` or `stopped` with the changes it made.
+- `tools.ts` parses each call against `shared/assistant-tools.ts` and writes with the version the turn's prompt showed, so an entry a person edited mid-turn answers `edit_conflict` to the model
+- `chats.ts` binds a new chat to the trip under way, else the next, else the latest. A reply names the message it answers in `reply_to`, so a retried send answers the saved reply.
+- The bridge proves itself with `BRIDGE_SECRET` as a bearer token, compared in constant time. It lives in Wrangler secrets and `.dev.vars`, and `worker/test/env.d.ts` declares its type for CI.
+
 ### `shared/`
 
-Holds the schemas the app, the API, and later the assistant's tools all import as `@shared/*`, plus the password hash and generator the Worker and the admin command share. The import direction between it, `src/`, and `worker/` is `.claude/rules/project/code/imports.md`.
+Holds the schemas the app, the API, and the assistant's tools all import as `@shared/*`, plus the password hash and generator the Worker and the admin command share. The import direction between it, `src/`, and `worker/` is `.claude/rules/project/code/imports.md`.
 
 - The root typecheck has no Worker types, so a binding type written here fails `bun run typecheck`
 
@@ -58,8 +68,8 @@ Holds the schemas the app, the API, and later the assistant's tools all import a
 
 The Worker's two smaller folders each carry one job.
 
-- `worker/routes/`: one Hono router per API area, being health, `/api/auth/`, `/api/admin/users`, `/api/settings`, and the calendar's `/api/trips`, `/api/entries`, and `/api/changes`
-- `worker/test/`: the migrating setup, the test-only binding types, and builders for invented accounts, trips, entries, and requests. `bare()` sends the Origin `csrf()` needs on a bodiless POST.
+- `worker/routes/`: one Hono router per API area, being health, auth, admin users, settings, trips, entries, changes, chats, and the assistant's status and bridge socket
+- `worker/test/`: the migrating setup, the test-only binding types, and builders for invented records, requests, and a scripted fake bridge. `bare()` sends the Origin `csrf()` needs on a bodiless POST.
 
 ## Gotchas
 
