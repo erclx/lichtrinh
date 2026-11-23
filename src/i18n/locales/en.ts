@@ -159,7 +159,7 @@ export const en = {
       'Saved. The next answer may take a little longer while this model loads.',
     contactLabel: 'Name shown when the assistant is offline',
     contactHint:
-      'The traveler sees “Notify …” with this name. Leave it empty to show Admin.',
+      'The traveler sees this name as whom to contact when the assistant is offline. Leave it empty to show Admin.',
     contactTooLong: 'Keep the name to 60 characters.',
     save: 'Save',
     saving: 'Saving…',

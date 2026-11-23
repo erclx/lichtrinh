@@ -157,7 +157,7 @@ export const vi = {
       'Đã lưu. Câu trả lời tiếp theo có thể lâu hơn một chút vì mô hình này đang tải.',
     contactLabel: 'Tên hiện khi trợ lý nghỉ',
     contactHint:
-      'Người đi sẽ thấy “Báo cho …” với tên này. Để trống thì hiện Quản trị viên.',
+      'Khi trợ lý nghỉ, người đi sẽ thấy tên này là người cần liên hệ. Để trống thì hiện Quản trị viên.',
     contactTooLong: 'Tên tối đa 60 ký tự.',
     save: 'Lưu',
     saving: 'Đang lưu…',
