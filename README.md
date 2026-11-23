@@ -33,6 +33,10 @@ bun run dev
 
 `bun run check` runs the same checks as the pre-push hook. `CONTRIBUTING.md` covers the rest.
 
+## Usage
+
+Run `bun link` once in the checkout, then `lichtrinh --help` from any folder for the product's own services, such as `lichtrinh db migrate` for the local database.
+
 ## License
 
 MIT, in `LICENSE`.
