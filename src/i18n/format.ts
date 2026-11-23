@@ -1,3 +1,5 @@
+import { minorDigits } from '@shared/currency.ts'
+
 import type { Language } from './resources'
 
 // A calendar day carries no zone, so each is placed at UTC midnight and
@@ -58,4 +60,76 @@ export function formatNumericDate(date: string, language: Language): string {
     month: 'numeric',
     year: 'numeric',
   }).format(utcDay(date))
+}
+
+/** A day heading, such as `Thursday, May 15`, from a `YYYY-MM-DD` date. */
+export function formatLongDate(date: string, language: Language): string {
+  return new Intl.DateTimeFormat(language, {
+    ...zone,
+    weekday: 'long',
+    day: 'numeric',
+    month: 'long',
+  }).format(utcDay(date))
+}
+
+/** The short weekday, such as `Thu`, from a `YYYY-MM-DD` date. */
+export function formatWeekday(date: string, language: Language): string {
+  return new Intl.DateTimeFormat(language, {
+    ...zone,
+    weekday: 'short',
+  }).format(utcDay(date))
+}
+
+/** A trip's span, such as `May 13 – 20, 2031`, from two `YYYY-MM-DD` dates. */
+export function formatDateSpan(
+  from: string,
+  to: string,
+  language: Language,
+): string {
+  return new Intl.DateTimeFormat(language, {
+    ...zone,
+    day: 'numeric',
+    month: 'short',
+    year: 'numeric',
+  }).formatRange(utcDay(from), utcDay(to))
+}
+
+/** A wall clock `HH:MM` on the 24-hour clock both languages read. */
+export function formatTime(time: string, language: Language): string {
+  return new Intl.DateTimeFormat(language, {
+    ...zone,
+    hour: '2-digit',
+    minute: '2-digit',
+    hourCycle: 'h23',
+  }).format(new Date(`1970-01-01T${time}:00Z`))
+}
+
+function unit(value: number, name: 'hour' | 'minute', language: Language) {
+  return new Intl.NumberFormat(language, {
+    style: 'unit',
+    unit: name,
+    unitDisplay: 'short',
+  }).format(value)
+}
+
+/** A length in minutes as hours and minutes, such as `1 hr 15 min`. */
+export function formatDuration(minutes: number, language: Language): string {
+  const hours = Math.floor(minutes / 60)
+  const rest = minutes % 60
+  const parts = []
+  if (hours > 0) parts.push(unit(hours, 'hour', language))
+  if (rest > 0 || hours === 0) parts.push(unit(rest, 'minute', language))
+  return parts.join(' ')
+}
+
+/** A cost stored in a currency's minor unit, read by that currency's digits. */
+export function formatMoney(
+  minor: number,
+  currency: string,
+  language: Language,
+): string {
+  return new Intl.NumberFormat(language, {
+    style: 'currency',
+    currency,
+  }).format(minor / 10 ** minorDigits(currency))
 }
