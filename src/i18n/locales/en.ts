@@ -62,7 +62,6 @@ export const en = {
   },
   shell: {
     back: 'Back',
-    placeholder: 'This page is on its way.',
     notFoundTitle: 'Page not found',
     notFoundBody: "There's nothing at this address.",
     goToday: 'Go to Today',

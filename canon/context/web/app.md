@@ -46,7 +46,7 @@ Holds the frame around every signed-in page, built against `canon/design/shell/`
 - `app-shell.tsx` owns the `main` landmark, the gutters, and the breakpoints, phone under 480, tablet to 1023, and desktop from 1024, plus the chat places `canon/context/web/chat.md` describes
 - `nav.tsx` draws the hideable desktop sidebar, the labeled tablet rail, and the phone tabs, which leave out admin entries
 - A new place is one entry in `destinations.ts`, never markup in `nav.tsx`, and `placement: 'header'` puts it on the top bar's one button
-- A page renders its own `page-header.tsx` and content, and `placeholder-page.tsx` backs no route since Calendar replaced it
+- A page renders its own `page-header.tsx` and content
 
 ### `src/features/`
 

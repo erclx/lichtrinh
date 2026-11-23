@@ -23,8 +23,8 @@ import { AppShell } from '@/shell/app-shell'
 import { NotFoundPage } from '@/shell/not-found-page'
 
 /**
- * The one route table. A screen row replaces a placeholder's `element` or
- * adds a child under the shell, and renames none of the paths here.
+ * The one route table. A screen row adds a child under the shell and renames
+ * none of the paths here.
  */
 export const routes: RouteObject[] = [
   {

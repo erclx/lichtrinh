@@ -61,7 +61,6 @@ export const vi = {
   },
   shell: {
     back: 'Quay lại',
-    placeholder: 'Trang này sắp có.',
     notFoundTitle: 'Không tìm thấy trang',
     notFoundBody: 'Không có gì ở địa chỉ này.',
     goToday: 'Về Hôm nay',
