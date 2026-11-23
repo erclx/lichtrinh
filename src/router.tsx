@@ -5,6 +5,7 @@ import { CreateAccountPage } from '@/features/accounts/create-account-page'
 import { EditAccountPage } from '@/features/accounts/edit-account-page'
 import { AssistantSettingsPage } from '@/features/assistant-settings/assistant-settings-page'
 import { BudgetPage } from '@/features/budget/budget-page'
+import { CalendarScreen } from '@/features/calendar/calendar-screen'
 import { ChatListPage } from '@/features/chat/chat-list-page'
 import { ThreadPage } from '@/features/chat/thread-page'
 import { DayPage } from '@/features/day/day-view'
@@ -20,7 +21,6 @@ import { SessionGate } from '@/session/gate'
 import { RequireAdmin } from '@/session/require-admin'
 import { AppShell } from '@/shell/app-shell'
 import { NotFoundPage } from '@/shell/not-found-page'
-import { PlaceholderPage } from '@/shell/placeholder-page'
 
 /**
  * The one route table. A screen row replaces a placeholder's `element` or
@@ -42,10 +42,7 @@ export const routes: RouteObject[] = [
           { path: 'entries/new', element: <AddEntryPage /> },
           { path: 'entries/:entryId', element: <EntryDetail /> },
           { path: 'entries/:entryId/edit', element: <EditEntryPage /> },
-          {
-            path: 'calendar',
-            element: <PlaceholderPage titleKey="nav.calendar" />,
-          },
+          { path: 'calendar', element: <CalendarScreen /> },
           { path: 'chats', element: <ChatListPage /> },
           { path: 'chats/:chatId', element: <ThreadPage /> },
           { path: 'settings', element: <SettingsPage /> },
