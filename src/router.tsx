@@ -2,6 +2,7 @@ import type { RouteObject } from 'react-router'
 
 import { AccountsPage } from '@/features/accounts/accounts-page'
 import { CreateAccountPage } from '@/features/accounts/create-account-page'
+import { SettingsPage } from '@/features/settings/settings-page'
 import { SessionGate } from '@/session/gate'
 import { RequireAdmin } from '@/session/require-admin'
 import { AppShell } from '@/shell/app-shell'
@@ -28,10 +29,7 @@ export const routes: RouteObject[] = [
             path: 'calendar',
             element: <PlaceholderPage titleKey="nav.calendar" />,
           },
-          {
-            path: 'settings',
-            element: <PlaceholderPage titleKey="nav.settings" />,
-          },
+          { path: 'settings', element: <SettingsPage /> },
           {
             path: 'admin',
             element: <RequireAdmin />,

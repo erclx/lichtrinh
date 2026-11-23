@@ -120,6 +120,13 @@ export const en = {
     copyFailed: "Couldn't copy. Read it out or type it instead.",
     done: 'Done',
   },
+  settings: {
+    title: 'Settings',
+    language: 'Language',
+    manageAccounts: 'Manage accounts',
+    signOut: 'Sign out',
+    signingOut: 'Signing out…',
+  },
   errors: {
     network: "Can't connect. Check the internet and try again.",
     generic: 'Something went wrong. Try again in a few minutes.',

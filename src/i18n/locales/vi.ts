@@ -117,6 +117,13 @@ export const vi = {
     copyFailed: 'Không chép được. Hãy đọc hoặc gõ lại.',
     done: 'Xong',
   },
+  settings: {
+    title: 'Cài đặt',
+    language: 'Ngôn ngữ',
+    manageAccounts: 'Quản lý tài khoản',
+    signOut: 'Đăng xuất',
+    signingOut: 'Đang đăng xuất…',
+  },
   errors: {
     network: 'Không kết nối được. Kiểm tra mạng rồi thử lại.',
     generic: 'Có lỗi xảy ra. Thử lại sau ít phút.',
