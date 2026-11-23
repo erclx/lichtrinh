@@ -150,6 +150,20 @@ class TestTranscriptions:
         assert body['status'] == 503
         assert error_code(body) == 'worker_unavailable'
 
+    def test_answers_502_when_the_model_fails_the_clip(
+        self, make_client: MakeClient, tmp_path: Path
+    ) -> None:
+        card = str(tmp_path / 'card')
+        client = make_client(
+            lambda model: [sys.executable, str(FAKE_WORKER), model.id, card, 'fail']
+        )
+
+        body = post_clip(client, encode_tone(0.5))
+
+        assert body['status'] == 502
+        assert error_code(body) == 'transcribe_failed'
+        assert client.get('/health').json()['loaded_model'] == 'qwen3-asr-1.7b'
+
     def test_logs_the_outcome_without_the_text(
         self, make_client: MakeClient, caplog: pytest.LogCaptureFixture
     ) -> None:

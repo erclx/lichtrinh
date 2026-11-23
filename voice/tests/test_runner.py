@@ -217,6 +217,20 @@ async def test_a_worker_that_never_answers_is_stopped(
     assert card_is_free(card)
 
 
+async def test_a_clip_the_model_fails_keeps_the_worker_loaded(
+    make_runner: Callable[..., Runner], card: Path
+) -> None:
+    runner = make_runner(
+        lambda model: [sys.executable, str(FAKE_WORKER), model.id, str(card), 'fail']
+    )
+
+    with pytest.raises(WorkerUnavailableError) as failed:
+        await runner.transcribe(QWEN, clip())
+
+    assert failed.value.reason == 'transcribe_failed'
+    assert runner.loaded == QWEN
+
+
 async def test_a_worker_that_exits_before_ready_fails_the_load(
     make_runner: Callable[..., Runner],
 ) -> None:

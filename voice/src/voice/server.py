@@ -19,7 +19,7 @@ from voice.config import HOST, Settings
 from voice.decode import MAX_SECONDS, SAMPLE_RATE, ClipError, decode
 from voice.form import FormError, parse_form
 from voice.models import DEFAULT_MODEL, MODELS, Model, find_model
-from voice.runner import Runner, WorkerUnavailableError
+from voice.runner import Failure, Runner, WorkerUnavailableError
 from voice.workers import worker_command
 
 log = logging.getLogger('voice.server')
@@ -134,6 +134,10 @@ def create_app(
                 duration,
                 error.reason,
             )
+            # A clip the model fails leaves voice up, so the caller keeps it apart.
+            if error.reason is Failure.TRANSCRIBE_FAILED:
+                message = f'The model {model.id} could not transcribe this clip.'
+                raise ApiError(502, 'transcribe_failed', message) from None
             raise _unavailable(model) from None
         log.info(
             'transcribe model=%s bytes=%d duration=%.2fs decode=%.2fs load=%.2fs '
