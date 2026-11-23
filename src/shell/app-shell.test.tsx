@@ -186,6 +186,7 @@ describe('the shell offline', () => {
         id: 'user-member',
         displayName: 'Thành viên',
         role: 'member',
+        canChat: false,
         language: null,
       }),
     )

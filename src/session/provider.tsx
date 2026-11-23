@@ -33,14 +33,15 @@ const storedUser = user.pick({
   id: true,
   displayName: true,
   role: true,
+  canChat: true,
   language: true,
 })
 
-function storeLastUser({ id, displayName, role, language }: User) {
+function storeLastUser({ id, displayName, role, canChat, language }: User) {
   try {
     localStorage.setItem(
       lastUserKey,
-      JSON.stringify({ id, displayName, role, language }),
+      JSON.stringify({ id, displayName, role, canChat, language }),
     )
   } catch {
     // A private window opens offline on the retry page instead.
@@ -55,15 +56,13 @@ function forgetLastUser() {
   }
 }
 
-// Offline the person cannot chat, and the username shows on no offline page.
+// The username shows on no offline page, so it is never stored.
 function readLastUser(): User | null {
   try {
     const parsed = storedUser.safeParse(
       JSON.parse(localStorage.getItem(lastUserKey) ?? 'null'),
     )
-    return parsed.success
-      ? { ...parsed.data, username: '', canChat: false }
-      : null
+    return parsed.success ? { ...parsed.data, username: '' } : null
   } catch {
     return null
   }
@@ -136,14 +135,17 @@ export function SessionProvider({
     }
   }, [settle])
 
-  // Offline asks again on reconnect, so a revoked session signs out then.
+  // Offline asks again on reconnect, leaving the saved plan only on an answer.
   const offline = state.status === 'offline'
   useEffect(() => {
     if (!offline) return
     let live = true
     const check = () =>
       void loadSession().then((next) => {
-        if (live && next.status !== 'offline') settle(next)
+        if (!live) return
+        if (next.status === 'signed-in' || next.status === 'signed-out') {
+          settle(next)
+        }
       })
     window.addEventListener('online', check)
     const timer = setInterval(check, refreshMs)

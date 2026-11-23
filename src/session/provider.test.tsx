@@ -17,6 +17,7 @@ function Probe() {
     <div>
       <p>status: {session.status}</p>
       <p>user: {session.user?.displayName ?? 'none'}</p>
+      <p>chat: {session.user?.canChat ? 'yes' : 'no'}</p>
       <button
         onClick={() =>
           session.signIn({ username: 'member', password: 'abcd efgh jkmn' })
@@ -183,6 +184,7 @@ function rememberMember() {
       id: 'user-member',
       displayName: 'Thành viên',
       role: 'member',
+      canChat: true,
       language: null,
     }),
   )
@@ -197,6 +199,7 @@ describe('offline', () => {
 
     expect(await screen.findByText('status: offline')).toBeInTheDocument()
     expect(screen.getByText('user: Thành viên')).toBeInTheDocument()
+    expect(screen.getByText('chat: yes')).toBeInTheDocument()
   })
 
   it('reads unreachable with nobody remembered on the device', async () => {
@@ -226,8 +229,26 @@ describe('offline', () => {
       id: 'user-member',
       displayName: 'Thành viên',
       role: 'member',
+      canChat: false,
       language: 'vi',
     })
+  })
+
+  it('stays on the saved plan when the reconnect check meets a server failure', async () => {
+    rememberMember()
+    let failing = false
+    fakeApi({
+      'GET /auth/me': () =>
+        failing ? failure('internal_error', 500) : offline(),
+    })
+    renderSession()
+    await screen.findByText('status: offline')
+
+    failing = true
+    window.dispatchEvent(new Event('online'))
+    await new Promise((settled) => setTimeout(settled, 50))
+
+    expect(screen.getByText('status: offline')).toBeInTheDocument()
   })
 
   it('signs in again when the connection returns', async () => {
