@@ -28,7 +28,9 @@ export function createQueryClient() {
         refetchIntervalInBackground: false,
         retry: retryLostAnswer,
       },
-      mutations: { retry: false },
+      // A write offline fails at once with the save error, keeping what was
+      // typed, rather than pausing on a form that never says it waits.
+      mutations: { retry: false, networkMode: 'always' },
     },
   })
 }

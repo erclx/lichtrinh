@@ -12,6 +12,10 @@ import { useSavedAt } from '@/offline/connection'
  */
 export const offlineReasonId = 'offline-reason'
 
+/** The look of a control waiting for the connection, kept visible but quiet. */
+export const waitingClass =
+  'bg-muted text-muted-foreground hover:bg-muted cursor-not-allowed'
+
 // The saved time reads on the device's clock, the one the traveler's phone
 // already shows, rather than in a trip's zone the card cannot pick.
 function clockTime(at: number, language: Language) {

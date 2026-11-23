@@ -189,7 +189,7 @@ describe('the shell offline', () => {
         language: null,
       }),
     )
-    fakeApi({ 'GET /auth/me': offline })
+    fakeApi({ 'GET /auth/me': offline, 'GET /trips': offline })
 
     renderAt('/trips')
 

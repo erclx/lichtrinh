@@ -19,6 +19,8 @@ import {
 import { useLanguage } from '@/i18n/use-language'
 import { ApiFailure } from '@/lib/api'
 import { cn } from '@/lib/utils'
+import { useOnline } from '@/offline/connection'
+import { offlineReasonId, waitingClass } from '@/offline/offline-card'
 import { PageHeader } from '@/shell/page-header'
 
 /**
@@ -33,6 +35,7 @@ export function EntryDetail() {
   const entry = useEntry(entryId)
   const trip = useTrip(entry.data?.tripId)
   const [deleting, setDeleting] = useState(false)
+  const online = useOnline()
 
   // A deleted entry is gone even while its last read is still cached.
   const missing =
@@ -153,21 +156,45 @@ export function EntryDetail() {
           })}`}
       </p>
 
-      <div className="flex flex-col gap-3 pt-5">
-        <Link
-          to={`/entries/${encodeURIComponent(item.id)}/edit`}
-          className={cn(buttonVariants())}
-        >
-          {t('entries.edit')}
-        </Link>
-        <Button
-          variant="ghost"
-          onClick={() => setDeleting(true)}
-          className="bg-muted"
-        >
-          {t('entries.deleteThis')}
-        </Button>
-      </div>
+      {online ? (
+        <div className="flex flex-col gap-3 pt-5">
+          <Link
+            to={`/entries/${encodeURIComponent(item.id)}/edit`}
+            className={cn(buttonVariants())}
+          >
+            {t('entries.edit')}
+          </Link>
+          <Button
+            variant="ghost"
+            onClick={() => setDeleting(true)}
+            className="bg-muted"
+          >
+            {t('entries.deleteThis')}
+          </Button>
+        </div>
+      ) : (
+        <div className="flex flex-col gap-3 pt-5">
+          <Button
+            disabled
+            focusableWhenDisabled
+            aria-describedby={offlineReasonId}
+            className={waitingClass}
+          >
+            {t('entries.edit')}
+          </Button>
+          <Button
+            disabled
+            focusableWhenDisabled
+            aria-describedby={offlineReasonId}
+            className={waitingClass}
+          >
+            {t('entries.deleteThis')}
+          </Button>
+          <p className="text-sm text-muted-foreground">
+            {t('offline.editsWait')}
+          </p>
+        </div>
+      )}
 
       <DeleteSheet
         entry={deleting ? item : null}

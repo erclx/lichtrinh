@@ -1,9 +1,8 @@
-import { type Query, useQueryClient } from '@tanstack/react-query'
+import { useQueryClient } from '@tanstack/react-query'
 import { useCallback, useSyncExternalStore } from 'react'
 
 import { calendarKeys } from '@/calendar-data/queries'
-import { ApiFailure } from '@/lib/api'
-import { useSession } from '@/session/session-context'
+import { onReach } from '@/lib/api'
 
 function onBrowserChange(notify: () => void) {
   window.addEventListener('online', notify)
@@ -14,44 +13,56 @@ function onBrowserChange(notify: () => void) {
   }
 }
 
-function lostOnNetwork(query: Query) {
-  const { error } = query.state
-  return error instanceof ApiFailure && error.code === 'network'
-}
+// Whether the last call got no answer, kept for the whole page since every
+// call reports it, and a refusal is still an answer.
+let lost = false
+const lostListeners = new Set<() => void>()
 
-/** Reads one value off the calendar queries, renewed on every cache change. */
-function useCalendarQueries<T>(read: (queries: Query[]) => T): T {
-  const cache = useQueryClient().getQueryCache()
-  const subscribe = useCallback(
-    (notify: () => void) => cache.subscribe(notify),
-    [cache],
-  )
-  const snapshot = () => read(cache.findAll({ queryKey: calendarKeys.all }))
-  return useSyncExternalStore(subscribe, snapshot, snapshot)
+onReach((reached) => {
+  if (lost === !reached) return
+  lost = !reached
+  for (const notify of lostListeners) notify()
+})
+
+function onLostChange(notify: () => void) {
+  lostListeners.add(notify)
+  return () => {
+    lostListeners.delete(notify)
+  }
 }
 
 /**
  * Whether the app can reach the API. The browser's flag alone misses a
- * connection that is up with no internet behind it, so a calendar read lost
- * on the network, or a session that opened offline, reads as offline too.
+ * connection that is up with no internet behind it, so a call that got no
+ * answer reads as offline too, until the next call gets one.
  */
 export function useOnline(): boolean {
-  const { status } = useSession()
   const browser = useSyncExternalStore(
     onBrowserChange,
     () => navigator.onLine,
     () => true,
   )
-  const lost = useCalendarQueries((queries) => queries.some(lostOnNetwork))
-  return browser && !lost && status !== 'offline'
+  const unanswered = useSyncExternalStore(
+    onLostChange,
+    () => lost,
+    () => false,
+  )
+  return browser && !unanswered
 }
 
-/** When the newest calendar read shown was fetched, or null with none saved. */
+/** When the newest calendar read on screen was fetched, or null with none saved. */
 export function useSavedAt(): number | null {
-  return useCalendarQueries((queries) => {
-    const times = queries
+  const cache = useQueryClient().getQueryCache()
+  const subscribe = useCallback(
+    (notify: () => void) => cache.subscribe(notify),
+    [cache],
+  )
+  const snapshot = () => {
+    const times = cache
+      .findAll({ queryKey: calendarKeys.all })
       .filter(({ state }) => state.data !== undefined)
       .map(({ state }) => state.dataUpdatedAt)
     return times.length === 0 ? null : Math.max(...times)
-  })
+  }
+  return useSyncExternalStore(subscribe, snapshot, snapshot)
 }
