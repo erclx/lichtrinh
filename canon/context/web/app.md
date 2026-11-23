@@ -63,7 +63,7 @@ Holds the app's own components, being the mark, the language toggle, the pickers
 - Add a kit component with `bunx --bun shadcn@latest add <component>`, and edit it in place
 - `picker-sheet.tsx` opens a drawer under 480px and a dialog above, and `sheet-list.tsx` is the one select, filtering without diacritics
 - `day-state.ts` marks each entry done, now, or upcoming on its zone's clock, and `swipe-row.tsx` reveals Delete under 1024px, never the only route to it
-- The undo status sits clear of the Talk bar below 1024px and in the corner beside the dock above it
+- The undo status sits clear of the Talk bar at every width, since the bar shows wherever the dock is closed
 
 ### Other folders
 
