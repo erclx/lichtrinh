@@ -5,7 +5,7 @@ import type { Rate } from '@shared/rates.ts'
 import { screen, within } from '@testing-library/react'
 
 import { applyLanguage } from '@/i18n/setup'
-import { anEntry,aTrip } from '@/test/calendar'
+import { anEntry, aTrip } from '@/test/calendar'
 import { aUser, fakeApi, json } from '@/test/fake-api'
 import { renderRoute } from '@/test/render-route'
 
@@ -137,5 +137,55 @@ describe('BudgetPage', () => {
     expect(await screen.findByText('6.840.000 ₫')).toBeInTheDocument()
     expect(await screen.findByText('khoảng 268 USD')).toBeInTheDocument()
     expect(screen.getByText('Chưa phân loại 840.000 ₫')).toBeInTheDocument()
+  })
+})
+
+describe('the trip overview', () => {
+  it('shows the home figure beside the trip total and links the budget', async () => {
+    serve(costedTrip)
+
+    renderRoute('/trips/trip-river')
+
+    expect(await screen.findByText('about 268 USD')).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: 'Budget' })).toHaveAttribute(
+      'href',
+      '/trips/trip-river/budget',
+    )
+  })
+
+  it('shows no home figure when no rate is stored', async () => {
+    serve(costedTrip, [])
+
+    renderRoute('/trips/trip-river')
+
+    await screen.findByText('₫6,840,000')
+    expect(screen.queryByText(/^about/)).not.toBeInTheDocument()
+  })
+
+  it('shows no home figure when the trip is priced in its home currency', async () => {
+    fakeApi({
+      'GET /auth/me': () => json(aUser()),
+      'GET /trips/trip-river': () =>
+        json({
+          trip: aTrip({ currency: 'USD', homeCurrency: 'USD' }),
+          entries: [anEntry({ costMinor: 4_500 })],
+        }),
+      'GET /rates': () => json({ rates: [usdRate] }),
+    })
+
+    renderRoute('/trips/trip-river')
+
+    await screen.findAllByText('$45.00')
+    expect(screen.queryByText(/^about/)).not.toBeInTheDocument()
+  })
+})
+
+describe('the day view', () => {
+  it('shows the home figure beside the day total', async () => {
+    serve([anEntry({ costMinor: 1_640_000 })])
+
+    renderRoute('/trips/trip-river/days/2031-05-15')
+
+    expect(await screen.findByText('about 64 USD')).toBeInTheDocument()
   })
 })

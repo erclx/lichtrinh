@@ -1,3 +1,4 @@
+import { sumCosts } from '@shared/budget.ts'
 import type { Entry } from '@shared/entries.ts'
 import { localDate, nowInZone } from '@shared/trip-time.ts'
 import type { Trip } from '@shared/trips.ts'
@@ -6,6 +7,7 @@ import { useTranslation } from 'react-i18next'
 import { Link, useParams } from 'react-router'
 
 import { useTrip } from '@/calendar-data/queries'
+import { HomeEstimate } from '@/components/home-estimate'
 import { LoadFailed } from '@/components/load-failed'
 import { RefreshFailed } from '@/components/refresh-failed'
 import { buttonVariants } from '@/components/ui/button'
@@ -52,9 +54,7 @@ export function DayView({
   const days = datesBetween(trip.startsOn, trip.endsOn)
   const today = nowInZone(now, trip.timeZone).date
   const rows = dayRows(entries, date, now)
-  const costs = rows.flatMap(({ entry }) =>
-    entry.costMinor === null ? [] : [entry.costMinor],
-  )
+  const dayCost = sumCosts(rows.map(({ entry }) => entry))
   const tripPath = tripPathOf(trip)
   const addTo = `/entries/new?${new URLSearchParams({ trip: trip.id, date })}`
   const longDate = formatLongDate(date, language)
@@ -101,16 +101,18 @@ export function DayView({
           })}
           <ChevronIcon className="size-5 shrink-0" />
         </Link>
-        {costs.length > 0 && (
+        {dayCost !== null && (
           <p className="text-base text-muted-foreground">
             {t('day.estimated')}:{' '}
             <b className="text-foreground">
-              {formatMoney(
-                costs.reduce((sum, cost) => sum + cost, 0),
-                trip.currency,
-                language,
-              )}
+              {formatMoney(dayCost, trip.currency, language)}
             </b>
+            <HomeEstimate
+              amountMinor={dayCost}
+              currency={trip.currency}
+              homeCurrency={trip.homeCurrency}
+              className="before:content-['_·_']"
+            />
           </p>
         )}
       </div>
