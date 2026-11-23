@@ -169,6 +169,29 @@ describe('SheetList', () => {
     ])
   })
 
+  it('opens a filterable list with focus in its filter, ready to type', async () => {
+    const user = userEvent.setup()
+    render(
+      <SheetList
+        label="Local time"
+        value="Asia/Bangkok"
+        options={zones}
+        onChange={() => {}}
+        filterable
+      />,
+    )
+
+    await user.click(
+      screen.getByRole('button', { name: 'Local time Bangkok (GMT+7)' }),
+    )
+
+    await waitFor(() =>
+      expect(
+        screen.getByRole('searchbox', { name: 'Search the list' }),
+      ).toHaveFocus(),
+    )
+  })
+
   it('says when nothing matches and clears the filter on request', async () => {
     const user = userEvent.setup()
     render(
