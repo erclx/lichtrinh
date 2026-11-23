@@ -14,8 +14,7 @@ test('a day loaded once reads the same entries after an offline reload', async (
   // Linux WebKit drops Secure cookies on http://localhost, unlike iPhone Safari.
   test.skip(browserName === 'webkit', 'Linux WebKit drops the Secure cookie')
   if (fixtureAdmin === undefined) throw new Error('The seed holds no admin')
-  // An installed clock rather than a pinned one, so the saved plan can go
-  // stale and its refresh fail offline, as it does on a phone reopened later.
+  // Installed, not pinned, so the saved plan goes stale and its refresh fails.
   await page.clock.install({ time: new Date(DEMO_INSTANT) })
   const signIn = await page.request.post('/api/auth/sign-in', {
     data: { username: fixtureAdmin.username, password: fixtureAdmin.password },
@@ -43,9 +42,7 @@ test('a day loaded once reads the same entries after an offline reload', async (
     page.getByRole('button', { name: /^Add an activity on/ }),
   ).toHaveAttribute('aria-disabled', 'true')
 
-  // A second launch offline reads the same plan, since the first one's failed
-  // refresh must not have saved over it. The refresh retries a lost answer
-  // twice, so the clock steps on until that failure reaches the device.
+  // Steps the clock past the refresh's retries until its failure is saved.
   await expect
     .poll(
       async () => {

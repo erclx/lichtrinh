@@ -90,8 +90,7 @@ describe('the saved plan', () => {
   })
 
   it('keeps a saved read whose refresh failed offline', async () => {
-    // A restored read refreshes on the next launch and fails with no network,
-    // keeping its data under an error status.
+    // A refresh failing offline keeps the data under an error status.
     const client = new QueryClient()
     client.setQueryData(tripsKey, savedTrips)
     await client.prefetchQuery({
