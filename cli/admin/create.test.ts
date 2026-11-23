@@ -4,6 +4,7 @@ import { deriveKey, parsePasswordHash } from '@shared/password-hash'
 import { describe, expect, it } from 'vitest'
 
 import { type ProgramContext, runCli, type Task } from '../program'
+import { insertAdminSql } from './create'
 
 // The indented line the password prints on, never a run of words around it.
 const GROUPED_PASSWORD = /^ {2}([a-z2-9]{4} [a-z2-9]{4} [a-z2-9]{4})$/m
@@ -232,5 +233,34 @@ describe('lichtrinh admin create', () => {
 
     expect(exitCode).toBe(1)
     expect(run.output()).not.toMatch(GROUPED_PASSWORD)
+  })
+})
+
+describe('insertAdminSql', () => {
+  function row(overrides: { username?: string; passwordHash?: string } = {}) {
+    return {
+      id: '0b7c1f0e-0000-4000-8000-000000000000',
+      username: 'someone-invented',
+      language: 'vi' as const,
+      passwordHash: 'pbkdf2-sha256$100000$AAAA$BBBB',
+      createdAt: 1_700_000_000_000,
+      ...overrides,
+    }
+  }
+
+  it('quotes each value from the safe set as a literal', () => {
+    expect(insertAdminSql(row())).toContain("'someone-invented'")
+  })
+
+  it.each([
+    ['a single quote', "x'); DROP TABLE users; --"],
+    ['a backslash', 'x\\'],
+    ['a space', 'two words'],
+  ])('refuses a value holding %s', (_case, username) => {
+    expect(() => insertAdminSql(row({ username }))).toThrow()
+  })
+
+  it('refuses a hash holding a quote', () => {
+    expect(() => insertAdminSql(row({ passwordHash: "pbkdf2'$1" }))).toThrow()
   })
 })
