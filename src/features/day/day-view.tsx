@@ -116,7 +116,7 @@ export function DayView({
       </div>
 
       <nav aria-label={t('day.daysLabel')} className="-mx-4 pb-4">
-        <ul className="flex gap-2 overflow-x-auto px-4 py-1 [scrollbar-width:none]">
+        <ul className="flex gap-2 scroll-px-4 overflow-x-auto px-4 py-1 [scrollbar-width:none]">
           {days.map((day) => {
             const selected = day === date
             return (
@@ -125,6 +125,13 @@ export function DayView({
                   ref={selected ? selectedRef : undefined}
                   to={`${tripPath}/days/${day}`}
                   aria-current={selected ? 'date' : undefined}
+                  // Focus alone stops at the edge, so honor the scroll padding.
+                  onFocus={(event) =>
+                    event.currentTarget.scrollIntoView?.({
+                      block: 'nearest',
+                      inline: 'nearest',
+                    })
+                  }
                   aria-label={formatLongDate(day, language)}
                   className={cn(
                     'relative flex h-[72px] w-16 flex-col items-center justify-center rounded-lg border-[1.5px] border-border bg-secondary text-secondary-foreground outline-none focus-visible:ring-3 focus-visible:ring-ring/50',
