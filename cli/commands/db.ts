@@ -10,11 +10,21 @@ export function registerDb(program: Command, run: RunInCheckout): void {
 
   db.command('status')
     .description('List the local migrations not yet applied')
-    .action(() =>
-      run(['bunx', 'wrangler', 'd1', 'migrations', 'list', 'DB', '--local']),
-    )
+    .action(async () => {
+      await run([
+        'bunx',
+        'wrangler',
+        'd1',
+        'migrations',
+        'list',
+        'DB',
+        '--local',
+      ])
+    })
 
   db.command('migrate')
     .description('Apply pending migrations to the local database')
-    .action(() => run(['bun', 'run', 'db:migrate']))
+    .action(async () => {
+      await run(['bun', 'run', 'db:migrate'])
+    })
 }

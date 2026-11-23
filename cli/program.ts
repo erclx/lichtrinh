@@ -28,8 +28,11 @@ export interface ProgramContext {
   findCheckout: (cwd: string) => Checkout
 }
 
-/** Hands one command to the task runner in the checkout a verb acts on. */
-export type RunInCheckout = (command: readonly string[]) => Promise<void>
+/**
+ * Hands one command to the task runner in the checkout a verb acts on, and
+ * resolves with its exit code so a verb can stop before its next step.
+ */
+export type RunInCheckout = (command: readonly string[]) => Promise<number>
 
 export function createProgram(io: CliIo, run: RunInCheckout): Command {
   // Commander copies these settings onto each subcommand, so they come first.
@@ -58,7 +61,10 @@ export async function runCli(
         `lichtrinh: not inside a lichtrinh checkout, so acting on ${checkout.root}\n`,
       )
     }
-    exitCode = await context.runTask({ command, cwd: checkout.root })
+    const code = await context.runTask({ command, cwd: checkout.root })
+    // The first failure decides the exit, so a later passing task cannot hide it.
+    if (exitCode === 0) exitCode = code
+    return code
   }
   const program = createProgram(context.io, run)
   try {
