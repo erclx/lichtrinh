@@ -1,5 +1,16 @@
 # Changelog
 
+## [0.0.4](https://github.com/erclx/lichtrinh/compare/v0.0.3...v0.0.4) (2026-11-23)
+
+
+### Features
+
+* **budget:** add the trip budget page and exchange rates ([#27](https://github.com/erclx/lichtrinh/issues/27)) ([9c8121b](https://github.com/erclx/lichtrinh/commit/9c8121b946992ff40ea6cec785729764ad255c11))
+* **calendar:** show every trip by month, week, and day with a filter ([#26](https://github.com/erclx/lichtrinh/issues/26)) ([36f9374](https://github.com/erclx/lichtrinh/commit/36f937481afc030d4f6d992974ab8abd96b8affc))
+* **chat:** add the chat screens with change cards, undo, and offline ([#24](https://github.com/erclx/lichtrinh/issues/24)) ([59299c1](https://github.com/erclx/lichtrinh/commit/59299c1d770cabee0c2e9faf990f94618eb738aa))
+* **chat:** add the talk button that records and lands the transcript ([#29](https://github.com/erclx/lichtrinh/issues/29)) ([ef90d4c](https://github.com/erclx/lichtrinh/commit/ef90d4c699766ced232c8245dcaec6ec8cfb49ff))
+* **offline:** read the last loaded plan without a connection ([#28](https://github.com/erclx/lichtrinh/issues/28)) ([1a0c1a1](https://github.com/erclx/lichtrinh/commit/1a0c1a113391797f6aaf82c960879fdbb327775f))
+
 ## [0.0.3](https://github.com/erclx/lichtrinh/compare/v0.0.2...v0.0.3) (2026-11-23)
 
 
