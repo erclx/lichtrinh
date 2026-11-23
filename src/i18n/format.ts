@@ -80,6 +80,16 @@ export function formatWeekday(date: string, language: Language): string {
   }).format(utcDay(date))
 }
 
+/** A day on a chat card or step, such as `Fri, May 16`, from a `YYYY-MM-DD` date. */
+export function formatCardDate(date: string, language: Language): string {
+  return new Intl.DateTimeFormat(language, {
+    ...zone,
+    weekday: 'short',
+    day: 'numeric',
+    month: 'short',
+  }).format(utcDay(date))
+}
+
 /** A trip's span, such as `May 13 – 20, 2031`, from two `YYYY-MM-DD` dates. */
 export function formatDateSpan(
   from: string,

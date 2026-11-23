@@ -66,6 +66,77 @@ async function flowTabs(page: Page) {
 
 const tripPath = `/trips/${DEMO_DAY.tripId}`
 
+// Signs in as the seeded traveler, the one account that can chat, and opens
+// in English like every other frame, since the traveler's own is Vietnamese.
+async function asTraveler(page: Page) {
+  const traveler = FIXTURE_ACCOUNTS.find(({ canChat }) => canChat)
+  if (traveler === undefined) throw new Error('The seed holds no traveler')
+  await page.addInitScript(() =>
+    localStorage.setItem('lichtrinh.language', 'en'),
+  )
+  const response = await page.request.post(`${BASE_URL}/api/auth/sign-in`, {
+    data: { username: traveler.username, password: traveler.password },
+  })
+  if (!response.ok()) {
+    throw new Error(`Sign-in for the capture failed with ${response.status()}`)
+  }
+}
+
+// The chat pages pin the composer and the Talk bar to the window's foot as
+// well as the tabs, so a full-page frame flows every pinned part to where
+// it reads at the bottom of a scroll, as `flowTabs` does for the tabs.
+async function flowSticky(page: Page) {
+  await page.addInitScript(() => {
+    document.addEventListener('DOMContentLoaded', () => {
+      const style = document.createElement('style')
+      style.textContent = '.sticky { position: static !important }'
+      document.head.append(style)
+    })
+  })
+}
+
+// Films in the invented trip's zone rather than the machine's, so the chat
+// list's times read the same on every machine. The harness runs Chromium,
+// which takes the override through its protocol.
+async function inTripZone(page: Page) {
+  const session = await page.context().newCDPSession(page)
+  await session.send('Emulation.setTimezoneOverride', {
+    timezoneId: 'Asia/Ho_Chi_Minh',
+  })
+}
+
+/**
+ * A chat route as the traveler at the demo instant, light and dark. `online`
+ * answers the status read, since the preview has no bridge, and left off it
+ * films the offline card.
+ */
+function chatCases(
+  section: string,
+  route: string,
+  online: boolean,
+): CaptureCase[] {
+  const setup = async (page: Page) => {
+    await inTripZone(page)
+    await page.clock.setFixedTime(new Date(DEMO_INSTANT))
+    await flowSticky(page)
+    if (online) await assistantOnline(page)
+    await asTraveler(page)
+  }
+  return [
+    { section, theme: 'default', route, evidence: true, setup },
+    {
+      section,
+      theme: 'dark',
+      route,
+      evidence: true,
+      setup: async (page) => {
+        await dark(page)
+        await setup(page)
+      },
+    },
+  ]
+}
+
 /** A calendar route as the admin at the demo instant, light and dark. */
 function calendarCases(section: string, route: string): CaptureCase[] {
   return [
@@ -224,4 +295,10 @@ export const CASES: CaptureCase[] = [
     'entry-add',
     `/entries/new?trip=${DEMO_DAY.tripId}&date=${DEMO_DAY.date}`,
   ),
+  // The dock beside Today from 1024 wide, and the Talk bar below that.
+  ...chatCases('chat-today', '/', true),
+  ...chatCases('chat-list', '/chats', true),
+  ...chatCases('chat-thread', '/chats/fixture-chat-today', true),
+  ...chatCases('chat-offline', '/chats/fixture-chat-today', false),
+  ...chatCases('chat-failed', '/chats/fixture-chat-dinner', true),
 ]

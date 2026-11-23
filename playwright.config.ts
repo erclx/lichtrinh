@@ -3,6 +3,8 @@ import { join } from 'node:path'
 
 import { defineConfig, devices } from '@playwright/test'
 
+import { E2E_BRIDGE_SECRET } from './e2e/fake-bridge'
+
 const isCI = !!process.env.CI
 const portOffset = Number(process.env.WORKTREE_PORT_OFFSET) || 0
 const baseURL = `http://localhost:${5173 + portOffset}`
@@ -34,7 +36,13 @@ export default defineConfig({
     // Seeded here rather than in a global setup, which Playwright runs only
     // after the server is already up and holding the database.
     command: `rm -rf "${stateRoot}" && bun scripts/seed.ts && bun run dev`,
-    env: { LICHTRINH_STATE_ROOT: stateRoot },
+    // The bridge secret is the invented one `e2e/fake-bridge.ts` presents,
+    // read from the environment since a worktree and CI hold no `.dev.vars`.
+    env: {
+      LICHTRINH_STATE_ROOT: stateRoot,
+      BRIDGE_SECRET: E2E_BRIDGE_SECRET,
+      CLOUDFLARE_INCLUDE_PROCESS_ENV: 'true',
+    },
     url: baseURL,
     reuseExistingServer: false,
   },

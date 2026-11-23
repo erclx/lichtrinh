@@ -4,6 +4,8 @@ import { AccountsPage } from '@/features/accounts/accounts-page'
 import { CreateAccountPage } from '@/features/accounts/create-account-page'
 import { EditAccountPage } from '@/features/accounts/edit-account-page'
 import { AssistantSettingsPage } from '@/features/assistant-settings/assistant-settings-page'
+import { ChatListPage } from '@/features/chat/chat-list-page'
+import { ThreadPage } from '@/features/chat/thread-page'
 import { DayPage } from '@/features/day/day-view'
 import { EntryDetail } from '@/features/entries/entry-detail'
 import { AddEntryPage, EditEntryPage } from '@/features/entries/entry-form'
@@ -41,6 +43,8 @@ export const routes: RouteObject[] = [
             path: 'calendar',
             element: <PlaceholderPage titleKey="nav.calendar" />,
           },
+          { path: 'chats', element: <ChatListPage /> },
+          { path: 'chats/:chatId', element: <ThreadPage /> },
           { path: 'settings', element: <SettingsPage /> },
           {
             path: 'admin',
