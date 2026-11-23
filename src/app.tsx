@@ -3,7 +3,7 @@ import { createBrowserRouter, RouterProvider } from 'react-router'
 
 import { createQueryClient } from '@/calendar-data/query-client'
 import { UndoProvider } from '@/components/undo-status'
-import { calendarPersistOptions } from '@/offline/persist'
+import { calendarPersistOptions, clearCalendarCache } from '@/offline/persist'
 import { routes } from '@/router'
 import { SessionProvider } from '@/session/provider'
 
@@ -11,10 +11,11 @@ import { SessionProvider } from '@/session/provider'
 const router = createBrowserRouter(routes)
 const queryClient = createQueryClient()
 const persistOptions = calendarPersistOptions()
+const forgetPlan = () => clearCalendarCache(queryClient)
 
 export function App() {
   return (
-    <SessionProvider>
+    <SessionProvider onSignedOut={forgetPlan}>
       <PersistQueryClientProvider
         client={queryClient}
         persistOptions={persistOptions}

@@ -3,13 +3,16 @@ import { createContext, useContext } from 'react'
 
 /**
  * `unreachable` is kept apart from `signed-out`, since a signed-in person
- * whose network dropped still holds a live session.
+ * whose network dropped still holds a live session. `offline` is that case
+ * on a device that remembers who last signed in, so the app opens on the
+ * plan it saved rather than on the retry page.
  */
 export type SessionStatus =
   | 'loading'
   | 'signed-out'
   | 'signed-in'
   | 'unreachable'
+  | 'offline'
 
 export interface SessionValue {
   status: SessionStatus
