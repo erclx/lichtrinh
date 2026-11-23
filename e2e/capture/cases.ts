@@ -47,7 +47,21 @@ async function assistantOnline(page: Page) {
 // time, so the page still loads and refreshes.
 async function atDemoInstant(page: Page) {
   await page.clock.setFixedTime(new Date(DEMO_INSTANT))
+  await flowTabs(page)
   await asAdmin(page)
+}
+
+// A full-page frame draws the phone tab bar where the window ends, over the
+// middle of a long page, so it flows to the page's end as it reads at the
+// bottom of a scroll.
+async function flowTabs(page: Page) {
+  await page.addInitScript(() => {
+    document.addEventListener('DOMContentLoaded', () => {
+      const style = document.createElement('style')
+      style.textContent = 'nav.sticky.bottom-0 { position: static !important }'
+      document.head.append(style)
+    })
+  })
 }
 
 const tripPath = `/trips/${DEMO_DAY.tripId}`
