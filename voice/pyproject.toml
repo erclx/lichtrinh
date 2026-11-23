@@ -1,7 +1,7 @@
 [project]
 name = "voice"
 version = "0.1.0"
-description = "Speech recognition for the trip calendar, and the benchmark that picks its model"
+description = "The speech recognition server behind lichtrinh voice, run on the workspace PC"
 requires-python = ">=3.14"
 dependencies = [
   "av<19",
