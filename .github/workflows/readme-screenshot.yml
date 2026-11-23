@@ -31,9 +31,9 @@ jobs:
     name: 🖼️ Refresh README Screenshot
     runs-on: ubuntu-latest
     timeout-minutes: 15
-    # The default GITHUB_TOKEN cannot push to a fork's branch, so a PR from
-    # outside this repository is skipped rather than left to fail on the push
-    # step below.
+    # A fork's PR gets no secrets and the default GITHUB_TOKEN cannot push to
+    # its branch, so a PR from outside this repository is skipped rather than
+    # left to fail on the push step below.
     if: github.event.pull_request.head.repo.full_name == github.repository
     permissions:
       contents: write
@@ -42,6 +42,11 @@ jobs:
         uses: actions/checkout@v7
         with:
           ref: ${{ github.head_ref }}
+          # The default token's push never triggers workflows, so the first-time
+          # contributor policy would hold every check on the bot's commit until
+          # a maintainer approves it. The owner's token runs them, and the
+          # fallback keeps the job working where the secret is not set.
+          token: ${{ secrets.RELEASE_PLEASE_TOKEN || github.token }}
 
       - name: Refuse An Unfilled Template
         # A path list left at its placeholder never fires on the pages it was
