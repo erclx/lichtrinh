@@ -63,8 +63,7 @@ test.describe('a stored appearance overrides the device', () => {
     await page.emulateMedia({ colorScheme: 'light' })
     await storeAppearanceBeforeLoad(page, 'light')
     await page.goto('/')
-    // The page's own listener on the same query fires after the head
-    // script's, so awaiting it proves the head script already saw the flip.
+    // Registered after the head script's listener, so it fires second.
     await page.evaluate(() => {
       const record = window as unknown as ThemeRecord
       record.schemeChanged = new Promise((resolve) => {

@@ -46,11 +46,7 @@ function deviceIsDark(): boolean {
   )
 }
 
-/**
- * Remembers a person's pick and themes the page at once. The head script's
- * scheme listener rereads the stored pick, so Auto resumes following the
- * device and a forced theme survives a scheme flip.
- */
+/** The head script's scheme listener rereads the stored pick, so Auto resumes following the device. */
 export function chooseAppearance(appearance: Appearance, storage?: Storage) {
   storeAppearance(appearance, storage)
   document.documentElement.dataset.theme = resolveTheme(
