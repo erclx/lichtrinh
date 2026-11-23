@@ -1,5 +1,7 @@
 import type { RouteObject } from 'react-router'
 
+import { AccountsPage } from '@/features/accounts/accounts-page'
+import { CreateAccountPage } from '@/features/accounts/create-account-page'
 import { SessionGate } from '@/session/gate'
 import { RequireAdmin } from '@/session/require-admin'
 import { AppShell } from '@/shell/app-shell'
@@ -34,10 +36,8 @@ export const routes: RouteObject[] = [
             path: 'admin',
             element: <RequireAdmin />,
             children: [
-              {
-                path: 'accounts',
-                element: <PlaceholderPage titleKey="nav.accounts" />,
-              },
+              { path: 'accounts', element: <AccountsPage /> },
+              { path: 'accounts/new', element: <CreateAccountPage /> },
             ],
           },
           { path: '*', element: <NotFoundPage /> },
