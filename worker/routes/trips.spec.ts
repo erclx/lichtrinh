@@ -1,12 +1,12 @@
 import { removed } from '@shared/changes.ts'
 import { apiError } from '@shared/errors.ts'
-import { tripList, tripWrite } from '@shared/trips.ts'
+import { tripList, tripWithEntries, tripWrite } from '@shared/trips.ts'
 import { env } from 'cloudflare:workers'
 import { describe, expect, it } from 'vitest'
 
 import { app } from '../app.ts'
 import { bare, json } from '../test/requests.ts'
-import { addTrip, postTrip, tripBody } from '../test/trips.ts'
+import { addEntry, addTrip, postTrip, tripBody } from '../test/trips.ts'
 import { signedIn } from '../test/users.ts'
 
 async function errorCode(res: Response) {
@@ -16,6 +16,11 @@ async function errorCode(res: Response) {
 async function listTrips(cookie: string) {
   const res = await app.request('/api/trips', bare('GET', cookie), env)
   return tripList.parse(await res.json()).trips
+}
+
+async function readTrip(cookie: string, id: string) {
+  const res = await app.request(`/api/trips/${id}`, bare('GET', cookie), env)
+  return tripWithEntries.parse(await res.json())
 }
 
 function patchTrip(cookie: string, id: string, body: unknown) {
@@ -249,6 +254,155 @@ describe('PATCH /api/trips/:id', () => {
       version: 1,
       name: 'Nobody',
     })
+
+    expect(res.status).toBe(404)
+    expect(await errorCode(res)).toBe('not_found')
+  })
+})
+
+describe('a trip date change', () => {
+  it('refuses dates leaving a live entry outside with entries_outside_range', async () => {
+    const { cookie } = await signedIn()
+    const { trip } = await addTrip(cookie, {
+      startsOn: '2031-04-10',
+      endsOn: '2031-04-16',
+    })
+    await addEntry(cookie, trip.id, {
+      startsOn: '2031-04-15',
+      endsOn: '2031-04-15',
+    })
+
+    const res = await patchTrip(cookie, trip.id, {
+      version: 1,
+      endsOn: '2031-04-14',
+    })
+
+    expect(res.status).toBe(400)
+    expect(await errorCode(res)).toBe('entries_outside_range')
+    const stored = (await listTrips(cookie)).find((t) => t.id === trip.id)
+    expect(stored?.endsOn).toBe('2031-04-16')
+  })
+
+  it('allows dates that still hold every live entry', async () => {
+    const { cookie } = await signedIn()
+    const { trip } = await addTrip(cookie, {
+      startsOn: '2031-04-10',
+      endsOn: '2031-04-16',
+    })
+    await addEntry(cookie, trip.id, {
+      startsOn: '2031-04-12',
+      endsOn: '2031-04-12',
+    })
+
+    const res = await patchTrip(cookie, trip.id, {
+      version: 1,
+      startsOn: '2031-04-12',
+      endsOn: '2031-04-12',
+    })
+
+    expect(res.status).toBe(200)
+  })
+
+  it('ignores a deleted entry outside the new dates', async () => {
+    const { cookie } = await signedIn()
+    const { trip } = await addTrip(cookie, {
+      startsOn: '2031-04-10',
+      endsOn: '2031-04-16',
+    })
+    const { entry } = await addEntry(cookie, trip.id, {
+      startsOn: '2031-04-15',
+      endsOn: '2031-04-15',
+    })
+    await app.request(
+      `/api/entries/${entry.id}`,
+      json('DELETE', { version: 1 }, cookie),
+      env,
+    )
+
+    const res = await patchTrip(cookie, trip.id, {
+      version: 1,
+      endsOn: '2031-04-14',
+    })
+
+    expect(res.status).toBe(200)
+  })
+})
+
+describe('a trip zone change', () => {
+  it('moves entries in the old zone and keeps their clock times', async () => {
+    const { cookie } = await signedIn()
+    const { trip } = await addTrip(cookie, { timeZone: 'Asia/Ho_Chi_Minh' })
+    const { entry } = await addEntry(cookie, trip.id, {
+      startTime: '09:00',
+      endTime: '10:30',
+    })
+
+    await patchTrip(cookie, trip.id, { version: 1, timeZone: 'Asia/Bangkok' })
+
+    const detail = await readTrip(cookie, trip.id)
+    expect(detail.entries.find((e) => e.id === entry.id)).toMatchObject({
+      timeZone: 'Asia/Bangkok',
+      startTime: '09:00',
+      endTime: '10:30',
+      version: 2,
+    })
+  })
+
+  it('leaves an entry in another zone as it was', async () => {
+    const { cookie } = await signedIn()
+    const { trip } = await addTrip(cookie, { timeZone: 'Asia/Ho_Chi_Minh' })
+    const { entry } = await addEntry(cookie, trip.id, {
+      timeZone: 'Asia/Tokyo',
+    })
+
+    await patchTrip(cookie, trip.id, { version: 1, timeZone: 'Asia/Bangkok' })
+
+    const detail = await readTrip(cookie, trip.id)
+    expect(detail.entries.find((e) => e.id === entry.id)).toMatchObject({
+      timeZone: 'Asia/Tokyo',
+      version: 1,
+    })
+  })
+})
+
+describe('GET /api/trips/:id', () => {
+  it('answers the trip with its live entries in date and time order', async () => {
+    const { cookie } = await signedIn()
+    const { trip } = await addTrip(cookie)
+    const later = await addEntry(cookie, trip.id, {
+      startsOn: '2031-04-12',
+      endsOn: '2031-04-12',
+    })
+    const earlier = await addEntry(cookie, trip.id, {
+      startsOn: '2031-04-11',
+      endsOn: '2031-04-11',
+    })
+    const gone = await addEntry(cookie, trip.id)
+    await app.request(
+      `/api/entries/${gone.entry.id}`,
+      json('DELETE', { version: 1 }, cookie),
+      env,
+    )
+
+    const detail = await readTrip(cookie, trip.id)
+
+    expect(detail.trip).toEqual(trip)
+    expect(detail.entries.map((e) => e.id)).toEqual([
+      earlier.entry.id,
+      later.entry.id,
+    ])
+  })
+
+  it('answers not_found for a deleted trip', async () => {
+    const { cookie } = await signedIn()
+    const { trip } = await addTrip(cookie)
+    await deleteTrip(cookie, trip.id, 1)
+
+    const res = await app.request(
+      `/api/trips/${trip.id}`,
+      bare('GET', cookie),
+      env,
+    )
 
     expect(res.status).toBe(404)
     expect(await errorCode(res)).toBe('not_found')

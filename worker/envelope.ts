@@ -48,6 +48,19 @@ export function refuse(c: Context, code: Refusal) {
   return c.json(fail(code, message), status)
 }
 
+/**
+ * The query string parsed by the schema. Throws an exception the app answers
+ * as `400 validation_failed` for a query that fails it.
+ */
+export function parseQuery<S extends z.ZodType>(
+  c: Context,
+  schema: S,
+): z.output<S> {
+  const result = schema.safeParse(c.req.query())
+  if (!result.success) throw invalidBody()
+  return result.data
+}
+
 function invalidBody() {
   return new HTTPException(400, {
     res: Response.json(fail('validation_failed', 'Invalid request body'), {

@@ -1,6 +1,6 @@
 import { z } from 'zod'
 
-import { localDate } from './trip-time.ts'
+import { clockTime, localDate } from './trip-time.ts'
 
 /** Who made a change: a person in the app, or the assistant for them. */
 export const changeSource = z.enum(['person', 'assistant'])
@@ -30,3 +30,29 @@ export const tripFields = z.strictObject({
   homeCurrency: z.string(),
 })
 export type TripFields = z.infer<typeof tripFields>
+
+export const entryKind = z.enum([
+  'food',
+  'sights',
+  'rest',
+  'transport',
+  'activity',
+])
+export type EntryKind = z.infer<typeof entryKind>
+
+// The fields a person sets on an entry, snapshotted the same way. The
+// times read on the wall in `timeZone`, and `costMinor` is an integer in
+// the trip currency's minor unit.
+export const entryFields = z.strictObject({
+  tripId: z.string(),
+  title: z.string(),
+  notes: z.string().nullable(),
+  kind: entryKind.nullable(),
+  startsOn: localDate,
+  startTime: clockTime,
+  endsOn: localDate,
+  endTime: clockTime,
+  timeZone: z.string(),
+  costMinor: z.number().int().nullable(),
+})
+export type EntryFields = z.infer<typeof entryFields>

@@ -143,6 +143,15 @@ export function recorded(db: Db, changeId: string) {
   )
 }
 
+/** The columns any write to an entry stamps with who made it. */
+export function stampedBy(actor: Actor, at: Date) {
+  return {
+    updatedBy: actor.userId,
+    updatedSource: actor.source,
+    updatedAt: at,
+  }
+}
+
 /** Whether two field snapshots of one entity hold the same values. */
 export function sameFields(a: object | null, b: object | null) {
   if (a === null || b === null) return a === b

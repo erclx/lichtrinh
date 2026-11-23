@@ -1,16 +1,19 @@
 import { deleteRequest } from '@shared/changes.ts'
-import type { TripList } from '@shared/trips.ts'
+import type { TripList, TripWithEntries } from '@shared/trips.ts'
 import { createTripRequest, updateTripRequest } from '@shared/trips.ts'
 import type { Context } from 'hono'
 import { Hono } from 'hono'
 
 import type { AuthEnv } from '../auth/guard.ts'
+import { entriesOfTrip } from '../calendar/entries.ts'
 import type { Actor } from '../calendar/record.ts'
 import { isRefused } from '../calendar/record.ts'
 import {
   createTrip,
   deleteTrip,
   listTrips,
+  liveTrip,
+  toTrip,
   updateTrip,
 } from '../calendar/trips.ts'
 import { createDb } from '../db/client.ts'
@@ -24,6 +27,17 @@ export function personOf(c: Context<AuthEnv>): Actor {
 export const tripRoutes = new Hono<AuthEnv>()
   .get('/trips', async (c) => {
     const body: TripList = { trips: await listTrips(createDb(c.env.DB)) }
+    return c.json(body)
+  })
+  .get('/trips/:id', async (c) => {
+    const db = createDb(c.env.DB)
+    const id = c.req.param('id')
+    const [row, entries] = await Promise.all([
+      liveTrip(db, id),
+      entriesOfTrip(db, id),
+    ])
+    if (row === undefined) return refuse(c, 'not_found')
+    const body: TripWithEntries = { trip: toTrip(row), entries }
     return c.json(body)
   })
   .post('/trips', async (c) => {

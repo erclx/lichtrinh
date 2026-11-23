@@ -2,6 +2,7 @@ import { z } from 'zod'
 
 import { rowVersion, tripFields } from './changes.ts'
 import { currency } from './currency.ts'
+import { entry } from './entries.ts'
 import { localDate, timeZone } from './trip-time.ts'
 
 /** A trip as the API shows it. */
@@ -38,7 +39,7 @@ export type CreateTripRequest = z.input<typeof createTripRequest>
 /**
  * A change to some of a trip's fields, carrying the version it was read at.
  * A new zone moves every entry that shared the old one, keeping its clock
- * times.
+ * times. New dates are refused while a live entry starts outside them.
  */
 export const updateTripRequest = z.strictObject({
   version: rowVersion,
@@ -58,3 +59,10 @@ export type TripList = z.infer<typeof tripList>
 /** What a create or an update answers: the trip and the change to undo. */
 export const tripWrite = z.strictObject({ trip, changeId: z.string() })
 export type TripWrite = z.infer<typeof tripWrite>
+
+/** One live trip with its live entries, ordered as the range read orders. */
+export const tripWithEntries = z.strictObject({
+  trip,
+  entries: z.array(entry),
+})
+export type TripWithEntries = z.infer<typeof tripWithEntries>

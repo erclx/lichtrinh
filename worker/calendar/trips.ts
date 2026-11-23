@@ -6,10 +6,21 @@ import type {
   TripWrite,
   updateTripRequest,
 } from '@shared/trips.ts'
-import { and, asc, eq, exists, isNull, sql } from 'drizzle-orm'
+import {
+  and,
+  asc,
+  eq,
+  exists,
+  gt,
+  isNull,
+  lt,
+  notExists,
+  or,
+  sql,
+} from 'drizzle-orm'
 import type { z } from 'zod'
 
-import { changes, trips } from '../db/schema.ts'
+import { changes, entries, trips } from '../db/schema.ts'
 import { logOutcome } from '../log.ts'
 import type { Actor, Db, Refused } from './record.ts'
 import {
@@ -19,6 +30,7 @@ import {
   recorded,
   refused,
   sameFields,
+  stampedBy,
 } from './record.ts'
 
 type TripRow = typeof trips.$inferSelect
@@ -49,6 +61,32 @@ export function tripAt(db: Db, id: string, version: number) {
           eq(trips.id, id),
           eq(trips.version, version),
           isNull(trips.deletedAt),
+        ),
+      ),
+  )
+}
+
+/**
+ * The condition that every live entry of the trip starts inside `dates`,
+ * since an entry outside its trip's dates drops out of every view.
+ */
+export function holdsEveryEntry(
+  db: Db,
+  tripId: string,
+  dates: { startsOn: string; endsOn: string },
+) {
+  return notExists(
+    db
+      .select({ one: sql`1` })
+      .from(entries)
+      .where(
+        and(
+          eq(entries.tripId, tripId),
+          isNull(entries.deletedAt),
+          or(
+            lt(entries.startsOn, dates.startsOn),
+            gt(entries.startsOn, dates.endsOn),
+          ),
         ),
       ),
   )
@@ -169,6 +207,24 @@ export async function updateTrip(
   }
   if (after.endsOn < after.startsOn) return refused('validation_failed')
   const changeId = crypto.randomUUID()
+  const datesMoved =
+    after.startsOn !== before.startsOn || after.endsOn !== before.endsOn
+  const zoneMoved = after.timeZone !== before.timeZone
+  // The entries a zone change carries along, read inside the batch so the
+  // change row names exactly the entries the rewrite below moves.
+  const inOldZone = and(
+    eq(entries.tripId, id),
+    eq(entries.timeZone, before.timeZone),
+    isNull(entries.deletedAt),
+  )
+  const rezone = db
+    .update(entries)
+    .set({
+      timeZone: after.timeZone,
+      version: sql`${entries.version} + 1`,
+      ...stampedBy(actor, at),
+    })
+    .where(and(inOldZone, recorded(db, changeId)))
   const [, guard, updated] = await db.batch([
     deferForeignKeys(db),
     recordChange(
@@ -183,14 +239,21 @@ export async function updateTrip(
         entityId: id,
         before,
         after,
+        rezoned: zoneMoved
+          ? sql`(select json_group_array(${entries.id}) from ${entries} where ${inOldZone})`
+          : undefined,
       },
-      tripAt(db, id, request.version),
+      and(
+        tripAt(db, id, request.version),
+        datesMoved ? holdsEveryEntry(db, id, after) : undefined,
+      ) ?? sql`1`,
     ),
     db
       .update(trips)
       .set({ ...after, version: sql`${trips.version} + 1` })
       .where(and(eq(trips.id, id), recorded(db, changeId)))
       .returning(),
+    ...(zoneMoved ? [rezone] : []),
   ])
   const trip = updated[0]
   if (guard.meta.changes === 0 || trip === undefined) {
