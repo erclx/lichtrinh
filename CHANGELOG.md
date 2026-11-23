@@ -1,5 +1,16 @@
 # Changelog
 
+## [0.0.3](https://github.com/erclx/lichtrinh/compare/v0.0.2...v0.0.3) (2026-11-23)
+
+
+### Features
+
+* **accounts:** let the admin edit an account and keep one admin ([#18](https://github.com/erclx/lichtrinh/issues/18)) ([a90491a](https://github.com/erclx/lichtrinh/commit/a90491a1102bb385e8eae2c7d3bfdf8d0771d026))
+* **calendar:** add the trip, day, and entry screens with undo ([#21](https://github.com/erclx/lichtrinh/issues/21)) ([77285bd](https://github.com/erclx/lichtrinh/commit/77285bd976450a9d2a33f84b76b43cda42083d6d))
+* **settings:** let each person pick a light, dark, or auto look ([#17](https://github.com/erclx/lichtrinh/issues/17)) ([a26135f](https://github.com/erclx/lichtrinh/commit/a26135feb727d6d85ae805ec5e334efd4bde22f2))
+* **settings:** let the admin pick the model and the offline contact ([#20](https://github.com/erclx/lichtrinh/issues/20)) ([e52f306](https://github.com/erclx/lichtrinh/commit/e52f30639da0d7c595a99c1a70212c3780adc6e9))
+* **voice:** carry clips through the bridge to the workspace pc ([#22](https://github.com/erclx/lichtrinh/issues/22)) ([a5fd4f4](https://github.com/erclx/lichtrinh/commit/a5fd4f4403905137408653215b0e94fb03d29d78))
+
 ## [0.0.2](https://github.com/erclx/lichtrinh/compare/v0.0.1...v0.0.2) (2026-11-23)
 
 
