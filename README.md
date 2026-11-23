@@ -17,10 +17,13 @@ My mom is traveling to Vietnam. Calendar apps ask her to learn them first. This 
 - A shared calendar with trips, entries, estimated costs, and a budget, editable by hand
 - A chat with an assistant that changes the calendar through four calendar tools alone, with Undo on every change
 - The assistant's local model and Vietnamese speech recognition run on my own computer, so the app costs nothing to run
+- The assistant defaults to `lichtrinh-assistant` on `qwen3.8:27b` and speech to `qwen3-asr-1.7b`, picked on the scores in `docs/benchmarks.md`
 
 ## Status
 
-Early development. See `canon/REQUIREMENTS.md` for what the app sets out to do.
+Early development, run locally and not deployed yet. You can sign in, plan trips by hand or by chat, talk to the assistant through the mic, see every trip by month, week, and day, check a trip's budget, undo any change, and read the last loaded plan offline.
+
+Still to come are the guided tutorial and practice trip, installing to the home screen, and the deploy. `canon/REQUIREMENTS.md` holds the full scope.
 
 ## Development
 
@@ -36,7 +39,12 @@ The seed migrates the local database and adds two invented accounts to sign in w
 
 ## Usage
 
-Run `bun link` once in the checkout, then `lichtrinh --help` from any folder for the product's own services, such as `lichtrinh db migrate` for the local database.
+Run `bun link` once in the checkout, then `lichtrinh --help` from any folder for the product's own services.
+
+- `lichtrinh db migrate` applies the migrations to the local database
+- `lichtrinh admin create <username>` makes an admin account and prints its password once
+- `lichtrinh bridge run` connects the assistant on the workspace PC, and `lichtrinh bridge eval` scores a model alias
+- `lichtrinh voice serve` runs the speech recognition server the talk button sends clips to
 
 ## License
 
