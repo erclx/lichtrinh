@@ -92,4 +92,4 @@ Draw widths: 390, 834, 1440
 
 - The mark is a calendar page with three pastel agenda bars, served as `public/favicon.svg` and drawn in the app by `src/components/brand-mark.tsx`.
 - Its outline and rings follow the text color, while the page and the bars keep their fills in both themes.
-- It sits beside the wordmark in the phone header and the desktop nav, and alone atop the tablet rail, whose top bar shows the wordmark without it.
+- It sits beside the wordmark in the phone header and desktop nav, and alone atop the tablet rail, whose top bar shows the bare wordmark.
