@@ -97,6 +97,13 @@ export const CASES: CaptureCase[] = [
     },
   },
   {
+    section: 'accounts-edit-own',
+    theme: 'default',
+    route: '/admin/accounts/fixture-admin',
+    evidence: true,
+    setup: asAdmin,
+  },
+  {
     section: 'settings',
     theme: 'default',
     route: '/settings',
