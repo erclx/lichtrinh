@@ -2757,6 +2757,7 @@ dev = [
 gpu = [
     { name = "ctranslate2" },
     { name = "faster-whisper" },
+    { name = "huggingface-hub" },
     { name = "nvidia-cublas-cu12" },
     { name = "qwen-asr" },
     { name = "torch" },
@@ -2785,6 +2786,7 @@ dev = [
 gpu = [
     { name = "ctranslate2", specifier = ">=4.9.1" },
     { name = "faster-whisper", specifier = "==1.2.1" },
+    { name = "huggingface-hub", specifier = ">=0.36.2" },
     { name = "nvidia-cublas-cu12", specifier = ">=12.9.3.13" },
     { name = "qwen-asr", specifier = "==0.0.6" },
     { name = "torch", specifier = "==2.15.0", index = "https://download.pytorch.org/whl/cu132", conflict = { package = "voice", group = "gpu" } },

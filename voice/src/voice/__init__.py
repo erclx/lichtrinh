@@ -1,2 +1,1 @@
-def main() -> None:
-    print('Hello from voice!')
+"""Speech recognition for the trip calendar, served on the workspace PC."""
