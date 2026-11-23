@@ -1,6 +1,6 @@
 import '@/i18n/setup'
 
-import { render, screen } from '@testing-library/react'
+import { act, render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import i18n from 'i18next'
 
@@ -237,16 +237,25 @@ describe('offline', () => {
   it('stays on the saved plan when the reconnect check meets a server failure', async () => {
     rememberMember()
     let failing = false
+    let answered: () => void = () => {}
+    const failureRead = new Promise<void>((settled) => {
+      answered = settled
+    })
     fakeApi({
-      'GET /auth/me': () =>
-        failing ? failure('internal_error', 500) : offline(),
+      'GET /auth/me': () => {
+        if (!failing) return offline()
+        answered()
+        return failure('internal_error', 500)
+      },
     })
     renderSession()
     await screen.findByText('status: offline')
 
     failing = true
     window.dispatchEvent(new Event('online'))
-    await new Promise((settled) => setTimeout(settled, 50))
+    await failureRead
+    // The failure's body is read and settled on the tasks after its answer.
+    await act(() => new Promise((settled) => setTimeout(settled, 0)))
 
     expect(screen.getByText('status: offline')).toBeInTheDocument()
   })
