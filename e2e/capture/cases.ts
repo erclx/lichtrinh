@@ -154,6 +154,30 @@ function calendarCases(section: string, route: string): CaptureCase[] {
   ]
 }
 
+/**
+ * A budget route as the admin at the demo instant in the invented trip's
+ * zone, so the rates page's set date reads the same on every machine.
+ */
+function budgetCases(section: string, route: string): CaptureCase[] {
+  const setup = async (page: Page) => {
+    await inTripZone(page)
+    await atDemoInstant(page)
+  }
+  return [
+    { section, theme: 'default', route, evidence: true, setup },
+    {
+      section,
+      theme: 'dark',
+      route,
+      evidence: true,
+      setup: async (page) => {
+        await dark(page)
+        await setup(page)
+      },
+    },
+  ]
+}
+
 export const CASES: CaptureCase[] = [
   { section: 'home', theme: 'default', route: '/', evidence: true },
   { section: 'home', theme: 'dark', route: '/', evidence: true, setup: dark },
@@ -301,4 +325,6 @@ export const CASES: CaptureCase[] = [
   ...chatCases('chat-thread', '/chats/fixture-chat-today', true),
   ...chatCases('chat-offline', '/chats/fixture-chat-today', false),
   ...chatCases('chat-failed', '/chats/fixture-chat-dinner', true),
+  ...budgetCases('budget', `${tripPath}/budget`),
+  ...budgetCases('rates', '/admin/rates'),
 ]
