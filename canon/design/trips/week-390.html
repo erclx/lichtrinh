@@ -3806,12 +3806,147 @@
         display: block;
         font-size: 18px;
       }
+
+      .wrows {
+        max-width: 760px;
+        margin: 4px auto 12px;
+        padding: 0 16px;
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+      }
+      .wr {
+        display: flex;
+        align-items: stretch;
+        gap: 8px;
+      }
+      .wr .open {
+        flex: 1;
+        min-width: 0;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        min-height: 64px;
+        padding: 6px 14px;
+        background: var(--surface);
+        border: 1.5px solid var(--line);
+        border-radius: 20px;
+        text-align: left;
+      }
+      .wr.td .open {
+        outline: 3px solid var(--text);
+        outline-offset: -3px;
+      }
+      .wr .dd {
+        width: 58px;
+        flex: none;
+        font-weight: 800;
+        font-size: 24px;
+        line-height: 1.05;
+      }
+      .wr .dd small {
+        display: block;
+        font-size: 15px;
+        font-weight: 700;
+        color: var(--muted);
+        margin-top: 2px;
+      }
+      .wr .ds {
+        flex: 1;
+        min-width: 0;
+        font-size: 18px;
+        color: var(--muted);
+        line-height: 1.3;
+      }
+      .wr .ds b {
+        display: block;
+        color: var(--text);
+        font-size: 19px;
+        font-weight: 800;
+      }
+      .wr .ds .now {
+        display: inline-block;
+        margin-left: 6px;
+        padding: 0 8px;
+        border-radius: 999px;
+        background: var(--selBg);
+        color: var(--selFg);
+        font-size: 14px;
+        font-weight: 800;
+        vertical-align: 2px;
+      }
+      .wdots {
+        display: inline-flex;
+        gap: 5px;
+        margin-left: 10px;
+        vertical-align: -1px;
+      }
+      .wdots i {
+        width: 14px;
+        height: 14px;
+        border-radius: 50%;
+        background: var(--c);
+        border: 1.5px solid var(--ci);
+      }
+      .wr .addd {
+        flex: none;
+        width: 64px;
+        min-height: 64px;
+        border-radius: 20px;
+        background: var(--fill);
+        color: var(--text);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      .tband {
+        background: var(--fill);
+        border-radius: 26px;
+        padding: 8px 8px 6px;
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+      }
+      .tband.cont {
+        border-bottom-left-radius: 8px;
+        border-bottom-right-radius: 8px;
+      }
+      .tband .th {
+        display: flex;
+        justify-content: space-between;
+        gap: 8px;
+        padding: 2px 10px 0;
+        font-size: 16px;
+        font-weight: 700;
+        color: var(--muted);
+      }
+      .tband .th b {
+        color: var(--text);
+        font-weight: 800;
+      }
+      .tband .addd {
+        background: var(--surface);
+        border: 1.5px solid var(--line);
+      }
+      .tband .tf {
+        padding: 0 10px 2px;
+        font-size: 15px;
+        font-weight: 700;
+        color: var(--muted);
+      }
+      .whint {
+        max-width: 760px;
+        margin: 12px auto 16px;
+        padding: 0 20px;
+        font-size: 17px;
+        color: var(--muted);
+      }
     </style>
   </head>
   <body>
     <div class="app">
       <div class="lbl" lang="en">
-        week · seven columns of activity blocks colored by kind
+        week · seven 64px rows, Add beside each day, the trip as a neutral band
       </div>
       <div class="top">
         <div
@@ -3909,6 +4044,14 @@
             <span class="vi">Ngày</span><span class="en">Day</span>
           </button>
         </div>
+        <div class="chips">
+          <button class="chip on">
+            <span class="vi">Tất cả</span
+            ><span class="en">All trips</span></button
+          ><button class="chip">Sông Mây</button
+          ><button class="chip">Đảo Lam</button
+          ><button class="chip">Hồ Bạc</button>
+        </div>
         <div class="mh" style="padding: 4px 16px">
           <div class="round">
             <svg
@@ -3947,68 +4090,253 @@
             </svg>
           </div>
         </div>
-        <div class="wkg">
-          <div class="col">
-            <div class="hd">
-              <span class="vi">T2</span><span class="en">Mon</span><b>12</b>
-            </div>
+        <div class="wrows">
+          <div class="wr">
+            <button class="open" aria-label="Mon 12 May">
+              <span class="dd"
+                >12<small
+                  ><span class="vi">Thứ Hai</span
+                  ><span class="en">Mon</span></small
+                ></span
+              ><span class="ds"
+                ><b><span class="vi">Trống</span><span class="en">Free</span></b
+                ><span class="vi">Chưa có gì</span
+                ><span class="en">Nothing planned</span></span
+              ></button
+            ><button
+              class="addd"
+              aria-label="Thêm vào Thứ Hai 12/5 / Add to Mon 12 May"
+            >
+              <svg
+                viewBox="0 0 24 24"
+                width="28"
+                height="28"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2.6"
+                stroke-linecap="round"
+                aria-hidden="true"
+              >
+                <path d="M12 5v14M5 12h14" />
+              </svg>
+            </button>
           </div>
-          <div class="col">
-            <div class="hd">
-              <span class="vi">T3</span><span class="en">Tue</span><b>13</b>
-            </div>
-            <div class="blk rest" style="--h: 60px"></div>
-            <div class="blk food" style="--h: 40px"></div>
-          </div>
-          <div class="col">
-            <div class="hd">
-              <span class="vi">T4</span><span class="en">Wed</span><b>14</b>
-            </div>
-            <div class="blk food" style="--h: 30px"></div>
-            <div class="blk sights" style="--h: 70px"></div>
-            <div class="blk food" style="--h: 45px"></div>
-          </div>
-          <div class="col">
-            <div class="hd on">
-              <span class="vi">T5</span><span class="en">Thu</span><b>15</b>
-            </div>
-            <div class="blk food" style="--h: 30px"></div>
-            <div class="blk sights" style="--h: 80px"></div>
-            <div class="blk food" style="--h: 30px"></div>
-            <div class="blk rest" style="--h: 60px"></div>
-            <div class="blk transit" style="--h: 14px"></div>
-            <div class="blk act" style="--h: 60px"></div>
-            <div class="blk food" style="--h: 45px"></div>
-          </div>
-          <div class="col">
-            <div class="hd">
-              <span class="vi">T6</span><span class="en">Fri</span><b>16</b>
-            </div>
-            <div class="blk food" style="--h: 30px"></div>
-            <div class="blk act" style="--h: 80px"></div>
-            <div class="blk sights" style="--h: 60px"></div>
-            <div class="blk food" style="--h: 45px"></div>
-          </div>
-          <div class="col">
-            <div class="hd">
-              <span class="vi">T7</span><span class="en">Sat</span><b>17</b>
-            </div>
-            <div class="blk sights" style="--h: 70px"></div>
-          </div>
-          <div class="col">
-            <div class="hd">
-              <span class="vi">CN</span><span class="en">Sun</span><b>18</b>
-            </div>
-          </div>
-        </div>
-        <div class="who-ch">
-          <span class="vi"
-            >Mỗi khối là một hoạt động, cao theo thời lượng. Chạm vào một ngày
-            để mở.</span
-          ><span class="en"
-            >Each block is one activity, as tall as it lasts. Tap a day to open
-            it.</span
+          <div
+            class="tband cont"
+            role="group"
+            aria-label="Sông Mây, 13 to 20 May"
           >
+            <div class="th">
+              <b>Sông Mây</b
+              ><span
+                ><span class="vi">13/5 – 20/5</span
+                ><span class="en">13–20 May</span></span
+              >
+            </div>
+            <div class="wr">
+              <button class="open" aria-label="Tue 13 May">
+                <span class="dd"
+                  >13<small
+                    ><span class="vi">Thứ Ba</span
+                    ><span class="en">Tue</span></small
+                  ></span
+                ><span class="ds"
+                  ><b
+                    ><span class="vi">2 hoạt động</span
+                    ><span class="en">2 entries</span></b
+                  >450.000 ₫<span class="wdots"
+                    ><i class="rest"></i><i class="food"></i></span
+                ></span></button
+              ><button
+                class="addd"
+                aria-label="Thêm vào Thứ Ba 13/5 / Add to Tue 13 May"
+              >
+                <svg
+                  viewBox="0 0 24 24"
+                  width="28"
+                  height="28"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2.6"
+                  stroke-linecap="round"
+                  aria-hidden="true"
+                >
+                  <path d="M12 5v14M5 12h14" />
+                </svg>
+              </button>
+            </div>
+            <div class="wr">
+              <button class="open" aria-label="Wed 14 May">
+                <span class="dd"
+                  >14<small
+                    ><span class="vi">Thứ Tư</span
+                    ><span class="en">Wed</span></small
+                  ></span
+                ><span class="ds"
+                  ><b
+                    ><span class="vi">3 hoạt động</span
+                    ><span class="en">3 entries</span></b
+                  >820.000 ₫<span class="wdots"
+                    ><i class="food"></i><i class="sights"></i
+                    ><i class="food"></i></span
+                ></span></button
+              ><button
+                class="addd"
+                aria-label="Thêm vào Thứ Tư 14/5 / Add to Wed 14 May"
+              >
+                <svg
+                  viewBox="0 0 24 24"
+                  width="28"
+                  height="28"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2.6"
+                  stroke-linecap="round"
+                  aria-hidden="true"
+                >
+                  <path d="M12 5v14M5 12h14" />
+                </svg>
+              </button>
+            </div>
+            <div class="wr td">
+              <button class="open" aria-label="Thu 15 May">
+                <span class="dd"
+                  >15<small
+                    ><span class="vi">Thứ Năm</span
+                    ><span class="en">Thu</span></small
+                  ></span
+                ><span class="ds"
+                  ><b
+                    ><span class="vi">7 hoạt động</span
+                    ><span class="en">7 entries</span
+                    ><span class="now"
+                      ><span class="vi">Hôm nay</span
+                      ><span class="en">Today</span></span
+                    ></b
+                  >1.640.000 ₫<span class="wdots"
+                    ><i class="food"></i><i class="sights"></i
+                    ><i class="food"></i><i class="rest"></i
+                    ><i class="transit"></i></span
+                ></span></button
+              ><button
+                class="addd"
+                aria-label="Thêm vào Thứ Năm 15/5 / Add to Thu 15 May"
+              >
+                <svg
+                  viewBox="0 0 24 24"
+                  width="28"
+                  height="28"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2.6"
+                  stroke-linecap="round"
+                  aria-hidden="true"
+                >
+                  <path d="M12 5v14M5 12h14" />
+                </svg>
+              </button>
+            </div>
+            <div class="wr">
+              <button class="open" aria-label="Fri 16 May">
+                <span class="dd"
+                  >16<small
+                    ><span class="vi">Thứ Sáu</span
+                    ><span class="en">Fri</span></small
+                  ></span
+                ><span class="ds"
+                  ><b
+                    ><span class="vi">4 hoạt động</span
+                    ><span class="en">4 entries</span></b
+                  >960.000 ₫<span class="wdots"
+                    ><i class="food"></i><i class="act"></i
+                    ><i class="sights"></i><i class="food"></i></span
+                ></span></button
+              ><button
+                class="addd"
+                aria-label="Thêm vào Thứ Sáu 16/5 / Add to Fri 16 May"
+              >
+                <svg
+                  viewBox="0 0 24 24"
+                  width="28"
+                  height="28"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2.6"
+                  stroke-linecap="round"
+                  aria-hidden="true"
+                >
+                  <path d="M12 5v14M5 12h14" />
+                </svg>
+              </button>
+            </div>
+            <div class="wr">
+              <button class="open" aria-label="Sat 17 May">
+                <span class="dd"
+                  >17<small
+                    ><span class="vi">Thứ Bảy</span
+                    ><span class="en">Sat</span></small
+                  ></span
+                ><span class="ds"
+                  ><b
+                    ><span class="vi">1 hoạt động</span
+                    ><span class="en">1 entry</span></b
+                  >300.000 ₫<span class="wdots"><i class="sights"></i></span
+                ></span></button
+              ><button
+                class="addd"
+                aria-label="Thêm vào Thứ Bảy 17/5 / Add to Sat 17 May"
+              >
+                <svg
+                  viewBox="0 0 24 24"
+                  width="28"
+                  height="28"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2.6"
+                  stroke-linecap="round"
+                  aria-hidden="true"
+                >
+                  <path d="M12 5v14M5 12h14" />
+                </svg>
+              </button>
+            </div>
+            <div class="wr">
+              <button class="open" aria-label="Sun 18 May">
+                <span class="dd"
+                  >18<small
+                    ><span class="vi">Chủ Nhật</span
+                    ><span class="en">Sun</span></small
+                  ></span
+                ><span class="ds"
+                  ><b
+                    ><span class="vi">Trống</span
+                    ><span class="en">Free</span></b
+                  ><span class="vi">Chưa có gì</span
+                  ><span class="en">Nothing planned</span></span
+                ></button
+              ><button
+                class="addd"
+                aria-label="Thêm vào Chủ Nhật 18/5 / Add to Sun 18 May"
+              >
+                <svg
+                  viewBox="0 0 24 24"
+                  width="28"
+                  height="28"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2.6"
+                  stroke-linecap="round"
+                  aria-hidden="true"
+                >
+                  <path d="M12 5v14M5 12h14" />
+                </svg>
+              </button>
+            </div>
+            <div class="tf">
+              <span class="vi">Tiếp tục đến 20/5</span
+              ><span class="en">Continues to 20 May</span>
+            </div>
+          </div>
         </div>
       </div>
       <div class="tabs">

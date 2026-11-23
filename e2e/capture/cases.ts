@@ -178,6 +178,31 @@ function budgetCases(section: string, route: string): CaptureCase[] {
   ]
 }
 
+/**
+ * A Calendar tab route as the admin at the demo instant, light and dark, in
+ * the invented trip's zone, since the unfiltered month takes today from the
+ * device's clock rather than a trip's.
+ */
+function calendarViewCases(section: string, route: string): CaptureCase[] {
+  const setup = async (page: Page) => {
+    await inTripZone(page)
+    await atDemoInstant(page)
+  }
+  return [
+    { section, theme: 'default', route, evidence: true, setup },
+    {
+      section,
+      theme: 'dark',
+      route,
+      evidence: true,
+      setup: async (page) => {
+        await dark(page)
+        await setup(page)
+      },
+    },
+  ]
+}
+
 export const CASES: CaptureCase[] = [
   { section: 'home', theme: 'default', route: '/', evidence: true },
   { section: 'home', theme: 'dark', route: '/', evidence: true, setup: dark },
@@ -327,4 +352,17 @@ export const CASES: CaptureCase[] = [
   ...chatCases('chat-failed', '/chats/fixture-chat-dinner', true),
   ...budgetCases('budget', `${tripPath}/budget`),
   ...budgetCases('rates', '/admin/rates'),
+  // The Calendar tab's three views over the seeded trips.
+  ...calendarViewCases(
+    'calendar-month',
+    `/calendar?view=month&date=${DEMO_DAY.date}`,
+  ),
+  ...calendarViewCases(
+    'calendar-week',
+    `/calendar?view=week&date=${DEMO_DAY.date}`,
+  ),
+  ...calendarViewCases(
+    'calendar-day',
+    `/calendar?view=day&date=${DEMO_DAY.date}`,
+  ),
 ]
