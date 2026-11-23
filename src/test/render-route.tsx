@@ -2,6 +2,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { render } from '@testing-library/react'
 import { createMemoryRouter, RouterProvider } from 'react-router'
 
+import { UndoProvider } from '@/components/undo-status'
 import { routes } from '@/router'
 import { SessionProvider } from '@/session/provider'
 
@@ -20,7 +21,9 @@ export function renderRoute(path: string) {
   render(
     <SessionProvider>
       <QueryClientProvider client={client}>
-        <RouterProvider router={router} />
+        <UndoProvider>
+          <RouterProvider router={router} />
+        </UndoProvider>
       </QueryClientProvider>
     </SessionProvider>,
   )
