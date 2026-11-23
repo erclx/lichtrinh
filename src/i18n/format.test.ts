@@ -109,16 +109,18 @@ describe('formatWeekday', () => {
 })
 
 describe('formatCardDate', () => {
+  afterEach(() => {
+    vi.unstubAllEnvs()
+  })
+
   it('gives the weekday, day, and month in English', () => {
     expect(formatCardDate('2031-05-16', 'en')).toBe('Fri, May 16')
   })
 
-  it('keeps the day whatever zone the device sits in', () => {
-    vi.stubEnv('TZ', 'Pacific/Kiritimati')
+  it('keeps the day on a device west of UTC', () => {
+    vi.stubEnv('TZ', 'America/Los_Angeles')
 
     expect(formatCardDate('2031-05-16', 'en')).toBe('Fri, May 16')
-
-    vi.unstubAllEnvs()
   })
 })
 
