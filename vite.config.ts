@@ -56,10 +56,14 @@ export default defineConfig({
   ],
   resolve: {
     alias: {
-      '@': path.resolve(import.meta.dirname, './src'),
+      '@': path.resolve(import.meta.dirname, './web'),
       '@shared': path.resolve(import.meta.dirname, './shared'),
     },
   },
+  // The app's own folder holds the icons and social cards, while index.html
+  // and the root stay put, since the Cloudflare plugin reads wrangler.jsonc,
+  // the env files, and the build output from the repository root.
+  publicDir: 'web/public',
   base: process.env.VITE_BASE_URL ?? '/',
   server: {
     port: 5173 + portOffset,

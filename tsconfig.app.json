@@ -24,8 +24,8 @@
 
     /* Path alias, matching vite.config.ts */
     "paths": {
-      "@/*": ["./src/*"]
+      "@/*": ["./web/*"]
     }
   },
-  "include": ["src"]
+  "include": ["web"]
 }

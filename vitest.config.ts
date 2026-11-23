@@ -25,7 +25,7 @@ export default mergeConfig(
         reporter: ['text', 'json', 'html'],
         exclude: [
           'node_modules/',
-          'src/test/setup.ts',
+          'web/test/setup.ts',
           'e2e/',
           'worker/test/**',
           'worker/db/migrations/**',
@@ -41,8 +41,8 @@ export default mergeConfig(
             name: 'web',
             environment: 'jsdom',
             globals: true,
-            setupFiles: ['src/test/setup.ts'],
-            include: ['src/**/*.test.{ts,tsx}', 'shared/**/*.test.ts'],
+            setupFiles: ['web/test/setup.ts'],
+            include: ['web/**/*.test.{ts,tsx}', 'shared/**/*.test.ts'],
           },
         },
         {

@@ -44,7 +44,7 @@ docs = [
   "CONTRIBUTING.md",
   "SECURITY.md",
 ]
-app = ["src/", "index.html", "public/", "components.json"]
+app = ["web/", "index.html", "components.json"]
 api = ["worker/", "wrangler.jsonc", "drizzle.config.ts"]
 shared = ["shared/"]
 e2e = ["e2e/"]
