@@ -2,10 +2,9 @@ import type { Language, SignInRequest, User } from '@shared/auth.ts'
 import { createContext, useContext } from 'react'
 
 /**
- * `unreachable` is kept apart from `signed-out`, since a signed-in person
- * whose network dropped still holds a live session. `offline` is that case
- * on a device that remembers who last signed in, so the app opens on the
- * plan it saved rather than on the retry page.
+ * `unreachable` and `offline` stay apart from `signed-out`, since a person
+ * whose network dropped still holds a live session. `offline` is a device
+ * that remembers who signed in, so the app opens on the plan it saved.
  */
 export type SessionStatus =
   | 'loading'

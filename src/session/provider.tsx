@@ -112,8 +112,7 @@ export function SessionProvider({
 }: SessionProviderProps) {
   const [state, setState] = useState<State>({ status: 'loading', user: null })
 
-  // Every way to signed out forgets what this device kept for the person,
-  // including a session revoked while the device was offline.
+  // Every way to signed out forgets what the device kept for the person.
   const settle = useCallback(
     (next: State) => {
       if (next.status === 'signed-out') {
@@ -137,8 +136,7 @@ export function SessionProvider({
     }
   }, [settle])
 
-  // Offline asks again when the connection returns, keeping the shell up
-  // meanwhile, so a session revoked while away signs out on its next answer.
+  // Offline asks again on reconnect, so a revoked session signs out then.
   const offline = state.status === 'offline'
   useEffect(() => {
     if (!offline) return

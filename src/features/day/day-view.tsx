@@ -92,8 +92,7 @@ export function DayView({
               {addLabel}
             </Link>
           ) : (
-            // Offline the press waits for the connection, and the card's
-            // sentence says why.
+            // Offline Add waits, and the card's sentence says why.
             <Button
               disabled
               focusableWhenDisabled

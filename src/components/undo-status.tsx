@@ -77,8 +77,7 @@ function UndoStatus({ notice, onChange }: UndoStatusProps) {
     return () => clearTimeout(timer)
   }, [notice, held, onChange])
 
-  // Offline the Undo stays on the notice, saying it waits for the
-  // connection, so the change can still be undone once it is back.
+  // Offline the Undo stays, saying it waits, so it still works once back.
   function undoLabel() {
     if (!online) return t('offline.needsConnection')
     return undo.isPending ? t('undo.undoing') : t('undo.undo')

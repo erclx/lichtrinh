@@ -20,16 +20,14 @@ export function createQueryClient() {
     defaultOptions: {
       queries: {
         staleTime: 5_000,
-        // Kept in memory as long as on the device, or a read nobody is
-        // watching drops from the save before its week is up.
+        // As long as the device keeps it, or an unwatched read leaves the save.
         gcTime: calendarCacheMaxAge,
         refetchOnWindowFocus: true,
         refetchInterval: refreshMs,
         refetchIntervalInBackground: false,
         retry: retryLostAnswer,
       },
-      // A write offline fails at once with the save error, keeping what was
-      // typed, rather than pausing on a form that never says it waits.
+      // Offline a write fails at once to the save error rather than pausing.
       mutations: { retry: false, networkMode: 'always' },
     },
   })

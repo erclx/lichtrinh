@@ -51,8 +51,7 @@ export function calendarPersistOptions(): Omit<
     persister: createAsyncStoragePersister({
       storage: safeStorage,
       key: calendarCacheKey,
-      // Every change is saved at once, since a save waiting out a throttle is
-      // lost when the traveler closes the app inside the wait.
+      // Saved at once, since a throttled save is lost if the app closes first.
       throttleTime: 0,
     }),
     maxAge: calendarCacheMaxAge,
@@ -70,8 +69,7 @@ export function calendarPersistOptions(): Omit<
  * person on a shared phone never reads it.
  */
 export function clearCalendarCache(client: QueryClient) {
-  // Removing the queries first replaces any save still queued with an empty
-  // one, so it cannot write the old plan back after the key is gone.
+  // Queries first, so a queued save writes an empty plan, never the old one.
   client.removeQueries({ queryKey: calendarKeys.all })
   safeStorage.removeItem(calendarCacheKey)
 }
