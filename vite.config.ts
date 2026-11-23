@@ -6,8 +6,21 @@ import { defineConfig } from 'vite'
 
 const portOffset = Number(process.env.WORKTREE_PORT_OFFSET) || 0
 
+// Moves local D1 state under another folder, so e2e runs and review drives
+// write a throwaway copy rather than the developer's own database. The seed
+// in `scripts/seed.ts` reads the same variable.
+const stateRoot = process.env.LICHTRINH_STATE_ROOT
+const cloudflareOptions =
+  stateRoot === undefined
+    ? {}
+    : {
+        persistState: {
+          path: path.join(path.resolve(stateRoot), '.wrangler', 'state'),
+        },
+      }
+
 export default defineConfig({
-  plugins: [react(), tailwindcss(), cloudflare()],
+  plugins: [react(), tailwindcss(), cloudflare(cloudflareOptions)],
   resolve: {
     alias: {
       '@': path.resolve(import.meta.dirname, './src'),

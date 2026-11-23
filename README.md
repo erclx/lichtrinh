@@ -4,7 +4,7 @@ A shared trip calendar for a parent who plans by talking. She speaks or types to
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="assets/evidence/readme/dark.png" />
-  <img alt="The Lịch trình home page, with the calendar mark beside the wordmark" src="assets/evidence/readme/light.png" />
+  <img alt="The Lịch trình sign-in card, with the calendar mark above the name" src="assets/evidence/readme/light.png" />
 </picture>
 
 ## Why
@@ -28,10 +28,11 @@ Install [Bun](https://bun.sh), then run:
 
 ```bash
 bun install
+bun scripts/seed.ts
 bun run dev
 ```
 
-`bun run check` runs the same checks as the pre-push hook. `CONTRIBUTING.md` covers the rest.
+The seed migrates the local database and adds two invented accounts to sign in with, whose passwords sit in `scripts/seed.ts`. `bun run check` runs the same checks as the pre-push hook. `CONTRIBUTING.md` covers the rest.
 
 ## Usage
 

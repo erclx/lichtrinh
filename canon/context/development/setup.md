@@ -22,15 +22,16 @@ Install [Bun](https://bun.sh) with `curl -fsSL https://bun.sh/install | bash` an
 
 These run and test the app, its local database, and the generated Worker types.
 
-| Command                | Purpose                                                                    |
-| ---------------------- | -------------------------------------------------------------------------- |
-| `bun run dev`          | Serve the app and the API on port 5173, plus the worktree offset           |
-| `bun run test:run`     | Run the Vitest unit and component tests once                               |
-| `bun run test:e2e`     | Run the Playwright suite in chromium, firefox, and webkit                  |
-| `bun run screenshot`   | Build, serve on port 4173, and capture each case in `e2e/capture/cases.ts` |
-| `bun run db:generate`  | Write the next migration from `worker/db/schema.ts`                        |
-| `bun run db:migrate`   | Apply pending migrations to the local D1 database under `.wrangler/`       |
-| `bun run types:worker` | Regenerate the Worker types from `wrangler.jsonc`, which typecheck runs    |
+| Command                | Purpose                                                                 |
+| ---------------------- | ----------------------------------------------------------------------- |
+| `bun run dev`          | Serve the app and the API on port 5173, plus the worktree offset        |
+| `bun run test:run`     | Run the Vitest unit and component tests once                            |
+| `bun run test:e2e`     | Seed a fresh temp database, then run Playwright in three engines        |
+| `bun run screenshot`   | Seed a temp database, build, serve on 4173, and capture each case       |
+| `bun scripts/seed.ts`  | Migrate and write the invented fixture accounts, safe to run twice      |
+| `bun run db:generate`  | Write the next migration from `worker/db/schema.ts`                     |
+| `bun run db:migrate`   | Apply pending migrations to the local D1 database under `.wrangler/`    |
+| `bun run types:worker` | Regenerate the Worker types from `wrangler.jsonc`, which typecheck runs |
 
 ### `cli/`
 
@@ -67,5 +68,5 @@ Holds the git hooks that run the checks before a commit or a push leaves.
 - A push fails on formatting drift until `bun run format` runs, since the `pre-push` hook writes nothing
 - The root `check` chains into `voice/scripts/verify.ts`, held through every sync by `canon tooling customize package.json:check`, since base overrides that script
 - `uv add` in `voice/` writes TOML that root oxfmt rejects, so run `bun run format` at the root after a dependency change
-- Local D1 state lives under `.wrangler/state/v3/d1`, and deleting `.wrangler/` resets it until the next `bun run db:migrate`
+- Local D1 state lives under `.wrangler/state/v3/d1`, or below `LICHTRINH_STATE_ROOT` when set, which keeps e2e, captures, and drives off the developer's database
 - `bun link` links the checkout it ran in, so a verb added on a branch stays invisible to `lichtrinh` until it merges and that checkout pulls

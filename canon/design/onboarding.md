@@ -9,7 +9,8 @@ Rows v01.8, v02.1, and v02.3 build these screens. These frames are a reference, 
 
 ## Code
 
-- None yet. The v01.8, v02.1, and v02.3 plans name the paths.
+- `src/features/sign-in/sign-in-page.tsx`: sign in and the paused state, with the paused message on the muted fill
+- The v01.8 and v02.3 plans name the paths for install, the tutorial, practice, and the empty calendar
 
 ## States
 
