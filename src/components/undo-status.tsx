@@ -5,6 +5,8 @@ import { useTranslation } from 'react-i18next'
 import { useUndo } from '@/calendar-data/mutations'
 import { type OfferUndo, OfferUndoContext } from '@/components/undo-context'
 import { ApiFailure } from '@/lib/api'
+import { cn } from '@/lib/utils'
+import { useOnline } from '@/offline/connection'
 
 interface Notice {
   /** What changed, already worded, such as `Deleted “Lunch”`. */
@@ -64,6 +66,7 @@ function undoFailureKey(error: unknown) {
 function UndoStatus({ notice, onChange }: UndoStatusProps) {
   const { t } = useTranslation()
   const undo = useUndo()
+  const online = useOnline()
   const [hovered, setHovered] = useState(false)
   const [focused, setFocused] = useState(false)
   const held = hovered || focused || undo.isPending
@@ -74,8 +77,14 @@ function UndoStatus({ notice, onChange }: UndoStatusProps) {
     return () => clearTimeout(timer)
   }, [notice, held, onChange])
 
+  // Offline the Undo stays, saying it waits, so it still works once back.
+  function undoLabel() {
+    if (!online) return t('offline.needsConnection')
+    return undo.isPending ? t('undo.undoing') : t('undo.undo')
+  }
+
   function runUndo() {
-    if (notice === null || notice.changeId === null) return
+    if (notice === null || notice.changeId === null || !online) return
     const { changeId, undoId } = notice
     undo.mutate(
       { changeId, undoId },
@@ -115,10 +124,13 @@ function UndoStatus({ notice, onChange }: UndoStatusProps) {
             <button
               type="button"
               onClick={runUndo}
-              aria-disabled={undo.isPending}
-              className="inline-flex min-h-target shrink-0 items-center rounded-lg bg-background px-4 font-extrabold text-foreground outline-none focus-visible:ring-3 focus-visible:ring-primary-foreground"
+              aria-disabled={undo.isPending || !online}
+              className={cn(
+                'inline-flex min-h-target shrink-0 items-center rounded-lg bg-background px-4 font-extrabold text-foreground outline-none focus-visible:ring-3 focus-visible:ring-primary-foreground',
+                !online && 'cursor-not-allowed',
+              )}
             >
-              {undo.isPending ? t('undo.undoing') : t('undo.undo')}
+              {undoLabel()}
             </button>
           )}
           <button

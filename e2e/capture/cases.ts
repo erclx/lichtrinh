@@ -203,6 +203,46 @@ function calendarViewCases(section: string, route: string): CaptureCase[] {
   ]
 }
 
+// Loads the route once online at the demo instant, so the device saves the
+// plan at 09:45 in the trip's zone, then cuts every API call before the
+// harness loads it again. The context route reaches past the service worker.
+async function offlineWithSavedPlan(page: Page, route: string) {
+  await inTripZone(page)
+  await atDemoInstant(page)
+  await page.goto(`${BASE_URL}${route}`)
+  await page.waitForFunction(() =>
+    (localStorage.getItem('lichtrinh.calendarCache') ?? '').includes(
+      'Sunset boat trip',
+    ),
+  )
+  await page
+    .context()
+    .route('**/api/**', (request) => request.abort('internetdisconnected'))
+}
+
+/** A calendar route read offline from the saved plan, light and dark. */
+function offlineCases(section: string, route: string): CaptureCase[] {
+  return [
+    {
+      section,
+      theme: 'default',
+      route,
+      evidence: true,
+      setup: (page) => offlineWithSavedPlan(page, route),
+    },
+    {
+      section,
+      theme: 'dark',
+      route,
+      evidence: true,
+      setup: async (page) => {
+        await dark(page)
+        await offlineWithSavedPlan(page, route)
+      },
+    },
+  ]
+}
+
 export const CASES: CaptureCase[] = [
   { section: 'home', theme: 'default', route: '/', evidence: true },
   { section: 'home', theme: 'dark', route: '/', evidence: true, setup: dark },
@@ -365,4 +405,6 @@ export const CASES: CaptureCase[] = [
     'calendar-day',
     `/calendar?view=day&date=${DEMO_DAY.date}`,
   ),
+  // Today read from the device's saved plan, as `canon/design/states/offline`.
+  ...offlineCases('offline-today', '/'),
 ]

@@ -1,14 +1,12 @@
 import '@/i18n/setup'
 
 import type { AssistantStatus } from '@shared/assistant.ts'
-import { render, screen } from '@testing-library/react'
+import { screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { createMemoryRouter, RouterProvider } from 'react-router'
 
 import { applyLanguage } from '@/i18n/setup'
-import { routes } from '@/router'
-import { SessionProvider } from '@/session/provider'
 import { aUser, failure, fakeApi, json, offline } from '@/test/fake-api'
+import { renderRoute } from '@/test/render-route'
 
 type Routes = Parameters<typeof fakeApi>[0]
 
@@ -38,14 +36,7 @@ function adminApi(routes: Routes = {}) {
 }
 
 function renderPage() {
-  const router = createMemoryRouter(routes, {
-    initialEntries: ['/admin/assistant'],
-  })
-  render(
-    <SessionProvider>
-      <RouterProvider router={router} />
-    </SessionProvider>,
-  )
+  renderRoute('/admin/assistant')
 }
 
 beforeEach(async () => {

@@ -66,6 +66,21 @@ describe('UndoProvider', () => {
     expect(screen.getByRole('button', { name: 'Delete' })).toHaveFocus()
   })
 
+  it('keeps Undo offline, saying it needs a connection, and sends nothing', async () => {
+    vi.spyOn(navigator, 'onLine', 'get').mockReturnValue(false)
+    const api = fakeApi({})
+    const user = userEvent.setup()
+    renderWithUndo()
+
+    await user.click(screen.getByRole('button', { name: 'Delete' }))
+    const undo = screen.getByRole('button', { name: 'Needs a connection' })
+    await user.click(undo)
+
+    expect(undo).toHaveAttribute('aria-disabled', 'true')
+    expect(api.requests).toHaveLength(0)
+    vi.restoreAllMocks()
+  })
+
   it('undoes the change by its id and says so', async () => {
     const api = fakeApi({
       'POST /changes/change-1/undo': () => json(undoneChange, 201),

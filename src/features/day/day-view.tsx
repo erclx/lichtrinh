@@ -12,13 +12,15 @@ import { dayRows } from '@/components/day-state'
 import { HomeEstimate } from '@/components/home-estimate'
 import { LoadFailed } from '@/components/load-failed'
 import { RefreshFailed } from '@/components/refresh-failed'
-import { buttonVariants } from '@/components/ui/button'
+import { Button, buttonVariants } from '@/components/ui/button'
 import { useNow } from '@/hooks/use-now'
 import { formatLongDate, formatMoney, formatWeekday } from '@/i18n/format'
 import { useLanguage } from '@/i18n/use-language'
 import { ApiFailure } from '@/lib/api'
 import { datesBetween } from '@/lib/trip-days'
 import { cn } from '@/lib/utils'
+import { useOnline } from '@/offline/connection'
+import { offlineReasonId, waitingClass } from '@/offline/offline-card'
 import { ChevronIcon, PlusIcon } from '@/shell/icons'
 import { PageHeader } from '@/shell/page-header'
 
@@ -50,6 +52,7 @@ export function DayView({
   const { t } = useTranslation()
   const language = useLanguage()
   const now = useNow()
+  const online = useOnline()
   const selectedRef = useRef<HTMLAnchorElement>(null)
   const days = datesBetween(trip.startsOn, trip.endsOn)
   const today = nowInZone(now, trip.timeZone).date
@@ -58,6 +61,13 @@ export function DayView({
   const tripPath = tripPathOf(trip)
   const addTo = `/entries/new?${new URLSearchParams({ trip: trip.id, date })}`
   const longDate = formatLongDate(date, language)
+  const addClass = 'size-target px-0 min-[480px]:w-auto min-[480px]:px-6'
+  const addLabel = (
+    <>
+      <PlusIcon className="size-7" />
+      <span className="hidden min-[480px]:inline">{t('day.add')}</span>
+    </>
+  )
 
   // The strip scrolls sideways on phone, so the open day starts in view.
   useEffect(() => {
@@ -73,17 +83,26 @@ export function DayView({
         title={longDate}
         backTo={isHome ? undefined : tripPath}
         action={
-          <Link
-            to={addTo}
-            aria-label={t('day.addOn', { date: longDate })}
-            className={cn(
-              buttonVariants(),
-              'size-target px-0 min-[480px]:w-auto min-[480px]:px-6',
-            )}
-          >
-            <PlusIcon className="size-7" />
-            <span className="hidden min-[480px]:inline">{t('day.add')}</span>
-          </Link>
+          online ? (
+            <Link
+              to={addTo}
+              aria-label={t('day.addOn', { date: longDate })}
+              className={cn(buttonVariants(), addClass)}
+            >
+              {addLabel}
+            </Link>
+          ) : (
+            // Offline Add waits, and the card's sentence says why.
+            <Button
+              disabled
+              focusableWhenDisabled
+              aria-label={t('day.addOn', { date: longDate })}
+              aria-describedby={offlineReasonId}
+              className={cn(addClass, waitingClass)}
+            >
+              {addLabel}
+            </Button>
+          )
         }
       />
 

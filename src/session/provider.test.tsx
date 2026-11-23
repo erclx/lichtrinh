@@ -1,13 +1,13 @@
 import '@/i18n/setup'
 
-import { render, screen } from '@testing-library/react'
+import { act, render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import i18n from 'i18next'
 
 import { readStoredLanguage, storeLanguage } from '@/i18n/language'
 import { applyLanguage } from '@/i18n/setup'
 import { apiFetch } from '@/lib/api'
-import { SessionProvider } from '@/session/provider'
+import { lastUserKey, SessionProvider } from '@/session/provider'
 import { useSession } from '@/session/session-context'
 import { aUser, failure, fakeApi, json, offline } from '@/test/fake-api'
 
@@ -17,6 +17,7 @@ function Probe() {
     <div>
       <p>status: {session.status}</p>
       <p>user: {session.user?.displayName ?? 'none'}</p>
+      <p>chat: {session.user?.canChat ? 'yes' : 'no'}</p>
       <button
         onClick={() =>
           session.signIn({ username: 'member', password: 'abcd efgh jkmn' })
@@ -25,6 +26,7 @@ function Probe() {
         sign in
       </button>
       <button onClick={() => session.refresh()}>retry</button>
+      <button onClick={() => session.signOut()}>sign out</button>
       <button onClick={() => apiFetch('/admin/users').catch(() => {})}>
         later call
       </button>
@@ -33,9 +35,9 @@ function Probe() {
   )
 }
 
-function renderSession() {
+function renderSession(onSignedOut?: () => void) {
   return render(
-    <SessionProvider>
+    <SessionProvider onSignedOut={onSignedOut}>
       <Probe />
     </SessionProvider>,
   )
@@ -172,6 +174,141 @@ describe('SessionProvider', () => {
       path: '/auth/me',
       body: { language: 'vi' },
     })
+  })
+})
+
+function rememberMember() {
+  localStorage.setItem(
+    lastUserKey,
+    JSON.stringify({
+      id: 'user-member',
+      displayName: 'Thành viên',
+      role: 'member',
+      canChat: true,
+      language: null,
+    }),
+  )
+}
+
+describe('offline', () => {
+  it('opens on the remembered person when the network is down', async () => {
+    rememberMember()
+    fakeApi({ 'GET /auth/me': offline })
+
+    renderSession()
+
+    expect(await screen.findByText('status: offline')).toBeInTheDocument()
+    expect(screen.getByText('user: Thành viên')).toBeInTheDocument()
+    expect(screen.getByText('chat: yes')).toBeInTheDocument()
+  })
+
+  it('reads unreachable with nobody remembered on the device', async () => {
+    fakeApi({ 'GET /auth/me': offline })
+
+    renderSession()
+
+    expect(await screen.findByText('status: unreachable')).toBeInTheDocument()
+  })
+
+  it('reads unreachable when the API answers with its own failure', async () => {
+    rememberMember()
+    fakeApi({ 'GET /auth/me': () => failure('internal_error', 500) })
+
+    renderSession()
+
+    expect(await screen.findByText('status: unreachable')).toBeInTheDocument()
+  })
+
+  it('remembers the signed-in person without their username', async () => {
+    fakeApi({ 'GET /auth/me': () => json(aUser({ language: 'vi' })) })
+
+    renderSession()
+    await screen.findByText('status: signed-in')
+
+    expect(JSON.parse(localStorage.getItem(lastUserKey) ?? 'null')).toEqual({
+      id: 'user-member',
+      displayName: 'Thành viên',
+      role: 'member',
+      canChat: false,
+      language: 'vi',
+    })
+  })
+
+  it('stays on the saved plan when the reconnect check meets a server failure', async () => {
+    rememberMember()
+    let failing = false
+    let answered: () => void = () => {}
+    const failureRead = new Promise<void>((settled) => {
+      answered = settled
+    })
+    fakeApi({
+      'GET /auth/me': () => {
+        if (!failing) return offline()
+        answered()
+        return failure('internal_error', 500)
+      },
+    })
+    renderSession()
+    await screen.findByText('status: offline')
+
+    failing = true
+    window.dispatchEvent(new Event('online'))
+    await failureRead
+    // The failure's body is read and settled on the tasks after its answer.
+    await act(() => new Promise((settled) => setTimeout(settled, 0)))
+
+    expect(screen.getByText('status: offline')).toBeInTheDocument()
+  })
+
+  it('signs in again when the connection returns', async () => {
+    rememberMember()
+    let online = false
+    fakeApi({ 'GET /auth/me': () => (online ? json(aUser()) : offline()) })
+    renderSession()
+    await screen.findByText('status: offline')
+
+    online = true
+    window.dispatchEvent(new Event('online'))
+
+    expect(await screen.findByText('status: signed-in')).toBeInTheDocument()
+  })
+
+  it('signs out and forgets the device when a session was revoked while away', async () => {
+    rememberMember()
+    const forget = vi.fn()
+    let online = false
+    fakeApi({
+      'GET /auth/me': () =>
+        online ? failure('unauthenticated', 401) : offline(),
+    })
+    renderSession(forget)
+    await screen.findByText('status: offline')
+
+    online = true
+    window.dispatchEvent(new Event('online'))
+
+    expect(await screen.findByText('status: signed-out')).toBeInTheDocument()
+    expect(forget).toHaveBeenCalled()
+    expect(localStorage.getItem(lastUserKey)).toBeNull()
+  })
+})
+
+describe('signing out', () => {
+  it('forgets the person and the saved plan on the device', async () => {
+    const user = userEvent.setup()
+    const forget = vi.fn()
+    fakeApi({
+      'GET /auth/me': () => json(aUser()),
+      'POST /auth/sign-out': () => new Response(null, { status: 204 }),
+    })
+    renderSession(forget)
+    await screen.findByText('status: signed-in')
+
+    await user.click(screen.getByRole('button', { name: 'sign out' }))
+
+    expect(await screen.findByText('status: signed-out')).toBeInTheDocument()
+    expect(forget).toHaveBeenCalledOnce()
+    expect(localStorage.getItem(lastUserKey)).toBeNull()
   })
 })
 

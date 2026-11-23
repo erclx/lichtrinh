@@ -8,7 +8,8 @@ import { useSession } from '@/session/session-context'
 
 /**
  * Decides between the sign-in card and the app at whatever path was asked
- * for, so signing in lands on that path without a redirect.
+ * for, so signing in lands on that path without a redirect. Offline with a
+ * remembered person, the app opens on the plan the device saved.
  */
 export function SessionGate() {
   const { t } = useTranslation()

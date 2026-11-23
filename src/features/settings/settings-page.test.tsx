@@ -1,22 +1,14 @@
 import '@/i18n/setup'
 
-import { render, screen, within } from '@testing-library/react'
+import { screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { createMemoryRouter, RouterProvider } from 'react-router'
 
 import { applyLanguage } from '@/i18n/setup'
-import { routes } from '@/router'
-import { SessionProvider } from '@/session/provider'
 import { aUser, fakeApi, json, offline } from '@/test/fake-api'
+import { renderRoute } from '@/test/render-route'
 
 function renderSettings() {
-  const router = createMemoryRouter(routes, { initialEntries: ['/settings'] })
-  render(
-    <SessionProvider>
-      <RouterProvider router={router} />
-    </SessionProvider>,
-  )
-  return router
+  return renderRoute('/settings').router
 }
 
 beforeEach(async () => {

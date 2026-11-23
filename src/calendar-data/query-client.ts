@@ -1,6 +1,7 @@
 import { QueryClient } from '@tanstack/react-query'
 
 import { ApiFailure } from '@/lib/api'
+import { calendarCacheMaxAge } from '@/offline/persist'
 
 /** How often an open screen asks again, so one person sees another's change. */
 export const refreshMs = 30_000
@@ -19,12 +20,15 @@ export function createQueryClient() {
     defaultOptions: {
       queries: {
         staleTime: 5_000,
+        // As long as the device keeps it, or an unwatched read leaves the save.
+        gcTime: calendarCacheMaxAge,
         refetchOnWindowFocus: true,
         refetchInterval: refreshMs,
         refetchIntervalInBackground: false,
         retry: retryLostAnswer,
       },
-      mutations: { retry: false },
+      // Offline a write fails at once to the save error rather than pausing.
+      mutations: { retry: false, networkMode: 'always' },
     },
   })
 }

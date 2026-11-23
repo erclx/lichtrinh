@@ -43,6 +43,24 @@ export function onUnauthenticated(listener: () => void): () => void {
   }
 }
 
+const reachListeners = new Set<(reached: boolean) => void>()
+
+/**
+ * Tells the listener after every call whether an answer arrived at all,
+ * refusals included, so the app knows it is offline when the browser's own
+ * flag still reads online. Returns the call that removes it.
+ */
+export function onReach(listener: (reached: boolean) => void): () => void {
+  reachListeners.add(listener)
+  return () => {
+    reachListeners.delete(listener)
+  }
+}
+
+function reportReach(reached: boolean) {
+  for (const listener of reachListeners) listener(reached)
+}
+
 /** Calls a path under `/api`, parsing a success through the schema given. */
 export async function apiFetch<S extends z.ZodType>(
   path: string,
@@ -71,8 +89,10 @@ export async function apiFetch(
       body: body === undefined ? undefined : JSON.stringify(body),
     })
   } catch {
+    reportReach(false)
     throw new ApiFailure('network', 0, null)
   }
+  reportReach(true)
 
   if (!response.ok) throw await failureFrom(response)
   if (schema === undefined) return undefined

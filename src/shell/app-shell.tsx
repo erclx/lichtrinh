@@ -4,6 +4,8 @@ import { Outlet, useMatch } from 'react-router'
 import { ChatDock } from '@/features/chat/chat-dock'
 import { TalkBar } from '@/features/chat/talk-bar'
 import { useMediaQuery } from '@/hooks/use-media-query'
+import { useOnline } from '@/offline/connection'
+import { OfflineCard } from '@/offline/offline-card'
 import { useSession } from '@/session/session-context'
 import { visibleDestinations } from '@/shell/destinations'
 import { Rail, Sidebar, Tabs } from '@/shell/nav'
@@ -37,6 +39,7 @@ function storeFlag(key: string, value: boolean) {
  */
 export function AppShell() {
   const { user } = useSession()
+  const online = useOnline()
   const [navHidden, setNavHidden] = useState(() => readFlag(navHiddenKey))
   const [chatClosed, setChatClosed] = useState(() => readFlag(chatClosedKey))
   const [sheetOpen, setSheetOpen] = useState(false)
@@ -116,6 +119,7 @@ export function AppShell() {
         />
         <main className="flex-1 px-4 pb-6 min-[480px]:px-8 lg:px-10">
           <div className="mx-auto w-full max-w-[760px]">
+            {!online && <OfflineCard />}
             <Outlet />
           </div>
         </main>

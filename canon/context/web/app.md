@@ -34,7 +34,8 @@ Holds the translation layer every screen reads its copy through, on i18next and 
 
 Holds app-wide sign-in state, the role `src/i18n/` holds for language, so a feature reads it without importing another feature.
 
-- `provider.tsx` loads `GET /api/auth/me` once and keeps `loading`, `signed-out`, `signed-in`, or `unreachable`, the last kept apart so an offline person is not signed out
+- `provider.tsx` loads `GET /api/auth/me` and keeps `loading`, `signed-out`, `signed-in`, `unreachable`, or `offline`, the last two kept apart so an offline person is not signed out
+- `offline` is a lost answer on a device remembering `lichtrinh.lastUser`, and every way to `signed-out` forgets that person and calls `onSignedOut`, which clears the saved plan
 - `session-context.ts` exports `useSession()`, with sign in, sign out, retry, and the language save a toggle press sends
 - The account's language applies through `applyLanguage` only where the device holds no stored choice
 - `gate.tsx` renders the sign-in card, the retry page, or the shell at whatever path was asked for, and `require-admin.tsx` shows a member the not-found page

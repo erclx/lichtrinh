@@ -1,13 +1,11 @@
 import '@/i18n/setup'
 
-import { render, screen } from '@testing-library/react'
+import { screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { createMemoryRouter, RouterProvider } from 'react-router'
 
 import { applyLanguage } from '@/i18n/setup'
-import { routes } from '@/router'
-import { SessionProvider } from '@/session/provider'
 import { aUser, failure, fakeApi, json, offline } from '@/test/fake-api'
+import { renderRoute } from '@/test/render-route'
 
 const admin = aUser({
   id: 'user-admin',
@@ -25,15 +23,7 @@ const traveler = aUser({
 })
 
 function renderEdit(id: string) {
-  const router = createMemoryRouter(routes, {
-    initialEntries: [`/admin/accounts/${id}`],
-  })
-  render(
-    <SessionProvider>
-      <RouterProvider router={router} />
-    </SessionProvider>,
-  )
-  return router
+  return renderRoute(`/admin/accounts/${id}`).router
 }
 
 function listed() {

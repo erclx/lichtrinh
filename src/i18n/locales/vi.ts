@@ -273,6 +273,16 @@ export const vi = {
     alreadyUndone: 'Việc này đã được hoàn tác rồi.',
     dismiss: 'Đóng',
   },
+  offline: {
+    title: 'Đang không có mạng',
+    savedAt: 'Đang xem bản lưu lúc {{time}}. Có mạng lại thì sửa được.',
+    savedOn:
+      'Đang xem bản lưu ngày {{date}} lúc {{time}}. Có mạng lại thì sửa được.',
+    nothingSaved:
+      'Máy này chưa lưu lịch trình nào. Có mạng lại thì lịch trình sẽ hiện.',
+    needsConnection: 'Cần có mạng',
+    editsWait: 'Cần có mạng để sửa.',
+  },
   chat: {
     listTitle: 'Trò chuyện',
     newChat: 'Cuộc trò chuyện mới',
