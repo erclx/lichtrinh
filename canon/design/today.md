@@ -9,11 +9,11 @@ Row v01.3 builds this screen. These frames are a reference, and where that row's
 
 ## Code
 
-- `src/features/today/today-screen.tsx`: the home screen, the day under way or the next trip's card
-- `src/features/day/day-view.tsx`: the day's date with Add, the trip and day number, the estimated cost, and the strip of days
-- `src/components/day-list.tsx`: the one list, with done rows collapsed and the now card expanded, leaving out the side column past 1000px
-- `src/components/swipe-row.tsx`: the left swipe on a day row that reveals Delete under 1024px
-- `src/components/sheet-list.tsx` and `src/components/date-range-sheet.tsx`: the choices and the trip dates the prototype opens
+- `web/features/today/today-screen.tsx`: the home screen, the day under way or the next trip's card
+- `web/features/day/day-view.tsx`: the day's date with Add, the trip and day number, the estimated cost, and the strip of days
+- `web/components/day-list.tsx`: the one list, with done rows collapsed and the now card expanded, leaving out the side column past 1000px
+- `web/components/swipe-row.tsx`: the left swipe on a day row that reveals Delete under 1024px
+- `web/components/sheet-list.tsx` and `web/components/date-range-sheet.tsx`: the choices and the trip dates the prototype opens
 
 ## States
 

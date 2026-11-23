@@ -7,10 +7,10 @@ description: The look, the mark, the home-screen icons, the social card, and the
 
 ## Code
 
-- `src/index.css`
-- `src/components/brand-mark.tsx`
-- `public/favicon.svg`
-- `public/og-image.png`
+- `web/index.css`
+- `web/components/brand-mark.tsx`
+- `web/public/favicon.svg`
+- `web/public/og-image.png`
 
 ## States
 

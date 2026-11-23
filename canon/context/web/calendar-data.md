@@ -11,7 +11,7 @@ Owns how the browser app reads and writes the calendar API, from the one query c
 
 ## Layout
 
-### `src/calendar-data/`
+### `web/calendar-data/`
 
 Holds one module per role, and every calendar screen reads through it rather than calling `apiFetch` itself.
 

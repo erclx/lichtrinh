@@ -19,9 +19,9 @@ A shared trip calendar a non-technical traveler plans by talking to Claude in Vi
 
 The web app the traveler and the family open in a browser.
 
-- `src/`: the React front end, styled with Tailwind v4
-- `src/components/ui/`: the shadcn kit on Base UI, owned and edited in place, added with `bunx --bun shadcn@latest add <component>`
-- `src/lib/`: shared helpers, including `cn` for merging classes
+- `web/`: the React front end, styled with Tailwind v4
+- `web/components/ui/`: the shadcn kit on Base UI, owned and edited in place, added with `bunx --bun shadcn@latest add <component>`
+- `web/lib/`: shared helpers, including `cn` for merging classes
 - `e2e/`: Playwright specs and the screenshot harness, with its cases in `e2e/capture/`
 
 ### Server and tooling

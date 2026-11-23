@@ -7,7 +7,7 @@ reviewed: 2026-11-21
 
 # Design
 
-Values live in `src/index.css`, light on `:root` and dark on `:root[data-theme='dark']`, an attribute the head script in `index.html` sets from the Appearance choice in Settings, or from the device scheme on Auto. This record holds the intent.
+Values live in `web/index.css`, light on `:root` and dark on `:root[data-theme='dark']`, an attribute the head script in `index.html` sets from the Appearance choice in Settings, or from the device scheme on Auto. This record holds the intent.
 
 ## Overview
 
@@ -90,6 +90,6 @@ Draw widths: 390, 834, 1440
 
 ## Mark
 
-- The mark is a calendar page with three pastel agenda bars, served as `public/favicon.svg` and drawn in the app by `src/components/brand-mark.tsx`.
+- The mark is a calendar page with three pastel agenda bars, served as `web/public/favicon.svg` and drawn in the app by `web/components/brand-mark.tsx`.
 - Its outline and rings follow the text color, while the page and the bars keep their fills in both themes.
 - It sits beside the wordmark in the phone header and desktop nav, and alone atop the tablet rail, whose top bar shows the bare wordmark.

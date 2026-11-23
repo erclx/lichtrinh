@@ -7,20 +7,20 @@ description: The React front end, its Tailwind styling and shadcn kit, and where
 
 ## Overview
 
-Owns the browser app the traveler and the family open, from `index.html` and `src/` down to the shared UI kit. The Worker serving it and the API are the subject of `canon/context/web/api.md`, and the chats with the assistant, the mic included, are `canon/context/web/chat.md`.
+Owns the browser app the traveler and the family open, from `index.html` and `web/` down to the shared UI kit. The Worker serving it and the API are the subject of `canon/context/web/api.md`, and the chats with the assistant, the mic included, are `canon/context/web/chat.md`.
 
 ## Layout
 
-### `src/`
+### `web/`
 
-Holds the React entry and the route table. `main.tsx` loads `src/i18n/setup.ts` and mounts `App` from `app.tsx`, and `index.css` holds the color roles, the font, the type steps, the 64px `--spacing-target`, and the radius roles `canon/DESIGN.md` describes.
+Holds the React entry and the route table. `main.tsx` loads `web/i18n/setup.ts` and mounts `App` from `app.tsx`, and `index.css` holds the color roles, the font, the type steps, the 64px `--spacing-target`, and the radius roles `canon/DESIGN.md` describes.
 
 - `app.tsx` renders `SessionProvider`, then the query cache from `canon/context/web/calendar-data.md`, then `UndoProvider`, around a data router built once from `router.tsx`
 - `router.tsx` is the one route table, the session gate over the shell over every page, which screen rows extend and never rename
 - Light values sit on `:root` and dark on `:root[data-theme='dark']`, which the head script in `index.html` sets and the `dark:` variant reads
 - Tailwind v4 runs through `@tailwindcss/vite`, so there is no `tailwind.config` file
 
-### `src/i18n/`
+### `web/i18n/`
 
 Holds the translation layer every screen reads its copy through, on i18next and react-i18next, with one `translation` namespace.
 
@@ -29,16 +29,16 @@ Holds the translation layer every screen reads its copy through, on i18next and 
 - `setup.ts` keeps `<html lang>` in step, and its `chooseLanguage` stores a press while `applyLanguage` never does
 - `format.ts` holds the `Intl` formatters, each taking the language from `useLanguage()`, and formats a `YYYY-MM-DD` day in UTC so the device zone never moves it
 
-### `src/session/`
+### `web/session/`
 
-Holds app-wide sign-in state, the role `src/i18n/` holds for language, so a feature reads it without importing another feature.
+Holds app-wide sign-in state, the role `web/i18n/` holds for language, so a feature reads it without importing another feature.
 
 - `provider.tsx` loads `GET /api/auth/me` and keeps `loading`, `signed-out`, `signed-in`, `unreachable`, or `offline`, the last two kept apart so an offline person is not signed out
 - `offline` is a lost answer on a device remembering `lichtrinh.lastUser`, and every way to `signed-out` forgets that person and calls `onSignedOut`, which clears the saved plan
 - `session-context.ts` exports `useSession()`, and the account's language applies only where the device holds no stored choice
 - `gate.tsx` renders the sign-in card, the retry page, or the shell at the path asked for, and `require-admin.tsx` shows a member the not-found page
 
-### `src/shell/`
+### `web/shell/`
 
 Holds the frame around every signed-in page, built against `canon/design/shell/`.
 
@@ -46,7 +46,7 @@ Holds the frame around every signed-in page, built against `canon/design/shell/`
 - `nav.tsx` draws the desktop sidebar, the tablet rail, and the phone tabs, and a new place is one entry in `destinations.ts`, never markup there
 - A page renders its own `page-header.tsx` and content
 
-### `src/features/`
+### `web/features/`
 
 Holds one folder per screen area, each importing the session and the shell. Today renders the day's view, and no other feature imports another.
 
@@ -56,7 +56,7 @@ Holds one folder per screen area, each importing the session and the shell. Toda
 - `day/` holds the day page, and `calendar/` the Calendar tab, its view, date, and trip held in the address, with `calendar-range.ts` laying each trip over the month and week
 - `entries/` holds the detail, the shared add and edit form, its prefill and cost parsing, and the start times and lengths
 
-### `src/components/`
+### `web/components/`
 
 Holds the app's own components, being the mark, the language toggle, the pickers, the kind icons, the day list with its entry states and swipe row, the delete sheet, the save error, and the undo status, beside the shadcn kit on Base UI in `ui/`.
 
@@ -69,9 +69,9 @@ Holds the app's own components, being the mark, the language toggle, the pickers
 
 The folders below each carry one small job.
 
-- `src/lib/`: `cn`, the day helpers, and `api.ts`, whose `apiFetch` parses through a `shared/` schema, throws `ApiFailure`, and sends a `blob` raw under its type
-- `src/hooks/`: `useMediaQuery`, unmatched in the test DOM, and `useNow`, beside `public/` holding the icons and social cards
-- `src/test/`: `fake-api.ts` behind `fetch`, invented builders, `media.ts` for a fake recorder and microphone, and `render-route.tsx`
+- `web/lib/`: `cn`, the day helpers, and `api.ts`, whose `apiFetch` parses through a `shared/` schema, throws `ApiFailure`, and sends a `blob` raw under its type
+- `web/hooks/`: `useMediaQuery`, unmatched in the test DOM, and `useNow`, beside `web/public/` holding the icons and social cards
+- `web/test/`: `fake-api.ts` behind `fetch`, invented builders, `media.ts` for a fake recorder and microphone, and `render-route.tsx`
 - `e2e/`: the Playwright specs and the screenshot harness, with its cases in `e2e/capture/cases.ts` and committed frames in `e2e/evidence/`
 - `canon/design/`: the accepted frames, written by `bun run design:sync` from `frames.json` and never by hand
 

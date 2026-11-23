@@ -68,7 +68,7 @@ Holds the speech model setting and the `transcriptions` record the admin ranks m
 
 ### `shared/`
 
-Holds the schemas the app, the API, and the assistant's tools all import as `@shared/*`, plus the password hash and generator the Worker and the admin command share. The import direction between it, `src/`, and `worker/` is `.claude/rules/project/code/imports.md`.
+Holds the schemas the app, the API, and the assistant's tools all import as `@shared/*`, plus the password hash and generator the Worker and the admin command share. The import direction between it, `web/`, and `worker/` is `.claude/rules/project/code/imports.md`.
 
 - The root typecheck has no Worker types, so a binding type written here fails `bun run typecheck`
 

@@ -11,17 +11,17 @@ English dates follow `Intl` in the build, as 9/20, 9/20/2031, and Mon to Sun, wh
 
 ## Code
 
-- `src/features/trips/trip-list.tsx`: the trips list, each card with its span, its status, and its trip-currency total
-- `src/features/trips/trip-form.tsx`: the new trip form, its name, dates, local time, and both currencies
-- `src/features/trips/trip-overview.tsx`: the overview card and each day with its kind dots and cost
-- `src/components/no-trips.tsx`: the empty calendar the list shows with no trip, drawn in `onboarding/`
-- `src/components/date-range-sheet.tsx`: the Trip dates range sheet setting From and To together
-- `src/components/sheet-list.tsx`: the local time and currency choices
-- `src/lib/month-cells.ts`: the Monday-first month the range sheet and the calendar both lay out
-- `src/features/calendar/calendar-screen.tsx`: the Calendar tab, its Month, Week, and Day control, and the Day view
-- `src/features/calendar/month-grid.tsx`: the month, each trip's days on a neutral band, a dot on a day with entries
-- `src/features/calendar/week-rows.tsx`: the week as seven rows, each trip's run of days on one band
-- `src/features/calendar/trip-filter.tsx`: the All trips and per-trip chips
+- `web/features/trips/trip-list.tsx`: the trips list, each card with its span, its status, and its trip-currency total
+- `web/features/trips/trip-form.tsx`: the new trip form, its name, dates, local time, and both currencies
+- `web/features/trips/trip-overview.tsx`: the overview card and each day with its kind dots and cost
+- `web/components/no-trips.tsx`: the empty calendar the list shows with no trip, drawn in `onboarding/`
+- `web/components/date-range-sheet.tsx`: the Trip dates range sheet setting From and To together
+- `web/components/sheet-list.tsx`: the local time and currency choices
+- `web/lib/month-cells.ts`: the Monday-first month the range sheet and the calendar both lay out
+- `web/features/calendar/calendar-screen.tsx`: the Calendar tab, its Month, Week, and Day control, and the Day view
+- `web/features/calendar/month-grid.tsx`: the month, each trip's days on a neutral band, a dot on a day with entries
+- `web/features/calendar/week-rows.tsx`: the week as seven rows, each trip's run of days on one band
+- `web/features/calendar/trip-filter.tsx`: the All trips and per-trip chips
 
 ## States
 

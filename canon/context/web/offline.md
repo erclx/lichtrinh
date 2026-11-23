@@ -11,18 +11,18 @@ Owns what keeps the last loaded plan readable with no connection, from the servi
 
 ## Layout
 
-### `src/offline/`
+### `web/offline/`
 
 Holds the device-side cache and the offline state, one role every calendar screen reads.
 
 - `persist.ts` saves every calendar read to `localStorage` under `lichtrinh.calendarCache` for 7 days, dropped when another app version saved it, and `clearCalendarCache` forgets it on sign-out
-- `connection.ts` reads offline as the browser's flag or any API call that got no answer, through `onReach` in `src/lib/api.ts`, so a connection with no internet behind it still counts
+- `connection.ts` reads offline as the browser's flag or any API call that got no answer, through `onReach` in `web/lib/api.ts`, so a connection with no internet behind it still counts
 - `offline-card.tsx` is the card from `canon/design/states/offline`, naming the saved time on the device's clock, and exports the reason id and the muted look each waiting control takes
 - Add, Edit, Delete, and Undo stay on screen offline and say they wait, while a write already started fails at once to the save error, since mutations run with `networkMode: 'always'`
 
 ### `vite.config.ts`
 
-Builds the service worker through `vite-plugin-pwa`, which `src/main.tsx` registers in production alone.
+Builds the service worker through `vite-plugin-pwa`, which `web/main.tsx` registers in production alone.
 
 - It precaches the built app and answers every navigation with `index.html`, leaving `/api/` to the network so no cached answer outlives a sign-out
 - `manifest: false` holds the place of the home-screen manifest, which a later row writes into the same plugin call
