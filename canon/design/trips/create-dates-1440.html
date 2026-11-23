@@ -1,0 +1,781 @@
+<!doctype html>
+<html lang="en" data-lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width" />
+    <title>Arm 2 · Range sheet · 1440</title>
+    <link rel="stylesheet" href="../assets/screens/fonts/fonts-cute.css" />
+    <style>
+      :root {
+        --background: #f8f8fc;
+        --foreground: #1f1d33;
+        --card: #fff;
+        --popover: #fff;
+        --primary: #1f1d33;
+        --primary-foreground: #fff;
+        --muted: #ececf6;
+        --muted-foreground: #4d4c62;
+        --accent: #ececf6;
+        --border: #dcdcea;
+        --input: #dcdcea;
+        --ring: #1f1d33;
+        --scrim: rgb(31 29 51 / 0.45);
+        --shadow: 0 16px 40px rgb(31 29 51 / 0.16);
+      }
+      :root[data-theme='dark'] {
+        --background: #121220;
+        --foreground: #f1f0fb;
+        --card: #1b1b2c;
+        --popover: #1b1b2c;
+        --primary: #f1f0fb;
+        --primary-foreground: #121220;
+        --muted: #26263b;
+        --muted-foreground: #b0aecb;
+        --accent: #26263b;
+        --border: #34344f;
+        --input: #34344f;
+        --ring: #f1f0fb;
+        --scrim: rgb(0 0 0 / 0.6);
+        --shadow: 0 16px 40px rgb(0 0 0 / 0.5);
+      }
+
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+      html[data-lang='en'] .vi,
+      html[data-lang='vi'] .en {
+        display: none;
+      }
+      body {
+        position: relative;
+        background: var(--background);
+        color: var(--foreground);
+        font-family: 'Nunito', sans-serif;
+        font-size: 21px;
+        line-height: 1.4;
+        font-variant-numeric: tabular-nums;
+      }
+      .lbl {
+        margin: 12px 16px;
+        padding: 10px 14px;
+        border: 2px dashed var(--border);
+        border-radius: 10px;
+        font-size: 15px;
+        line-height: 1.45;
+        color: var(--muted-foreground);
+      }
+      .lbl b {
+        color: var(--foreground);
+        font-size: 17px;
+        font-weight: 800;
+        display: block;
+      }
+      .app {
+        position: relative;
+        max-width: 692px;
+        margin: 0 auto;
+        padding: 0 16px 24px;
+      }
+      .top {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 10px 0;
+      }
+      .brand {
+        font-weight: 800;
+        font-size: 22px;
+      }
+      .seg {
+        display: flex;
+        border-radius: 999px;
+        padding: 4px;
+        background: var(--muted);
+      }
+      .seg button {
+        font: inherit;
+        font-size: 18px;
+        font-weight: 800;
+        border: 0;
+        background: transparent;
+        color: var(--muted-foreground);
+        min-width: 60px;
+        height: 56px;
+        border-radius: 999px;
+        cursor: pointer;
+      }
+      .seg button[aria-pressed='true'] {
+        background: var(--primary);
+        color: var(--primary-foreground);
+      }
+      .back {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-weight: 800;
+        font-size: 18px;
+        height: 64px;
+      }
+      h1 {
+        font-size: 34px;
+        line-height: 1.15;
+        font-weight: 900;
+      }
+      .sub {
+        color: var(--muted-foreground);
+        font-size: 18px;
+        margin: 8px 0 6px;
+      }
+      .fl {
+        font-size: 18px;
+        font-weight: 800;
+        margin: 14px 0 6px;
+      }
+      .in {
+        width: 100%;
+        height: 64px;
+        border-radius: 18px;
+        border: 2px solid var(--input);
+        background: var(--card);
+        font-size: 21px;
+        padding: 0 16px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+      }
+      .in.ph {
+        color: var(--muted-foreground);
+      }
+      .in.open {
+        border-color: var(--ring);
+        box-shadow: 0 0 0 2px var(--ring);
+      }
+      .in svg {
+        color: var(--muted-foreground);
+        flex: none;
+      }
+      .row2 {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 12px;
+      }
+      .fld {
+        position: relative;
+      }
+      .hint {
+        font-size: 16px;
+        color: var(--muted-foreground);
+        text-align: center;
+        margin-top: 4px;
+      }
+      .save {
+        margin-top: 22px;
+        height: 64px;
+        border-radius: 999px;
+        background: var(--primary);
+        color: var(--primary-foreground);
+        font-weight: 800;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      /* arm 0 */
+      .native {
+        position: absolute;
+        left: 0;
+        bottom: 66px;
+        width: 100%;
+        min-width: 300px;
+        background: #fff;
+        color: #111;
+        border: 1px solid #767676;
+        font:
+          400 16px/1 'Nunito',
+          sans-serif;
+        z-index: 5;
+        height: 300px;
+        overflow: hidden;
+      }
+      .native div {
+        padding: 5px 20px;
+        height: 26px;
+      }
+      .native .hl {
+        background: #1a66d6;
+        color: #fff;
+      }
+      .native:after {
+        content: '';
+        position: absolute;
+        right: 2px;
+        top: 2px;
+        width: 5px;
+        height: 150px;
+        background: #9a9aa3;
+        border-radius: 3px;
+      }
+      /* arm 1 */
+      .menu {
+        position: absolute;
+        left: 0;
+        top: calc(100% + 8px);
+        width: 100%;
+        min-width: 232px;
+        background: var(--popover);
+        border: 2px solid var(--border);
+        border-radius: 28px;
+        padding: 8px;
+        box-shadow: var(--shadow);
+        z-index: 5;
+        max-height: 372px;
+        overflow: hidden;
+      }
+      .opt {
+        height: 64px;
+        border-radius: 999px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0 20px;
+        font-size: 21px;
+      }
+      .opt.sel {
+        background: var(--primary);
+        color: var(--primary-foreground);
+        font-weight: 800;
+      }
+      .menu:after {
+        content: '';
+        position: absolute;
+        left: 2px;
+        right: 2px;
+        bottom: 0;
+        height: 44px;
+        border-radius: 0 0 26px 26px;
+        background: linear-gradient(transparent, var(--popover));
+      }
+      /* arm 2 */
+      .scrim {
+        position: absolute;
+        inset: 0;
+        background: var(--scrim);
+        z-index: 4;
+      }
+      .sheet {
+        position: absolute;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        max-width: none;
+        background: var(--popover);
+        border-radius: 28px 28px 0 0;
+        padding: 10px 16px 16px;
+        z-index: 5;
+        box-shadow: var(--shadow);
+      }
+      .sheet.dlg {
+        left: 50%;
+        right: auto;
+        bottom: auto;
+        top: 150px;
+        width: 440px;
+        margin-left: -220px;
+        border-radius: 28px;
+        padding: 20px 16px 16px;
+      }
+      .grip {
+        width: 56px;
+        height: 6px;
+        border-radius: 3px;
+        background: var(--border);
+        margin: 0 auto 10px;
+      }
+      .sheet h2 {
+        font-size: 27px;
+        line-height: 1.2;
+        font-weight: 900;
+        padding: 4px 8px 10px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+      .x {
+        width: 56px;
+        height: 56px;
+        border-radius: 999px;
+        background: var(--muted);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      .list {
+        max-height: 392px;
+        overflow: hidden;
+        position: relative;
+      }
+      .list:after {
+        content: '';
+        position: absolute;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        height: 44px;
+        background: linear-gradient(transparent, var(--popover));
+      }
+      /* arm 3 */
+      .tray {
+        margin-top: 10px;
+        background: var(--muted);
+        border-radius: 24px;
+        padding: 12px;
+      }
+      .tray .more {
+        height: 56px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        font-size: 18px;
+        font-weight: 800;
+        color: var(--muted-foreground);
+      }
+      .grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 8px;
+      }
+      .chip {
+        height: 64px;
+        border-radius: 999px;
+        background: var(--card);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 20px;
+        font-weight: 700;
+      }
+      .chip.sel {
+        background: var(--primary);
+        color: var(--primary-foreground);
+        font-weight: 800;
+      }
+      @media (min-width: 600px) {
+        .grid {
+          grid-template-columns: repeat(6, 1fr);
+        }
+      }
+
+      body {
+        min-height: 100vh;
+      }
+      .scrim,
+      .sheet {
+        position: fixed;
+      }
+      .sheet.dlg {
+        top: 50%;
+        transform: translateY(-50%);
+      }
+      .cal {
+        user-select: none;
+      }
+      .calh {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 4px 4px 8px;
+      }
+      .calh b {
+        font-size: 22px;
+        font-weight: 800;
+      }
+      .nav {
+        display: flex;
+        gap: 8px;
+      }
+      .rb {
+        width: 56px;
+        height: 56px;
+        border-radius: 999px;
+        background: var(--muted);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      .dow,
+      .days {
+        display: grid;
+        grid-template-columns: repeat(7, 1fr);
+        text-align: center;
+      }
+      .dow span {
+        font-size: 18px;
+        font-weight: 800;
+        color: var(--muted-foreground);
+        padding: 6px 0;
+      }
+      .d {
+        height: 48px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 21px;
+        position: relative;
+      }
+      .d span {
+        width: 48px;
+        height: 48px;
+        border-radius: 999px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        position: relative;
+        z-index: 1;
+      }
+      .d.out {
+        color: var(--muted-foreground);
+        opacity: 0.55;
+      }
+      .d.sel span {
+        background: var(--primary);
+        color: var(--primary-foreground);
+        font-weight: 800;
+      }
+      .d.today span {
+        box-shadow: inset 0 0 0 2px var(--ring);
+      }
+      .d.band:before {
+        content: '';
+        position: absolute;
+        inset: 0;
+        background: var(--muted);
+      }
+      .d.b0:before {
+        left: 50%;
+      }
+      .d.b1:before {
+        right: 50%;
+      }
+      .pop {
+        position: absolute;
+        left: 0;
+        top: calc(100% + 8px);
+        width: 380px;
+        max-width: calc(100vw - 32px);
+        background: var(--popover);
+        border: 2px solid var(--border);
+        border-radius: 28px;
+        padding: 12px;
+        box-shadow: var(--shadow);
+        z-index: 5;
+      }
+      .nat {
+        position: absolute;
+        left: 0;
+        top: calc(100% + 2px);
+        width: 236px;
+        background: #fff;
+        color: #111;
+        border: 1px solid #9a9aa3;
+        padding: 10px;
+        font-size: 13px;
+        line-height: 1.2;
+        z-index: 5;
+      }
+      .nat .nh {
+        display: flex;
+        justify-content: space-between;
+        font-weight: 800;
+        margin-bottom: 8px;
+      }
+      .nat .ng {
+        display: grid;
+        grid-template-columns: repeat(7, 1fr);
+        text-align: center;
+        row-gap: 9px;
+      }
+      .nat .ng b {
+        font-weight: 800;
+      }
+      .nat .ng .s {
+        background: #1a66d6;
+        color: #fff;
+        outline: 2px solid #111;
+      }
+      .nat .nf {
+        display: flex;
+        justify-content: space-between;
+        color: #1a66d6;
+        margin-top: 10px;
+      }
+      .sum {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 12px;
+        padding: 12px 4px 0;
+        font-size: 18px;
+        color: var(--muted-foreground);
+      }
+      .sum b {
+        color: var(--foreground);
+      }
+      .row2 > * {
+        min-width: 0;
+      }
+      @media (max-width: 359px) {
+        .row2 .in {
+          padding: 0 12px;
+        }
+        .row2 .in svg {
+          display: none;
+        }
+      }
+      .done {
+        height: 56px;
+        padding: 0 24px;
+        border-radius: 999px;
+        background: var(--primary);
+        color: var(--primary-foreground);
+        font-weight: 800;
+        display: flex;
+        align-items: center;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="lbl" lang="en">
+      <b>Arm 2 · Range sheet · 1440px</b>Cost: one sheet sets both dates, so
+      tapping a start then an end is a gesture to learn, and the two fields act
+      as one control.<br />Reference: the select sheet list picked today, the
+      trip band on the month calendar.
+    </div>
+    <div class="app" style="">
+      <div class="top">
+        <div class="brand">Lịch trình</div>
+        <div class="seg" role="group" aria-label="Language / Ngôn ngữ">
+          <button data-l="vi" aria-pressed="false">VI</button
+          ><button data-l="en" aria-pressed="true">EN</button>
+        </div>
+      </div>
+      <div class="back">
+        <svg
+          viewBox="0 0 10 18"
+          width="10"
+          height="18"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2.4"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          aria-hidden="true"
+        >
+          <path d="M8.5 1.5L1.5 9l7 7.5" /></svg
+        ><span class="vi">Quay lại</span><span class="en">Back</span>
+      </div>
+      <h1>
+        <span class="vi">Chuyến đi mới</span><span class="en">New trip</span>
+      </h1>
+      <div class="fl">
+        <span class="vi">Tên chuyến đi</span><span class="en">Trip name</span>
+      </div>
+      <div class="in">
+        <span class="vi">Thăm nhà ở Hồ Bạc</span
+        ><span class="en">Home visit to Hồ Bạc</span>
+      </div>
+      <div class="row2">
+        <div class="fld">
+          <div class="fl">
+            <span class="vi">Đi ngày</span><span class="en">From</span>
+          </div>
+          <div class="in open">
+            <span>20/9/2031</span
+            ><svg
+              viewBox="0 0 24 24"
+              width="24"
+              height="24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2.2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              aria-hidden="true"
+            >
+              <rect x="3.5" y="5" width="17" height="15.5" rx="3.5" />
+              <path d="M3.5 10h17M8 3v4M16 3v4" />
+            </svg>
+          </div>
+        </div>
+        <div class="fld">
+          <div class="fl">
+            <span class="vi">Về ngày</span><span class="en">To</span>
+          </div>
+          <div class="in open">
+            <span>24/9/2031</span
+            ><svg
+              viewBox="0 0 24 24"
+              width="24"
+              height="24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2.2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              aria-hidden="true"
+            >
+              <rect x="3.5" y="5" width="17" height="15.5" rx="3.5" />
+              <path d="M3.5 10h17M8 3v4M16 3v4" />
+            </svg>
+          </div>
+        </div>
+      </div>
+      <div class="fl">
+        <span class="vi">Giờ địa phương</span><span class="en">Local time</span>
+      </div>
+      <div class="in">
+        <span
+          ><span class="vi">Giờ Việt Nam (GMT+7)</span
+          ><span class="en">Vietnam time (GMT+7)</span></span
+        ><svg
+          viewBox="0 0 24 24"
+          width="22"
+          height="22"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2.4"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          aria-hidden="true"
+        >
+          <path d="M6 9l6 6 6-6" />
+        </svg>
+      </div>
+      <div class="save">
+        <span class="vi">Tạo chuyến đi</span><span class="en">Create trip</span>
+      </div>
+    </div>
+    <div class="scrim"></div>
+    <div class="sheet dlg" role="dialog">
+      <h2>
+        <span class="vi">Ngày đi và về</span><span class="en">Trip dates</span
+        ><span class="x"
+          ><svg
+            viewBox="0 0 24 24"
+            width="22"
+            height="22"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2.6"
+            stroke-linecap="round"
+            aria-hidden="true"
+          >
+            <path d="M6 6l12 12M18 6L6 18" /></svg
+        ></span>
+      </h2>
+      <div class="cal">
+        <div class="calh">
+          <b
+            ><span class="vi">Tháng 9, 2031</span
+            ><span class="en">September 2031</span></b
+          >
+          <div class="nav">
+            <span class="rb"
+              ><svg
+                viewBox="0 0 10 18"
+                width="10"
+                height="18"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2.4"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                aria-hidden="true"
+              >
+                <path d="M8.5 1.5L1.5 9l7 7.5" /></svg></span
+            ><span class="rb"
+              ><svg
+                viewBox="0 0 10 18"
+                width="10"
+                height="18"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2.4"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                aria-hidden="true"
+              >
+                <path d="M1.5 1.5L8.5 9l-7 7.5" /></svg
+            ></span>
+          </div>
+        </div>
+        <div class="dow">
+          <span><span class="vi">T2</span><span class="en">Mo</span></span
+          ><span><span class="vi">T3</span><span class="en">Tu</span></span
+          ><span><span class="vi">T4</span><span class="en">We</span></span
+          ><span><span class="vi">T5</span><span class="en">Th</span></span
+          ><span><span class="vi">T6</span><span class="en">Fr</span></span
+          ><span><span class="vi">T7</span><span class="en">Sa</span></span
+          ><span><span class="vi">CN</span><span class="en">Su</span></span>
+        </div>
+        <div class="days">
+          <div class="d"><span>1</span></div>
+          <div class="d"><span>2</span></div>
+          <div class="d"><span>3</span></div>
+          <div class="d"><span>4</span></div>
+          <div class="d"><span>5</span></div>
+          <div class="d"><span>6</span></div>
+          <div class="d"><span>7</span></div>
+          <div class="d"><span>8</span></div>
+          <div class="d"><span>9</span></div>
+          <div class="d"><span>10</span></div>
+          <div class="d"><span>11</span></div>
+          <div class="d"><span>12</span></div>
+          <div class="d"><span>13</span></div>
+          <div class="d"><span>14</span></div>
+          <div class="d today"><span>15</span></div>
+          <div class="d"><span>16</span></div>
+          <div class="d"><span>17</span></div>
+          <div class="d"><span>18</span></div>
+          <div class="d"><span>19</span></div>
+          <div class="d sel band b0"><span>20</span></div>
+          <div class="d band"><span>21</span></div>
+          <div class="d band"><span>22</span></div>
+          <div class="d band"><span>23</span></div>
+          <div class="d sel band b1"><span>24</span></div>
+          <div class="d"><span>25</span></div>
+          <div class="d"><span>26</span></div>
+          <div class="d"><span>27</span></div>
+          <div class="d"><span>28</span></div>
+          <div class="d"><span>29</span></div>
+          <div class="d"><span>30</span></div>
+          <div class="d out"><span>1</span></div>
+          <div class="d out"><span>2</span></div>
+          <div class="d out"><span>3</span></div>
+          <div class="d out"><span>4</span></div>
+          <div class="d out"><span>5</span></div>
+        </div>
+      </div>
+      <div class="sum">
+        <span
+          ><b>20/9</b> <span class="vi">đến</span><span class="en">to</span>
+          <b>24/9</b> · <span class="vi">5 ngày</span
+          ><span class="en">5 days</span></span
+        ><span class="done"
+          ><span class="vi">Xong</span><span class="en">Done</span></span
+        >
+      </div>
+    </div>
+    <script>
+      document.querySelectorAll('.seg button').forEach(function (b) {
+        b.addEventListener('click', function () {
+          document.documentElement.dataset.lang = b.dataset.l
+          document.querySelectorAll('.seg button').forEach(function (x) {
+            x.setAttribute('aria-pressed', x === b)
+          })
+        })
+      })
+    </script>
+  </body>
+</html>

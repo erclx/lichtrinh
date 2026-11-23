@@ -60,6 +60,7 @@ Calm, large, and plain for an older traveler reading on an iPhone. Near-black co
 ## Spacing
 
 - Every control's hit area reaches `--spacing-target`, and a control drawn smaller pads out to it, as the header's language and settings controls do on phone.
+- A day cell in a month is the one exception, at 46 to 58px, since seven columns cannot fit wider on a phone.
 
 ## Layout
 
