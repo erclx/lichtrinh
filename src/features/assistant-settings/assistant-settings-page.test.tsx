@@ -1,6 +1,7 @@
 import '@/i18n/setup'
 
 import type { AssistantStatus } from '@shared/assistant.ts'
+import type { VoiceAdmin, VoiceUsage } from '@shared/voice.ts'
 import { screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 
@@ -19,6 +20,28 @@ function aStatus(overrides: Partial<AssistantStatus> = {}): AssistantStatus {
   }
 }
 
+function aUsage(overrides: Partial<VoiceUsage> = {}): VoiceUsage {
+  return {
+    model: 'qwen3-asr-1.7b',
+    clips: 0,
+    sent: 0,
+    meanEditRatio: null,
+    ...overrides,
+  }
+}
+
+function aVoice(overrides: Partial<VoiceAdmin> = {}): VoiceAdmin {
+  return {
+    model: 'qwen3-asr-1.7b',
+    usage: [
+      aUsage({ model: 'qwen3-asr-1.7b' }),
+      aUsage({ model: 'whisper-large-v3-turbo' }),
+      aUsage({ model: 'phowhisper-large' }),
+    ],
+    ...overrides,
+  }
+}
+
 /** Today at 10:14 on the device's clock, as the API sends it. */
 function todayAt1014() {
   const at = new Date()
@@ -31,6 +54,7 @@ function adminApi(routes: Routes = {}) {
     'GET /auth/me': () => json(aUser({ id: 'user-admin', role: 'admin' })),
     'GET /assistant/status': () => json(aStatus()),
     'GET /settings': () => json({ contactName: null }),
+    'GET /admin/voice': () => json(aVoice()),
     ...routes,
   })
 }
@@ -213,6 +237,79 @@ describe('AssistantSettingsPage', () => {
       expect(await screen.findByRole('alert')).toHaveTextContent(
         'Something went wrong',
       )
+    })
+  })
+
+  describe('the speech model', () => {
+    it('checks the saved model and reads Not used yet before any clip', async () => {
+      adminApi()
+
+      renderPage()
+
+      expect(
+        await screen.findByRole('radio', { name: 'Qwen3-ASR' }),
+      ).toBeChecked()
+      expect(
+        screen.getByRole('radio', { name: 'PhoWhisper' }),
+      ).toHaveAccessibleDescription('Trained for Vietnamese Not used yet')
+    })
+
+    it("reads each model's clips and the share of words changed", async () => {
+      adminApi({
+        'GET /admin/voice': () =>
+          json(
+            aVoice({
+              usage: [
+                aUsage({
+                  model: 'qwen3-asr-1.7b',
+                  clips: 12,
+                  sent: 10,
+                  meanEditRatio: 0.083,
+                }),
+                aUsage({ model: 'whisper-large-v3-turbo', clips: 1, sent: 0 }),
+                aUsage({ model: 'phowhisper-large' }),
+              ],
+            }),
+          ),
+      })
+
+      renderPage()
+
+      expect(
+        await screen.findByText('10 of 12 clips sent · 8% of words changed'),
+      ).toBeInTheDocument()
+      expect(screen.getByText('1 clip · none sent yet')).toBeInTheDocument()
+    })
+
+    it('saves a picked model and confirms it inline', async () => {
+      const user = userEvent.setup()
+      const api = adminApi({ 'PUT /admin/voice': ({ body }) => json(body) })
+      renderPage()
+
+      await user.click(
+        await screen.findByRole('radio', { name: 'Whisper turbo' }),
+      )
+
+      expect(await screen.findByText(/^Saved\. The next clip/)).toBeVisible()
+      expect(screen.getByRole('radio', { name: 'Whisper turbo' })).toBeChecked()
+      expect(api.requests.at(-1)).toEqual({
+        method: 'PUT',
+        path: '/admin/voice',
+        body: { model: 'whisper-large-v3-turbo' },
+      })
+    })
+
+    it('keeps the saved model and says so when the save fails', async () => {
+      const user = userEvent.setup()
+      adminApi({ 'PUT /admin/voice': () => failure('internal', 500) })
+      renderPage()
+
+      await user.click(await screen.findByRole('radio', { name: 'PhoWhisper' }))
+
+      expect(await screen.findByRole('alert')).toHaveTextContent(
+        'Something went wrong',
+      )
+      expect(screen.getByRole('radio', { name: 'Qwen3-ASR' })).toBeChecked()
     })
   })
 

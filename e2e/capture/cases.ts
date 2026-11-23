@@ -137,6 +137,134 @@ function chatCases(
   ]
 }
 
+interface TalkScript {
+  /** Whether the status read says the voice server answers. */
+  voice: boolean
+  /** The buttons pressed once the composer shows, in order. */
+  presses: readonly ('Talk' | 'Stop and write it down')[]
+  /** The clip's words, or null to hold the clip at transcribing. */
+  words: string | null
+  /** Refuses the microphone, as a traveler who tapped Don't Allow. */
+  denied?: boolean
+}
+
+const TALK_CHAT = '/chats/fixture-chat-today'
+
+// The harness has no microphone and no hook after the load, so the page
+// gets a tone for a microphone, answers its own clip, and presses the mic
+// itself. The thread reads empty, as the talk frames draw it.
+async function talkScript(page: Page, script: TalkScript) {
+  await page.route('**/api/assistant/status', (route) =>
+    route.fulfill({
+      json: {
+        online: true,
+        lastAnsweredAt: null,
+        model: 'lichtrinh-assistant',
+        voice: { online: script.voice, model: 'qwen3-asr-1.7b' },
+      },
+    }),
+  )
+  await page.route(`**/api${TALK_CHAT}`, async (route) => {
+    const response = await route.fetch()
+    const thread = (await response.json()) as Record<string, unknown>
+    await route.fulfill({ response, json: { ...thread, messages: [] } })
+  })
+  await page.addInitScript(({ presses, words, denied }) => {
+    navigator.mediaDevices.getUserMedia = async () => {
+      if (denied === true) throw new DOMException('denied', 'NotAllowedError')
+      const context = new AudioContext()
+      const tone = context.createOscillator()
+      const out = context.createMediaStreamDestination()
+      tone.connect(out)
+      tone.start()
+      return out.stream
+    }
+    const realFetch = window.fetch.bind(window)
+    window.fetch = (input, init) => {
+      const url = input instanceof Request ? input.url : String(input)
+      if (url.includes('/api/voice/transcriptions/')) {
+        if (words === null) return new Promise<Response>(() => undefined)
+        const id = url.split('/').pop() ?? ''
+        return Promise.resolve(
+          Response.json({
+            id,
+            text: words,
+            model: 'qwen3-asr-1.7b',
+            audioMs: 2100,
+            ms: 900,
+          }),
+        )
+      }
+      if (url.endsWith('/api/assistant/warm')) {
+        return Promise.resolve(new Response(null, { status: 202 }))
+      }
+      return realFetch(input, init)
+    }
+    // Hands back audio at once, so listening starts without waiting a slice.
+    class StandInRecorder {
+      static isTypeSupported = (mime: string) => mime.startsWith('audio/webm')
+      state = 'inactive'
+      ondataavailable: ((event: { data: Blob }) => void) | null = null
+      onstop: (() => void) | null = null
+      start() {
+        this.state = 'recording'
+        queueMicrotask(() =>
+          this.ondataavailable?.({ data: new Blob([new Uint8Array([1])]) }),
+        )
+      }
+      stop() {
+        this.state = 'inactive'
+        this.ondataavailable?.({ data: new Blob([new Uint8Array([1])]) })
+        this.onstop?.()
+      }
+    }
+    Object.defineProperty(window, 'MediaRecorder', { value: StandInRecorder })
+    const queue = [...presses]
+    const timer = setInterval(() => {
+      const label = queue[0]
+      if (label === undefined) {
+        clearInterval(timer)
+        return
+      }
+      const button = document.querySelector<HTMLButtonElement>(
+        `button[aria-label="${label}"]`,
+      )
+      if (button === null) return
+      // Stop shows while the mic opens too, where a press cancels the clip.
+      const listening = document.body.innerText.includes('Listening…')
+      if (label !== 'Talk' && !listening) return
+      queue.shift()
+      button.click()
+    }, 50)
+  }, script)
+}
+
+/** One talk state on the chat page as the traveler, light and dark. */
+function talkCases(section: string, script: TalkScript): CaptureCase[] {
+  const setup = async (page: Page) => {
+    await inTripZone(page)
+    await page.clock.setFixedTime(new Date(DEMO_INSTANT))
+    await flowSticky(page)
+    await talkScript(page, script)
+    await asTraveler(page)
+  }
+  return [
+    { section, theme: 'default', route: TALK_CHAT, evidence: true, setup },
+    {
+      section,
+      theme: 'dark',
+      route: TALK_CHAT,
+      evidence: true,
+      setup: async (page) => {
+        await dark(page)
+        await setup(page)
+      },
+    },
+  ]
+}
+
+const STOP = 'Stop and write it down'
+
 /** A calendar route as the admin at the demo instant, light and dark. */
 function calendarCases(section: string, route: string): CaptureCase[] {
   return [
@@ -407,4 +535,33 @@ export const CASES: CaptureCase[] = [
   ),
   // Today read from the device's saved plan, as `canon/design/states/offline`.
   ...offlineCases('offline-today', '/'),
+  // The talk states, each reached by the page pressing the mic itself.
+  ...talkCases('talk-ready', { voice: true, presses: [], words: null }),
+  ...talkCases('talk-listening', {
+    voice: true,
+    presses: ['Talk'],
+    words: null,
+  }),
+  ...talkCases('talk-transcribing', {
+    voice: true,
+    presses: ['Talk', STOP],
+    words: null,
+  }),
+  ...talkCases('talk-review', {
+    voice: true,
+    presses: ['Talk', STOP],
+    words: 'doi an toi sang 8 gio',
+  }),
+  ...talkCases('talk-retry', {
+    voice: true,
+    presses: ['Talk', STOP],
+    words: '',
+  }),
+  ...talkCases('talk-voice-off', { voice: false, presses: [], words: null }),
+  ...talkCases('talk-denied', {
+    voice: true,
+    presses: ['Talk'],
+    words: null,
+    denied: true,
+  }),
 ]

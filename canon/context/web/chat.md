@@ -21,8 +21,17 @@ Holds the chat list, one thread with its composer, and the places each width dra
 - `change-card.tsx` undoes through the calendar's undo with one `undoId` per card, so a press retried after a lost answer reaches the stored undo
 - The shell renders `chat-dock.tsx` from 1024 wide, as a half sheet from 480, and `talk-bar.tsx` otherwise, standing both aside on the chat pages
 
+### `src/features/chat/voice/`
+
+Holds the mic in the composer, from a tap to the words landing in the box for the traveler to fix before Send.
+
+- `talk.ts` is the reducer over ready, starting, listening, transcribing, review, retry, denied, off, and failed, and only the middle three take the message row
+- `use-talk.ts` warms voice on a tap, opens one session per tap so a late answer from a dropped one changes nothing, and sends the whole clip once on Stop
+- `recorder.ts` records webm with Opus or else Safari's mp4 at 32 kbps, and closes the microphone on Stop, at 60 seconds, and when the page hides
+- `edit-ratio.ts` measures the share of words changed between the box right after the words landed and the text sent, which rides the send as `voice`
+
 ## Gotchas
 
 - A Stop or a drop carries no saved reply, so the thread asks again every second until the reply saves, then drops back to 30 seconds
 - The e2e server reads `BRIDGE_SECRET` from its environment, and a `.dev.vars` holding one overrides it, so `e2e/chat.spec.ts` fails from such a checkout
-- The relay holds one bridge per server, so the chat journey runs in Chromium alone, since two engines' fake bridges would replace each other
+- The relay holds one bridge per server, so every journey using the fake bridge stays in `e2e/chat.spec.ts` on Chromium alone, since a second file or engine would run beside it

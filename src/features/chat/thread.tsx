@@ -44,7 +44,7 @@ export function Thread({ chatId, layout }: ThreadProps) {
   const { turn, send, stop } = useTurn(chatId)
   const thread = useThread(chatId, unsavedSend(turn))
   const contact = useContact()
-  const { online } = useAssistantStatus()
+  const { online, voiceOnline } = useAssistantStatus()
   const start = useStartChat()
   const navigate = useNavigate()
   const offline = online === false
@@ -161,6 +161,9 @@ export function Thread({ chatId, layout }: ThreadProps) {
         <Composer
           running={running}
           offline={offline}
+          voiceOnline={voiceOnline}
+          empty={!thread.isPending && items.length === 0}
+          contactName={contact.data ?? null}
           onSend={send}
           onStop={stop}
         />

@@ -1,5 +1,6 @@
 import type { AssistantStatus } from '@shared/assistant.ts'
 import type { ChatEvent } from '@shared/chats.ts'
+import type { VoiceSend } from '@shared/voice.ts'
 import { useQueryClient } from '@tanstack/react-query'
 import { useReducer, useRef } from 'react'
 
@@ -35,8 +36,8 @@ export function useTurn(chatId: string) {
   const refreshCalendar = () =>
     void client.invalidateQueries({ queryKey: calendarKeys.all })
 
-  /** Resolves false when the send was turned away before it saved. */
-  async function send(text: string): Promise<boolean> {
+  /** Resolves false when turned away. `voice` rides a transcript's send. */
+  async function send(text: string, voice?: VoiceSend): Promise<boolean> {
     if (turn !== null && isRunning(turn)) return false
     const abort = new AbortController()
     controller.current = abort
@@ -44,7 +45,7 @@ export function useTurn(chatId: string) {
     dispatch({ type: 'start', sent })
     let events: AsyncIterable<ChatEvent>
     try {
-      events = await sendMessage(chatId, sent, abort.signal)
+      events = await sendMessage(chatId, { ...sent, voice }, abort.signal)
     } catch (error) {
       if (abort.signal.aborted) {
         void client.invalidateQueries({ queryKey: chatKeys.all })
