@@ -13,11 +13,21 @@ Owns the browser app the traveler and the family open, from `index.html` and `sr
 
 ### `src/`
 
-Holds the React entry and the app shell. `main.tsx` mounts the named `App` export from `app.tsx`, and `index.css` holds the color roles, the Nunito font, the five type steps, the 64px `--spacing-target`, and the radius roles that `canon/DESIGN.md` describes.
+Holds the React entry and the app shell. `main.tsx` loads `src/i18n/setup.ts` and then mounts the named `App` export from `app.tsx`, and `index.css` holds the color roles, the Nunito font, the five type steps, the 64px `--spacing-target`, and the radius roles that `canon/DESIGN.md` describes.
 
-- `app.tsx` renders a header row with the mark beside the wordmark above a placeholder heading, until the screens land
+- `app.tsx` renders a header row with the mark, the wordmark, and the language toggle above a placeholder heading, until the screens land
 - Light values sit on `:root` and dark on `:root[data-theme='dark']`, and the `dark:` variant reads the same attribute, which the head script in `index.html` sets from the device scheme
 - Tailwind v4 runs through `@tailwindcss/vite`, so there is no `tailwind.config` file
+
+### `src/i18n/`
+
+Holds the translation layer every screen reads its copy through, on i18next and react-i18next, with one `translation` namespace.
+
+- `locales/en.ts` is the shape source, and `locales/vi.ts` satisfies the `Messages` type `resources.ts` derives from it, so a key in one alone fails `tsc`
+- `language.ts` picks the opening language, a device choice first, then the account's, then Vietnamese in production and English in development, and never the browser's
+- `setup.ts` starts the instance synchronously before the first render and keeps `<html lang>` in step
+- `chooseLanguage` stores a press under `lichtrinh.language`, while `applyLanguage` switches without storing, for an account's language
+- `i18next.d.ts` types every `t()` key against `en.ts`, and `resources.test.ts` checks both modules hold the same keys with none empty
 
 ### `src/components/ui/`
 
@@ -37,7 +47,7 @@ Holds the accepted board frames a screen builds against, one group folder per ap
 
 The folders below each carry one small job.
 
-- `src/components/`: the app's own components, being the inline `brand-mark.tsx`, with the shadcn kit under `ui/`
+- `src/components/`: the app's own components, being the inline `brand-mark.tsx` and the VI and EN `language-toggle.tsx`, with the shadcn kit under `ui/`
 - `public/`: the favicon, the PNG icons from 16 to 512, and the light and dark social cards, while the web manifest is not written yet
 - `src/lib/`: shared helpers, being `cn` re-exported from the `cn` package
 - `src/test/`: the Vitest setup file the test config loads

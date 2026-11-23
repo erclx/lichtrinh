@@ -1,0 +1,41 @@
+import { expect, test } from '@playwright/test'
+
+test('a language chosen on the device survives a reload', async ({ page }) => {
+  await page.goto('/')
+  await expect(page.locator('html')).toHaveAttribute('lang', 'en')
+
+  await page.getByRole('button', { name: 'VI Tiếng Việt' }).click()
+  await expect(page.locator('html')).toHaveAttribute('lang', 'vi')
+
+  await page.reload()
+
+  await expect(page.locator('html')).toHaveAttribute('lang', 'vi')
+  await expect(
+    page.getByRole('button', { name: 'VI Tiếng Việt' }),
+  ).toHaveAttribute('aria-pressed', 'true')
+})
+
+test.describe('the pressed language keeps its fill under the pointer', () => {
+  for (const colorScheme of ['light', 'dark'] as const) {
+    test(`in ${colorScheme}`, async ({ page }) => {
+      await page.emulateMedia({ colorScheme })
+      await page.goto('/')
+      // No transitions, so the hover read cannot pass on a fade's first frame.
+      await page.addStyleTag({
+        content: '* { transition: none !important; }',
+      })
+      const pressed = page.getByRole('button', { name: 'EN English' })
+      await page.getByRole('button', { name: 'VI Tiếng Việt' }).click()
+      await pressed.click()
+      await page.mouse.move(0, 0)
+      await expect(pressed).toHaveAttribute('aria-pressed', 'true')
+      const fill = await pressed.evaluate(
+        (el) => getComputedStyle(el).backgroundColor,
+      )
+
+      await pressed.hover()
+
+      await expect(pressed).toHaveCSS('background-color', fill)
+    })
+  }
+})
