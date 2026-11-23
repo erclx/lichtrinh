@@ -62,6 +62,17 @@ describe('apiFetch', () => {
     expect(init?.body).toBe('{"name":"a"}')
   })
 
+  it('declares JSON on a POST with no body', async () => {
+    const fetch = respondWith(new Response(null, { status: 204 }))
+
+    await apiFetch('/auth/sign-out', { method: 'POST' })
+
+    const [, init] = fetch.mock.calls[0]
+    expect(new Headers(init?.headers).get('content-type')).toBe(
+      'application/json',
+    )
+  })
+
   it('resolves with nothing for an empty success when no schema is given', async () => {
     respondWith(new Response(null, { status: 204 }))
 

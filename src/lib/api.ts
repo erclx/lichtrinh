@@ -67,8 +67,10 @@ export async function apiFetch(
     response = await fetch(`/api${path}`, {
       method,
       credentials: 'same-origin',
+      // Every write declares JSON, a bodyless one too, since a dev proxy can
+      // hand the Worker an empty body that its content-type check refuses.
       headers:
-        body === undefined ? undefined : { 'content-type': 'application/json' },
+        method === 'GET' ? undefined : { 'content-type': 'application/json' },
       body: body === undefined ? undefined : JSON.stringify(body),
     })
   } catch {
