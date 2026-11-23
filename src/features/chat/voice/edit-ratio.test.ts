@@ -15,6 +15,14 @@ describe('editRatio', () => {
     )
   })
 
+  it('ignores case and punctuation a model writes differently', () => {
+    expect(editRatio('Dời ăn tối sang 8 giờ', 'dời ăn tối sang 8 giờ?')).toBe(0)
+  })
+
+  it('drops a token that is punctuation alone', () => {
+    expect(editRatio('dời ăn tối - 8 giờ', 'dời ăn tối 8 giờ')).toBe(0)
+  })
+
   it('ignores spacing the traveler tidied', () => {
     expect(editRatio('doi  an toi ', 'doi an toi')).toBe(0)
   })

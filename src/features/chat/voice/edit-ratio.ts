@@ -1,6 +1,7 @@
 /**
  * The share of words changed between the landed box and the text sent, from
- * 0 to 1. Words, as a word error rate counts, so a diacritic changes a word.
+ * 0 to 1, as syllable WER counts: a diacritic changes a word, case and edge
+ * punctuation do not, since models differ in both and neither is a mishearing.
  */
 export function editRatio(landed: string, sent: string): number {
   const before = words(landed)
@@ -11,7 +12,12 @@ export function editRatio(landed: string, sent: string): number {
 }
 
 function words(text: string): string[] {
-  return text.normalize('NFC').trim().split(/\s+/).filter(Boolean)
+  return text
+    .normalize('NFC')
+    .toLowerCase()
+    .split(/\s+/)
+    .map((word) => word.replace(/^\p{P}+|\p{P}+$/gu, ''))
+    .filter(Boolean)
 }
 
 // Levenshtein over words, one row at a time.
