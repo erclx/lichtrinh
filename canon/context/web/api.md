@@ -38,6 +38,16 @@ Holds the Drizzle schema, the client a route gets its database from, the migrati
 - Each migration takes a rollback of the same file name under `rollbacks/`, and a spec fails when one is missing or leaves a table behind
 - `bun run db:migrate` and `bun run dev` read the same local database under `.wrangler/state/v3/d1`
 
+### `worker/calendar/`
+
+Holds the trip, entry, and history rules the routes call as `person`, which the assistant's bridge will call as `assistant`.
+
+- Every write is one D1 batch opening on its change row, inserted only while the version, range, and id checks hold, and every later statement waits on that row, so a refused check writes nothing
+- Rows are soft-deleted, so a read never returns a deleted trip, a deleted entry, or an entry of a deleted trip
+- Update and delete take the version the caller read and answer `edit_conflict` on a stale one. Create takes a client id, and a retry with the same body answers the stored row.
+- Undo writes a change's `before` back as an `undo` change, refusing `undo_conflict` unless the row still holds that change's `after`, and `already_undone` on a second try
+- A trip's zone change moves the entries in its old zone, keeping their clock times, and records which, so undoing it moves the same ones back
+
 ### `shared/`
 
 Holds the schemas the app, the API, and later the assistant's tools all import as `@shared/*`, plus the password hash and generator the Worker and the admin command share. The import direction between it, `src/`, and `worker/` is `.claude/rules/project/code/imports.md`.
@@ -48,8 +58,8 @@ Holds the schemas the app, the API, and later the assistant's tools all import a
 
 The Worker's two smaller folders each carry one job.
 
-- `worker/routes/`: one Hono router per API area, being health, sessions under `/api/auth/`, accounts under `/api/admin/users`, and the contact name under `/api/settings`
-- `worker/test/`: the migrating setup file, the test-only binding types, and builders for invented accounts and requests. `bare()` sends the Origin header `csrf()` needs on a bodiless POST.
+- `worker/routes/`: one Hono router per API area, being health, `/api/auth/`, `/api/admin/users`, `/api/settings`, and the calendar's `/api/trips`, `/api/entries`, and `/api/changes`
+- `worker/test/`: the migrating setup, the test-only binding types, and builders for invented accounts, trips, entries, and requests. `bare()` sends the Origin `csrf()` needs on a bodiless POST.
 
 ## Gotchas
 
@@ -57,3 +67,4 @@ The Worker's two smaller folders each carry one job.
 - Storage resets per spec file rather than per test, so a case that writes or rolls back hands its state to the next case in that file
 - `vitest.config.ts` merges `vite.config.ts`, so `cloudflare()` loads in both test projects. Suspect it first when `bun run test:run` hangs after a plugin upgrade.
 - Coverage runs on V8, which Cloudflare's known-issues page calls unsupported. Switch to Istanbul and exclude `worker/db/migrations/` if CI reports `worker/` at zero.
+- Drizzle's D1 batch throws on a `db.run()` carrying parameters, so a guarded insert goes through `insertWhen()` in `worker/calendar/record.ts`, with `deferForeignKeys()` ahead of it
