@@ -52,6 +52,9 @@ voice/clips/
 *.wav
 *.mp3
 *.webm
+*.mp4
+*.ogg
+*.opus
 
 # Local secrets and state for Cloudflare and the bridge
 .dev.vars

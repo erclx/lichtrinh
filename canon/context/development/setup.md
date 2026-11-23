@@ -40,20 +40,23 @@ Holds the `lichtrinh` command for the product's own services, which the owner in
 - `program.ts` builds the commander program from an injected output, task runner, and checkout lookup, so tests drive it with no process
 - `checkout.ts` picks the git top level of the working folder when it is a lichtrinh checkout, a linked worktree included, else the command's own checkout
 - `task.ts` prints `› <command>`, runs it with inherited output, and returns its exit code
-- `commands/` holds one file per verb group, being `db status` and `db migrate` over the local database and `admin create`, whose `--remote` asks before it writes
+- `commands/` holds one file per verb group, being `db` over the local database, `admin`, whose `create --remote` asks before it writes, and `voice`, which hands off to `uv run --group gpu`
 - `admin/` makes the first admin, as `lichtrinh admin create <username> --local` after `bun run db:migrate`. It prints the password once, and the operator's own account passes `--language en`.
 
 ### `voice/`
 
-Holds the Python project, synced from canon's python stack with `--skip base`, so husky, oxfmt, and commitlint stay at the root. It needs [uv](https://docs.astral.sh/uv/) and one `uv sync` inside `voice/`, since `bun run check` runs these too. Run them from inside `voice/`.
+Holds the Python project, synced from canon's python stack with `--skip base`, so husky, oxfmt, and commitlint stay at the root. It needs [uv](https://docs.astral.sh/uv/) and one `uv sync` inside `voice/`, since `bun run check` runs these too. Run the `bun run` rows from inside `voice/`.
 
-| Command             | Purpose                                              |
-| ------------------- | ---------------------------------------------------- |
-| `bun run lint`      | Run `ruff check` and `ruff format --check`           |
-| `bun run lint:fix`  | Auto-fix with `ruff check --fix` then `ruff format`  |
-| `bun run typecheck` | Run `mypy` in strict mode                            |
-| `bun run test:run`  | Run `pytest -v`                                      |
-| `bun run test:cov`  | Run `pytest` with branch coverage and an HTML report |
+| Command                             | Purpose                                                                                   |
+| ----------------------------------- | ----------------------------------------------------------------------------------------- |
+| `bun run lint`                      | Run `ruff check` and `ruff format --check`                                                |
+| `bun run lint:fix`                  | Auto-fix with `ruff check --fix` then `ruff format`                                       |
+| `bun run typecheck`                 | Run `mypy` in strict mode                                                                 |
+| `bun run test:run`                  | Run `pytest -v`                                                                           |
+| `bun run test:cov`                  | Run `pytest` with branch coverage and an HTML report                                      |
+| `lichtrinh voice models`            | On the workspace PC after `uv sync --group gpu`, fetch every model and convert PhoWhisper |
+| `lichtrinh voice serve`             | Serve on `127.0.0.1:8770`, one model at a time, unloaded after `VOICE_IDLE_SECONDS`       |
+| `lichtrinh voice transcribe <path>` | Send one clip to the running server and print its text and timings                        |
 
 ### `.husky/`
 
