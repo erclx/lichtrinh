@@ -1,23 +1,17 @@
 import '@/i18n/setup'
 
-import { render, screen } from '@testing-library/react'
+import { screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { createMemoryRouter, RouterProvider } from 'react-router'
 
 import { applyLanguage } from '@/i18n/setup'
 import { apiFetch } from '@/lib/api'
-import { routes } from '@/router'
-import { SessionProvider } from '@/session/provider'
 import { aUser, failure, fakeApi, json, offline } from '@/test/fake-api'
+import { renderRoute } from '@/test/render-route'
 
+// The calendar pages read through the query cache, so the shell renders
+// inside every provider `app.tsx` mounts.
 function renderAt(path: string) {
-  const router = createMemoryRouter(routes, { initialEntries: [path] })
-  render(
-    <SessionProvider>
-      <RouterProvider router={router} />
-    </SessionProvider>,
-  )
-  return router
+  return renderRoute(path).router
 }
 
 beforeEach(async () => {

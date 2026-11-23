@@ -28,10 +28,13 @@ export function useTrip(id: string | undefined) {
   })
 }
 
-export function useEntries(range: EntryRange) {
+/** The entries starting in a range, idle while `range` is undefined. */
+export function useEntries(range: EntryRange | undefined) {
+  const asked = range ?? { from: '', to: '' }
   return useQuery({
-    queryKey: calendarKeys.entries(range),
-    queryFn: () => listEntries(range),
+    queryKey: calendarKeys.entries(asked),
+    queryFn: () => listEntries(asked),
+    enabled: range !== undefined,
   })
 }
 

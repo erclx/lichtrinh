@@ -5,6 +5,9 @@ import { CreateAccountPage } from '@/features/accounts/create-account-page'
 import { EditAccountPage } from '@/features/accounts/edit-account-page'
 import { AssistantSettingsPage } from '@/features/assistant-settings/assistant-settings-page'
 import { SettingsPage } from '@/features/settings/settings-page'
+import { TripForm } from '@/features/trips/trip-form'
+import { TripList } from '@/features/trips/trip-list'
+import { TripOverview } from '@/features/trips/trip-overview'
 import { SessionGate } from '@/session/gate'
 import { RequireAdmin } from '@/session/require-admin'
 import { AppShell } from '@/shell/app-shell'
@@ -23,10 +26,9 @@ export const routes: RouteObject[] = [
         element: <AppShell />,
         children: [
           { index: true, element: <PlaceholderPage titleKey="nav.today" /> },
-          {
-            path: 'trips',
-            element: <PlaceholderPage titleKey="nav.trips" />,
-          },
+          { path: 'trips', element: <TripList /> },
+          { path: 'trips/new', element: <TripForm /> },
+          { path: 'trips/:tripId', element: <TripOverview /> },
           {
             path: 'calendar',
             element: <PlaceholderPage titleKey="nav.calendar" />,
