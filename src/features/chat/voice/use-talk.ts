@@ -86,14 +86,19 @@ export function useTalk(onLanded: (text: string) => void) {
         letGo()
         dispatch({ type: 'dropped' })
       },
+      // Listening starts with the first audio, so a Stop always sends some.
+      onAudio: () => {
+        if (session.current === id) dispatch({ type: 'opened' })
+      },
     })
     setStream(opened)
-    dispatch({ type: 'opened' })
   }
 
   function stop() {
     if (state.phase === 'starting') {
       session.current += 1
+      recording.current?.cancel()
+      letGo()
       dispatch({ type: 'stop' })
       return
     }

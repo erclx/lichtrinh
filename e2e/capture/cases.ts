@@ -200,7 +200,7 @@ async function talkScript(page: Page, script: TalkScript) {
       }
       return realFetch(input, init)
     }
-    // A real recorder stopped in its first frame hands back no audio.
+    // Hands back audio at once, so listening starts without waiting a slice.
     class StandInRecorder {
       static isTypeSupported = (mime: string) => mime.startsWith('audio/webm')
       state = 'inactive'
@@ -208,6 +208,9 @@ async function talkScript(page: Page, script: TalkScript) {
       onstop: (() => void) | null = null
       start() {
         this.state = 'recording'
+        queueMicrotask(() =>
+          this.ondataavailable?.({ data: new Blob([new Uint8Array([1])]) }),
+        )
       }
       stop() {
         this.state = 'inactive'
@@ -227,6 +230,9 @@ async function talkScript(page: Page, script: TalkScript) {
         `button[aria-label="${label}"]`,
       )
       if (button === null) return
+      // Stop shows while the mic opens too, where a press cancels the clip.
+      const listening = document.body.innerText.includes('Listening…')
+      if (label !== 'Talk' && !listening) return
       queue.shift()
       button.click()
     }, 50)

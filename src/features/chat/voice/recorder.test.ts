@@ -44,6 +44,18 @@ describe('record', () => {
     })
   })
 
+  it('says once when the first audio arrives, and keeps it in the clip', async () => {
+    const { stream } = aFakeStream()
+    const onAudio = vi.fn()
+    const recording = record(stream, webm, { ...quiet, onAudio })
+
+    await Promise.resolve()
+    const clip = await recording.stop()
+
+    expect(onAudio).toHaveBeenCalledOnce()
+    expect(clip.size).toBe(3)
+  })
+
   it('closes the microphone on Stop and resolves the clip in its type', async () => {
     const { stream, track } = aFakeStream()
     const recording = record(stream, webm, quiet)

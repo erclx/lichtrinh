@@ -59,8 +59,13 @@ interface RecordOptions {
   onCap: (clip: Promise<Blob>) => void
   /** Called when the page hides, which drops the clip. */
   onHidden: () => void
+  /** Called once, when the first audio arrives, so a Stop sends a clip. */
+  onAudio?: () => void
   maxMs?: number
 }
+
+// A short slice delivers the first audio a quarter second in.
+const SLICE_MS = 250
 
 /**
  * Records `stream` until Stop, the cap, or the page hiding, and closes its
@@ -70,7 +75,12 @@ interface RecordOptions {
 export function record(
   stream: MediaStream,
   format: ClipFormat,
-  { onCap, onHidden, maxMs = MAX_CLIP_SECONDS * 1000 }: RecordOptions,
+  {
+    onCap,
+    onHidden,
+    onAudio = () => undefined,
+    maxMs = MAX_CLIP_SECONDS * 1000,
+  }: RecordOptions,
 ): Recording {
   const recorder = new MediaRecorder(stream, {
     mimeType: format.mime,
@@ -80,7 +90,9 @@ export function record(
   let ended: Promise<Blob> | null = null
 
   recorder.ondataavailable = (event) => {
-    if (event.data.size > 0) chunks.push(event.data)
+    if (event.data.size === 0) return
+    chunks.push(event.data)
+    if (chunks.length === 1) onAudio()
   }
 
   function release() {
@@ -116,7 +128,7 @@ export function record(
 
   const cap = setTimeout(() => onCap(stop()), maxMs)
   document.addEventListener('visibilitychange', onVisibility)
-  recorder.start(1000)
+  recorder.start(SLICE_MS)
 
   return { stop, cancel }
 }

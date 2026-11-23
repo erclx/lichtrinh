@@ -109,8 +109,6 @@ test('the traveler speaks a request, fixes the transcript, sends it, and types w
     await expect(
       page.getByText('Listening…', { exact: true }).first(),
     ).toBeVisible()
-    // Speaks for a second, since a Stop in the first frame sends an empty clip.
-    await page.waitForTimeout(1000)
 
     const transcribed = bridge.answerClip('doi an toi sang 8 gio', 800)
     await stop.click()

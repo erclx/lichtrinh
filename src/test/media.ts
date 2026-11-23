@@ -1,6 +1,6 @@
 /**
  * Stand-ins for the browser's recorder and microphone, which jsdom lacks.
- * The recorder hands back one chunk on stop, as a real one flushes.
+ * The recorder hands back one slice on start and one more on stop.
  */
 export class FakeMediaRecorder {
   static supported = new Set(['audio/webm;codecs=opus', 'audio/mp4'])
@@ -25,6 +25,10 @@ export class FakeMediaRecorder {
 
   start() {
     this.state = 'recording'
+    queueMicrotask(() => {
+      if (this.state !== 'recording') return
+      this.ondataavailable?.({ data: new Blob([new Uint8Array([5])]) })
+    })
   }
 
   stop() {
