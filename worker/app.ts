@@ -1,3 +1,5 @@
+import { MAX_CLIP_BYTES, readClipType } from '@shared/voice.ts'
+import type { Context } from 'hono'
 import { Hono } from 'hono'
 import { bodyLimit } from 'hono/body-limit'
 import { csrf } from 'hono/csrf'
@@ -14,22 +16,29 @@ import { healthRoutes } from './routes/health.ts'
 import { settingsRoutes } from './routes/settings.ts'
 import { tripRoutes } from './routes/trips.ts'
 import { userRoutes } from './routes/users.ts'
+import { voiceRoutes } from './routes/voice.ts'
 
 export const MAX_BODY_BYTES = 64 * 1024
 
 const UNSAFE_METHOD = /^(POST|PUT|PATCH|DELETE)$/
 const JSON_TYPE = /^application\/json\s*(;|$)/i
 
+// The one route taking audio. Matching the method and the whole path keeps
+// every other route on the JSON limit and type.
+const CLIP_PATH = /^\/api\/voice\/transcriptions\/[^/]+$/
+
+function sendsClip(c: Context) {
+  return c.req.method === 'PUT' && CLIP_PATH.test(c.req.path)
+}
+
 export const app = new Hono<AuthEnv>().basePath('/api')
 
-app.use(
-  '*',
-  bodyLimit({
-    maxSize: MAX_BODY_BYTES,
-    onError: (c) =>
-      c.json(fail('body_too_large', 'Request body too large'), 413),
-  }),
-)
+const tooLarge = (c: Context) =>
+  c.json(fail('body_too_large', 'Request body too large'), 413)
+const jsonLimit = bodyLimit({ maxSize: MAX_BODY_BYTES, onError: tooLarge })
+const clipLimit = bodyLimit({ maxSize: MAX_CLIP_BYTES, onError: tooLarge })
+
+app.use('*', (c, next) => (sendsClip(c) ? clipLimit : jsonLimit)(c, next))
 
 // Refuses a cross-origin form post. A form cannot send JSON, and a JSON body
 // from another origin needs a preflight this API never grants, so the check
@@ -38,10 +47,13 @@ app.use('*', csrf())
 
 app.use('*', async (c, next) => {
   const hasBody = c.req.raw.body !== null
+  const contentType = c.req.header('content-type')
+  const clip = sendsClip(c) && readClipType(contentType) !== undefined
   if (
     UNSAFE_METHOD.test(c.req.method) &&
     hasBody &&
-    !JSON_TYPE.test(c.req.header('content-type') ?? '')
+    !clip &&
+    !JSON_TYPE.test(contentType ?? '')
   ) {
     return c.json(
       fail('unsupported_media_type', 'Send the body as application/json'),
@@ -63,6 +75,7 @@ app.route('/', entryRoutes)
 app.route('/', changeRoutes)
 app.route('/', assistantRoutes)
 app.route('/', chatRoutes)
+app.route('/', voiceRoutes)
 
 app.notFound((c) => c.json(fail('not_found', 'No such API route'), 404))
 

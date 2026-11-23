@@ -41,6 +41,8 @@ const REFUSALS = {
   assistant_unavailable: [503, 'The workspace PC is not connected'],
   assistant_busy: [409, 'The assistant is answering another message'],
   no_trip: [409, 'There is no trip for a chat to plan'],
+  voice_unavailable: [503, 'Voice is not answering on the workspace PC'],
+  voice_failed: [502, 'The workspace PC could not transcribe the clip'],
 } as const satisfies Partial<
   Record<ApiErrorCode, readonly [ContentfulStatusCode, string]>
 >

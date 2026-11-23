@@ -1,8 +1,10 @@
 import type { DownFrame, UpFrame } from '@shared/bridge-frames.ts'
 import { BRIDGE_PROTOCOL, downFrame, readFrame } from '@shared/bridge-frames.ts'
 import { env } from 'cloudflare:workers'
+import { expect, vi } from 'vitest'
 
 import { app } from '../app.ts'
+import { relayOf } from '../assistant/relay.ts'
 
 export const TEST_BRIDGE_SECRET = 'test-bridge-secret'
 
@@ -35,7 +37,7 @@ export interface FakeBridge {
  * default, so a case starts with the bridge online.
  */
 export async function connectBridge(
-  options: { protocol?: number; awaitReady?: boolean } = {},
+  options: { protocol?: number; awaitReady?: boolean; voice?: boolean } = {},
 ): Promise<FakeBridge> {
   const res = await requestBridgeSocket(`Bearer ${TEST_BRIDGE_SECRET}`)
   const ws = res.webSocket
@@ -70,11 +72,64 @@ export async function connectBridge(
     },
     closed,
   }
-  bridge.send({ type: 'hello', protocol: options.protocol ?? BRIDGE_PROTOCOL })
+  bridge.send({
+    type: 'hello',
+    protocol: options.protocol ?? BRIDGE_PROTOCOL,
+    ...(options.voice === true ? { voice: true as const } : {}),
+  })
   if (options.awaitReady ?? true) {
     const first = await bridge.next()
     if (first.type !== 'ready')
       throw new Error(`Expected ready, got ${first.type}`)
   }
   return bridge
+}
+
+/**
+ * Says the voice server's health, then waits until the relay has read it,
+ * since the socket and a request reach the relay apart.
+ */
+export async function sayVoice(bridge: FakeBridge, online: boolean) {
+  bridge.send({ type: 'voice_status', online })
+  await vi.waitFor(async () => {
+    expect(await relayOf(env).voiceOnline()).toBe(online)
+  })
+}
+
+/** A bridge online whose voice server answers. */
+export async function connectVoiceBridge() {
+  const bridge = await connectBridge({ voice: true })
+  await sayVoice(bridge, true)
+  return bridge
+}
+
+type Transcribe = Extract<DownFrame, { type: 'transcribe' }>
+
+type ClipAnswer =
+  | { text: string; audioMs: number }
+  | { failed: 'unavailable' | 'failed' }
+
+/** Reads the next frame, which has to be a clip, and answers it. */
+export async function answerClip(
+  bridge: FakeBridge,
+  answer: ClipAnswer,
+): Promise<Transcribe> {
+  const frame = await bridge.next()
+  if (frame.type !== 'transcribe') {
+    throw new Error(`Expected transcribe, got ${frame.type}`)
+  }
+  bridge.send(
+    'failed' in answer
+      ? {
+          type: 'transcribe_failed',
+          transcriptionId: frame.transcriptionId,
+          reason: answer.failed,
+        }
+      : {
+          type: 'transcript',
+          transcriptionId: frame.transcriptionId,
+          ...answer,
+        },
+  )
+  return frame
 }

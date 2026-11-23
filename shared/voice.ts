@@ -20,6 +20,12 @@ export const DEFAULT_VOICE_MODEL: VoiceModel = 'qwen3-asr-1.7b'
 export const clipType = z.enum(['audio/webm', 'audio/mp4'])
 export type ClipType = z.infer<typeof clipType>
 
+/** The clip type a `Content-Type` header names, codec parameters aside. */
+export function readClipType(header: string | undefined): ClipType | undefined {
+  const parsed = clipType.safeParse(header?.split(';')[0].trim().toLowerCase())
+  return parsed.success ? parsed.data : undefined
+}
+
 export const MAX_CLIP_SECONDS = 60
 
 // A 60 second clip in either type runs well under this.
