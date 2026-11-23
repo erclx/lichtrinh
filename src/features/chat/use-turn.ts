@@ -23,10 +23,9 @@ function reduce(turn: Turn | null, action: Action): Turn | null {
 }
 
 /**
- * Runs one chat's sends. Each change refreshes the calendar as it lands,
- * and the end of a turn refreshes the thread and the chat list. Leaving the
- * page lets a running turn finish rather than stopping it, since the API
- * reads a dropped reader as Stop.
+ * Runs one chat's sends, refreshing the calendar on each change and the chat
+ * reads at the end. Leaving the page never aborts a running turn, since the
+ * API reads a dropped reader as Stop.
  */
 export function useTurn(chatId: string) {
   const client = useQueryClient()

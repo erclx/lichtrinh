@@ -4,10 +4,9 @@ import { chatEvent } from '@shared/chats.ts'
 import { ApiFailure, failureFrom } from '@/lib/api'
 
 /**
- * Sends one message and answers its stream of events once the API accepts
- * it. A refused or unanswered send throws `ApiFailure` here, before any
- * event, while a connection lost partway throws from the iteration.
- * Aborting `signal` stops the turn, keeping what it already changed.
+ * Sends one message, throwing `ApiFailure` on a refused or unanswered send,
+ * and answers its events, whose iteration throws on a connection lost
+ * partway. Aborting `signal` stops the turn, keeping what it changed.
  */
 export async function sendMessage(
   chatId: string,

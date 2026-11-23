@@ -17,12 +17,9 @@ test('the traveler reads the offline card, then chats with the assistant and und
   browserName,
   baseURL,
 }) => {
-  // Linux WebKit drops Secure cookies on http://localhost, unlike iPhone
-  // Safari. The relay holds one bridge per server, so a second engine's
-  // bridge would replace this one mid-turn, and one engine runs the journey.
   test.skip(
     browserName !== 'chromium',
-    'One bridge per server, and Linux WebKit drops the Secure cookie',
+    "The relay holds one bridge per server, so a second engine's bridge would replace this one mid-turn, and Linux WebKit drops the Secure cookie",
   )
   if (traveler === undefined) throw new Error('The seed holds no traveler')
   if (baseURL === undefined) throw new Error('The config names no base URL')

@@ -31,10 +31,9 @@ function storeFlag(key: string, value: boolean) {
 }
 
 /**
- * The frame around every signed-in page. It owns the nav, the top bar, the
- * `main` landmark, and the gutters, and a page renders only its own header
- * and content into the outlet. For an account that can chat it adds the
- * chat dock from 1024 wide, the sheet below that, and the Talk bar.
+ * The frame around every signed-in page, owning the nav, the top bar, the
+ * `main` landmark, and the gutters, plus the chat dock, sheet, and Talk bar
+ * for an account that can chat. A page renders only into the outlet.
  */
 export function AppShell() {
   const { user } = useSession()
@@ -52,8 +51,7 @@ export function AppShell() {
   const onChats = useMatch('/chats/*') !== null
   const onThread = useMatch('/chats/:chatId') !== null
 
-  // The chat pages hold the thread themselves, so the dock and the bar
-  // stand aside there rather than showing the same chat twice.
+  // The chat pages hold the thread, so the dock and bar stand aside there.
   const chat = user?.canChat === true && !onChats
   const dockOpen = chat && wide && !chatClosed
   const sheetShown = chat && roomy && !wide && sheetOpen

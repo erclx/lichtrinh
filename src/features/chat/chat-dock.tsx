@@ -33,8 +33,7 @@ export function ChatDock({ variant, onClose }: ChatDockProps) {
   const latest = chats.data?.[0]
   const sheet = variant === 'sheet'
 
-  // The sheet opens on a press, so focus moves into it. The dock is there
-  // from load and takes no focus.
+  // A pressed sheet takes focus, and the dock, there from load, takes none.
   useEffect(() => {
     if (sheet) closeRef.current?.focus()
   }, [sheet])

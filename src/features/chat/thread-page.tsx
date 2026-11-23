@@ -31,8 +31,7 @@ function ThreadScreen({ chatId }: { chatId: string }) {
   }
 
   return (
-    // Fills the screen under the top bar, so a short chat still keeps its
-    // composer at the foot, where the thumb expects it.
+    // Fills the screen under the top bar, keeping the composer at the foot.
     <div className="flex min-h-[calc(100svh-84px-24px)] flex-col">
       <PageHeader
         title={thread.data?.chat.title ?? t('chat.untitled')}
