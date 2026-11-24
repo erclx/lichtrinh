@@ -57,8 +57,7 @@ export async function findMissing(
     })
   }
 
-  // Wrangler prefers this file over the environment, so its secret would
-  // lock out the bridge the run starts with its own.
+  // Wrangler prefers this file's secret over the one the run passes in.
   const devVars = join(where.checkout, '.dev.vars')
   if (/^\s*BRIDGE_SECRET\s*=/m.test(probes.readText(devVars) ?? '')) {
     missing.push({
