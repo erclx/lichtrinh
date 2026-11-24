@@ -25,6 +25,7 @@ export interface ServiceGroup {
 
 // The shell convention for a command that could not be found or started.
 const NOT_STARTED = 127
+const SETTLE_POLL_MS = 50
 
 /**
  * Runs services side by side, each in its own process group, so a stop
@@ -35,26 +36,38 @@ export function superviseServices(
   write: (text: string) => void,
   { graceMs }: { graceMs: number },
 ): ServiceGroup {
-  const running = new Set<ChildProcess>()
+  const started: ChildProcess[] = []
+  const open = new Set<ChildProcess>()
   let ended: GroupEnd | undefined
   let settle: (end: GroupEnd) => void = () => {}
   const done = new Promise<GroupEnd>((resolve) => {
     settle = resolve
   })
 
-  const finishIfIdle = () => {
-    if (ended !== undefined && running.size === 0) settle(ended)
+  /** Settles once each group reads as gone, since workerd holds pipes of its own. */
+  const settleOnceGone = (end: GroupEnd) => {
+    const deadline = Date.now() + graceMs
+    let killed = false
+    const check = () => {
+      const alive = started.filter(groupAnswers)
+      if (open.size === 0 && alive.length === 0) {
+        settle(end)
+        return
+      }
+      if (!killed && Date.now() >= deadline) {
+        killed = true
+        for (const child of alive) signalGroup(child, 'SIGKILL')
+      }
+      setTimeout(check, SETTLE_POLL_MS)
+    }
+    check()
   }
 
   const endWith = (end: GroupEnd) => {
     if (ended !== undefined) return
     ended = end
-    for (const child of running) signalGroup(child, 'SIGTERM')
-    const kill = setTimeout(() => {
-      for (const child of running) signalGroup(child, 'SIGKILL')
-    }, graceMs)
-    kill.unref()
-    finishIfIdle()
+    for (const child of started) signalGroup(child, 'SIGTERM')
+    settleOnceGone(end)
   }
 
   const start = (service: Service) => {
@@ -66,14 +79,15 @@ export function superviseServices(
       detached: true,
       stdio: ['ignore', 'pipe', 'pipe'],
     })
-    running.add(child)
+    started.push(child)
+    open.add(child)
     for (const stream of [child.stdout, child.stderr]) {
       const lines = createInterface({ input: stream })
       lines.on('line', (line) => write(`[${service.name}] ${line}\n`))
     }
     child.once('error', (error) => {
       write(`[${service.name}] could not start ${file}: ${error.message}\n`)
-      running.delete(child)
+      open.delete(child)
       endWith({ reason: 'exited', name: service.name, code: NOT_STARTED })
     })
     child.once('exit', (code, signal) => {
@@ -85,17 +99,24 @@ export function superviseServices(
         code: code ?? 128 + (signal ? constants.signals[signal] : 0),
       })
     })
-    // Every process in the group holds the pipes, so this waits on all of them.
-    child.once('close', () => {
-      running.delete(child)
-      finishIfIdle()
-    })
+    // Waits on the output too, so a last line is never cut off.
+    child.once('close', () => open.delete(child))
   }
 
   return {
     start,
     stop: () => endWith({ reason: 'stopped' }),
     done,
+  }
+}
+
+function groupAnswers(child: ChildProcess): boolean {
+  if (child.pid === undefined) return false
+  try {
+    process.kill(-child.pid, 0)
+    return true
+  } catch {
+    return false
   }
 }
 

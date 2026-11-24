@@ -27,6 +27,16 @@ function alive(pid: number): boolean {
   }
 }
 
+/** Whether the pid is gone within the bound, since the kernel reaps it a moment later. */
+async function goneWithin(pid: number, ms = 2_000): Promise<boolean> {
+  const deadline = Date.now() + ms
+  while (alive(pid)) {
+    if (Date.now() > deadline) return false
+    await new Promise((resolve) => setTimeout(resolve, 20))
+  }
+  return true
+}
+
 /** Resolves with the first match in what the services printed, once it shows. */
 async function untilPrinted(output: () => string, pattern: RegExp) {
   for (;;) {
@@ -77,7 +87,7 @@ describe('superviseServices', () => {
     const ended = await group.done
 
     expect(ended).toEqual({ reason: 'exited', name: 'bridge', code: 3 })
-    expect(alive(Number(appPid))).toBe(false)
+    expect(await goneWithin(Number(appPid))).toBe(true)
   })
 
   it('reads a stop as the reason once a stop was asked for', async () => {
@@ -105,7 +115,7 @@ describe('superviseServices', () => {
     group.stop()
     await group.done
 
-    expect(alive(Number(grandchildPid))).toBe(false)
+    expect(await goneWithin(Number(grandchildPid))).toBe(true)
   })
 
   it('kills a service that ignores the stop once the grace runs out', async () => {
@@ -117,7 +127,26 @@ describe('superviseServices', () => {
     group.stop()
     await group.done
 
-    expect(alive(Number(pid))).toBe(false)
+    expect(await goneWithin(Number(pid))).toBe(true)
+  })
+
+  it('kills a grandchild with pipes of its own that ignores the stop', async () => {
+    const { group, output } = supervise(200)
+    // Piped rather than inherited, as Miniflare starts workerd.
+    const forks = [
+      `const { spawn } = require('node:child_process')`,
+      `const script = "process.on('SIGTERM', () => {}); ${idle}"`,
+      `const child = spawn(process.execPath, ['-e', script], { stdio: 'pipe' })`,
+      `console.log(child.pid)`,
+      idle,
+    ].join('\n')
+    group.start(service('app', forks))
+    const [, grandchildPid] = await untilPrinted(output, /\[app\] (\d+)/)
+
+    group.stop()
+    await group.done
+
+    expect(alive(Number(grandchildPid))).toBe(false)
   })
 
   it('names a service that could not start', async () => {
