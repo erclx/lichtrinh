@@ -44,6 +44,7 @@ function devRun(overrides: Partial<DevRun> = {}) {
     },
     services: services.group,
     answers: async (url) => !url.includes(':8770'),
+    portFree: async () => true,
     onInterrupt: (handler) => {
       interrupt = handler
     },
@@ -93,6 +94,43 @@ describe('runDev', () => {
       )
       expect(dev.oneShots).toEqual([])
       expect(dev.services.started).toEqual([])
+    })
+
+    it('names a taken app port and neither resets nor seeds', async () => {
+      const dev = devRun({ reset: true, portFree: async () => false })
+
+      const exitCode = await runDev(dev.run)
+
+      expect(exitCode).toBe(1)
+      expect(dev.output()).toContain('port 5193')
+      expect(dev.removed).toEqual([])
+      expect(dev.oneShots).toEqual([])
+    })
+
+    it('neither resets nor seeds once interrupted during the check', async () => {
+      const dev = devRun({ reset: true })
+      dev.run.findMissing = async () => {
+        dev.interrupt()
+        return []
+      }
+
+      const exitCode = await runDev(dev.run)
+
+      expect(exitCode).toBe(130)
+      expect(dev.removed).toEqual([])
+      expect(dev.oneShots).toEqual([])
+    })
+
+    it('does not seed once interrupted during the reset', async () => {
+      const dev = devRun({ reset: true })
+      dev.run.removeState = async () => {
+        dev.interrupt()
+      }
+
+      const exitCode = await runDev(dev.run)
+
+      expect(exitCode).toBe(130)
+      expect(dev.oneShots).toEqual([])
     })
 
     it('seeds its own database with the today trip and keeps it', async () => {

@@ -6,6 +6,7 @@ import { spawn, spawnSync } from 'node:child_process'
 import { randomBytes } from 'node:crypto'
 import { existsSync } from 'node:fs'
 import { rm } from 'node:fs/promises'
+import { createServer } from 'node:net'
 import { homedir } from 'node:os'
 import { join, resolve } from 'node:path'
 
@@ -35,6 +36,8 @@ export interface DevRun {
   services: ServiceGroup
   /** Whether a GET to the address answers at all. */
   answers: (url: string) => Promise<boolean>
+  /** Whether nothing listens on the port yet, read before the reset or seed. */
+  portFree: (port: number) => Promise<boolean>
   onInterrupt: (handler: () => void) => void
   appWaitMs: number
   pollMs: number
@@ -53,6 +56,13 @@ export async function runDev(run: DevRun): Promise<number> {
   })
 
   const missing = await run.findMissing()
+  if (!(await run.portFree(run.appPort))) {
+    missing.push({
+      need: `a free port ${run.appPort}`,
+      fix: 'Stop whatever serves it, such as a bun run dev in this checkout.',
+    })
+  }
+  if (interrupted) return INTERRUPTED
   if (missing.length > 0) {
     run.write('The run needs these first:\n')
     for (const { need, fix } of missing) run.write(`  ${need}: ${fix}\n`)
@@ -61,6 +71,7 @@ export async function runDev(run: DevRun): Promise<number> {
 
   const stateRoot = join(run.checkout, '.wrangler', 'dev')
   if (run.reset) await run.removeState(stateRoot)
+  if (interrupted) return INTERRUPTED
   const seeded = await run.runOnce({
     command: ['bun', 'scripts/seed.ts', '--today'],
     cwd: run.checkout,
@@ -164,6 +175,16 @@ async function answersAt(url: string): Promise<boolean> {
   }
 }
 
+function portFree(port: number): Promise<boolean> {
+  return new Promise((settle) => {
+    const probe = createServer()
+    probe.once('error', () => settle(false))
+    probe.listen({ port, host: 'localhost' }, () => {
+      probe.close(() => settle(true))
+    })
+  })
+}
+
 async function ollamaModels(): Promise<string[] | undefined> {
   try {
     const reply = await fetch(
@@ -229,9 +250,12 @@ if (import.meta.main) {
     runOnce: runToEnd,
     services: superviseServices(write, { graceMs: 10_000 }),
     answers: answersAt,
+    portFree,
     onInterrupt: (handler) => {
       process.on('SIGINT', handler)
       process.on('SIGTERM', handler)
+      // The children left the terminal's session, so closing it reaches only this.
+      process.on('SIGHUP', handler)
     },
     appWaitMs: 90_000,
     pollMs: 500,
