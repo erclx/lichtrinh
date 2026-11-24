@@ -85,6 +85,14 @@ export default mergeConfig(
             include: ['bridge/**/*.test.ts'],
           },
         },
+        {
+          extends: true,
+          test: {
+            name: 'scripts',
+            environment: 'node',
+            include: ['scripts/**/*.test.ts'],
+          },
+        },
       ],
     },
   }),

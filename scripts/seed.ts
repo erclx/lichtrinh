@@ -217,6 +217,110 @@ export const FIXTURE_ENTRIES: readonly FixtureEntry[] = [
   },
 ]
 
+function addDays(date: string, days: number): string {
+  const [year = 0, month = 1, day = 1] = date.split('-').map(Number)
+  return new Date(Date.UTC(year, month - 1, day + days))
+    .toISOString()
+    .slice(0, 10)
+}
+
+/**
+ * An invented trip around `today`, for the owner's own runs alone, so the
+ * home screen has a now and a next. Every test and capture reads the 2031
+ * fixtures, which this leaves alone.
+ */
+export function todayFixtures(today: string): {
+  trip: FixtureTrip
+  entries: FixtureEntry[]
+} {
+  const tripId = 'dev-trip-today'
+  const entry = (
+    id: string,
+    offset: number,
+    fields: Pick<
+      FixtureEntry,
+      'title' | 'kind' | 'startTime' | 'endTime' | 'costMinor'
+    >,
+  ): FixtureEntry => ({
+    id: `dev-entry-${id}`,
+    tripId,
+    notes: null,
+    startsOn: addDays(today, offset),
+    endsOn: addDays(today, offset),
+    addedBy: 'fixture-traveler',
+    ...fields,
+  })
+  return {
+    trip: {
+      id: tripId,
+      name: 'A week on Đồi Sương',
+      startsOn: addDays(today, -2),
+      endsOn: addDays(today, 4),
+      timeZone: 'Asia/Ho_Chi_Minh',
+      currency: 'VND',
+      homeCurrency: 'USD',
+    },
+    entries: [
+      entry('arrive', -2, {
+        title: 'Train up the hill',
+        kind: 'transport',
+        startTime: '09:00',
+        endTime: '12:00',
+        costMinor: 220_000,
+      }),
+      entry('breakfast', 0, {
+        title: 'Bánh mì at the hostel',
+        kind: 'food',
+        startTime: '07:00',
+        endTime: '08:00',
+        costMinor: 40_000,
+      }),
+      entry('walk', 0, {
+        title: 'Tea terrace walk',
+        kind: 'sights',
+        startTime: '08:30',
+        endTime: '11:30',
+        costMinor: 60_000,
+      }),
+      entry('lunch', 0, {
+        title: 'Lunch by the lake',
+        kind: 'food',
+        startTime: '12:00',
+        endTime: '13:00',
+        costMinor: 150_000,
+      }),
+      entry('rest', 0, {
+        title: 'Rest at the hostel',
+        kind: 'rest',
+        startTime: '13:30',
+        endTime: '16:00',
+        costMinor: null,
+      }),
+      entry('dinner', 0, {
+        title: 'Hot pot dinner',
+        kind: 'food',
+        startTime: '18:00',
+        endTime: '20:00',
+        costMinor: 300_000,
+      }),
+      entry('market', 0, {
+        title: 'Night market',
+        kind: 'activity',
+        startTime: '20:30',
+        endTime: '22:00',
+        costMinor: 100_000,
+      }),
+      entry('waterfall', 1, {
+        title: 'Waterfall day trip',
+        kind: 'activity',
+        startTime: '08:00',
+        endTime: '15:00',
+        costMinor: 400_000,
+      }),
+    ],
+  }
+}
+
 export interface FixtureRate {
   from: string
   to: string
@@ -356,7 +460,12 @@ interface SeedDatabase {
   batch(statements: unknown[]): Promise<unknown>
 }
 
-async function insertAccounts(state: string) {
+interface Calendar {
+  trips: readonly FixtureTrip[]
+  entries: readonly FixtureEntry[]
+}
+
+async function insertAccounts(state: string, calendar: Calendar) {
   // Loaded here, so the e2e specs reading the fixtures never load wrangler.
   const { getPlatformProxy } = await import('wrangler')
   const proxy = await getPlatformProxy<{ DB: SeedDatabase }>({
@@ -386,7 +495,7 @@ async function insertAccounts(state: string) {
       ),
     )
     await proxy.env.DB.batch(rows)
-    await proxy.env.DB.batch(calendarRows(proxy.env.DB))
+    await proxy.env.DB.batch(calendarRows(proxy.env.DB, calendar))
     await proxy.env.DB.batch(chatRows(proxy.env.DB))
     await proxy.env.DB.batch(rateRows(proxy.env.DB))
   } finally {
@@ -397,7 +506,7 @@ async function insertAccounts(state: string) {
 // Written straight into the tables rather than through the calendar rules,
 // which need the Worker's types the e2e specs importing this file lack. The
 // rows carry no history, so a drive can undo its own changes but not these.
-function calendarRows(db: SeedDatabase) {
+function calendarRows(db: SeedDatabase, { trips, entries }: Calendar) {
   const at = Date.UTC(2031, 4, 1)
   const trip = db.prepare(
     `INSERT INTO trips
@@ -413,11 +522,9 @@ function calendarRows(db: SeedDatabase) {
      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1, ?, 'person', ?, ?, 'person', ?)
      ON CONFLICT (id) DO NOTHING`,
   )
-  const zoneOf = new Map(
-    FIXTURE_TRIPS.map(({ id, timeZone }) => [id, timeZone]),
-  )
+  const zoneOf = new Map(trips.map(({ id, timeZone }) => [id, timeZone]))
   return [
-    ...FIXTURE_TRIPS.map((fixture) =>
+    ...trips.map((fixture) =>
       trip.bind(
         fixture.id,
         fixture.name,
@@ -428,7 +535,7 @@ function calendarRows(db: SeedDatabase) {
         fixture.homeCurrency,
       ),
     ),
-    ...FIXTURE_ENTRIES.map((fixture) =>
+    ...entries.map((fixture) =>
       entry.bind(
         fixture.id,
         fixture.tripId,
@@ -568,9 +675,20 @@ function chatRows(db: SeedDatabase) {
 
 if (import.meta.main) {
   const state = statePath(process.env.LICHTRINH_STATE_ROOT ?? '.')
+  const calendar = { trips: [...FIXTURE_TRIPS], entries: [...FIXTURE_ENTRIES] }
+  // `--today` is for the owner's own runs, never for a test or a capture.
+  if (process.argv.includes('--today')) {
+    const around = todayFixtures(
+      new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Ho_Chi_Minh' }).format(
+        new Date(),
+      ),
+    )
+    calendar.trips.push(around.trip)
+    calendar.entries.push(...around.entries)
+  }
   migrate(state)
-  await insertAccounts(state)
+  await insertAccounts(state, calendar)
   console.log(
-    `Seeded ${FIXTURE_ACCOUNTS.map(({ username }) => username).join(', ')}, ${FIXTURE_TRIPS.length} trips, and ${FIXTURE_ENTRIES.length} entries`,
+    `Seeded ${FIXTURE_ACCOUNTS.map(({ username }) => username).join(', ')}, ${calendar.trips.length} trips, and ${calendar.entries.length} entries`,
   )
 }
