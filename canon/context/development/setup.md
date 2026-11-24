@@ -44,14 +44,14 @@ Holds `bun run dev:full`, the owner's way to try the whole app at any time on in
 | `bun run dev:full`   | Vite, workerd, voice, and the bridge here | `.wrangler/dev/` in the checkout, kept until `--reset` |
 | `bun run test:run`   | Vitest, with the API inside workerd       | A fresh in-memory D1 per test file                     |
 | `bun run test:e2e`   | Playwright against `bun run dev`          | `lichtrinh-e2e-<offset>/` under the temp folder, wiped |
-| `bun run screenshot` | A built preview on port 4173              | A `mktemp -d` folder, gone after the run               |
-| Production           | The Cloudflare Worker, deployed from CI   | The remote D1 database the deploy binds                |
+| `bun run screenshot` | A built preview on port 4173              | A fresh `mktemp -d` folder for each run                |
+| Production           | Not deployed yet, a later row's CI deploy | The remote D1 database that deploy will bind           |
 
 The run seeds, checks, and stops in the ways below.
 
 - It seeds the 2031 fixtures plus a trip around today with `bun scripts/seed.ts --today`, which no test or capture passes, so their frames stay on 2031
 - A rerun keeps the database and the owner's edits in it, and `bun run dev:full --reset` removes `.wrangler/dev/` first
-- It checks `uv`, Ollama with both `lichtrinh-assistant` aliases, the speech models, and `.dev.vars`, and starts nothing until each is fixed
+- It checks `uv`, Ollama with both `lichtrinh-assistant` aliases, the speech models, a free app port, and that no `.dev.vars` exists, and starts nothing until each holds
 - The Worker and the bridge share a secret made for the run and passed through the environment, and the bridge dials `localhost` whatever `LICHTRINH_URL` the shell holds
 - Each child runs in its own process group, so Ctrl-C reaches Vite and workerd too, and any child exiting stops the rest. A voice server already on 8770 is reused and left running.
 
