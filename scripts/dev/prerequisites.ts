@@ -8,7 +8,6 @@ export interface Probes {
   /** The model names Ollama lists, or undefined when it does not answer. */
   ollamaModels: () => Promise<string[] | undefined>
   exists: (path: string) => boolean
-  readText: (path: string) => string | undefined
 }
 
 /** One thing the run needs and lacks, with what the owner runs for it. */
@@ -57,12 +56,12 @@ export async function findMissing(
     })
   }
 
-  // Wrangler prefers this file's secret over the one the run passes in.
+  // Wrangler reads the environment only when no `.dev.vars` exists at all.
   const devVars = join(where.checkout, '.dev.vars')
-  if (/^\s*BRIDGE_SECRET\s*=/m.test(probes.readText(devVars) ?? '')) {
+  if (probes.exists(devVars)) {
     missing.push({
-      need: 'no BRIDGE_SECRET in .dev.vars',
-      fix: `Remove the BRIDGE_SECRET line from ${devVars}, since the run sets its own.`,
+      need: 'no .dev.vars',
+      fix: `Move ${devVars} aside, since the Worker ignores the run's secret while it exists.`,
     })
   }
   return missing

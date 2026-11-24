@@ -18,7 +18,6 @@ function readyMachine(overrides: Partial<Probes> = {}): Probes {
     ],
     exists: (path) =>
       path === '/home/owner/.local/share/lichtrinh/voice/phowhisper-large',
-    readText: () => undefined,
     ...overrides,
   }
 }
@@ -79,28 +78,21 @@ describe('findMissing', () => {
     ])
   })
 
-  it('names a .dev.vars that sets the bridge secret', async () => {
+  it('names any .dev.vars, which hides the environment from the Worker', async () => {
     const machine = readyMachine({
-      readText: (path) =>
-        path === '/work/lichtrinh/.dev.vars'
-          ? 'OTHER=1\nBRIDGE_SECRET=invented\n'
-          : undefined,
+      exists: (path) =>
+        path === '/work/lichtrinh/.dev.vars' ||
+        path === '/home/owner/.local/share/lichtrinh/voice/phowhisper-large',
     })
 
     const missing = await findMissing(machine, where)
 
     expect(missing).toEqual([
       {
-        need: 'no BRIDGE_SECRET in .dev.vars',
-        fix: expect.stringContaining('/work/lichtrinh/.dev.vars'),
+        need: 'no .dev.vars',
+        fix: expect.stringContaining('Move /work/lichtrinh/.dev.vars aside'),
       },
     ])
-  })
-
-  it('accepts a .dev.vars that leaves the bridge secret unset', async () => {
-    const machine = readyMachine({ readText: () => '# BRIDGE_SECRET=old\n' })
-
-    expect(await findMissing(machine, where)).toEqual([])
   })
 
   it('reports every miss at once', async () => {

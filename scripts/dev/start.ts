@@ -4,7 +4,7 @@
 
 import { spawn, spawnSync } from 'node:child_process'
 import { randomBytes } from 'node:crypto'
-import { existsSync, readFileSync } from 'node:fs'
+import { existsSync } from 'node:fs'
 import { rm } from 'node:fs/promises'
 import { homedir } from 'node:os'
 import { join, resolve } from 'node:path'
@@ -222,8 +222,6 @@ if (import.meta.main) {
             undefined,
           ollamaModels,
           exists: existsSync,
-          readText: (path) =>
-            existsSync(path) ? readFileSync(path, 'utf8') : undefined,
         },
         { checkout, speechModels },
       ),
