@@ -92,9 +92,10 @@ describe('superviseServices', () => {
 
   it('stops a grandchild the service started', async () => {
     const { group, output } = supervise()
+    // Inherited output, as Vite's under `bun run dev`, so the stop waits on it.
     const forks = [
       `const { spawn } = require('node:child_process')`,
-      `const child = spawn(process.execPath, ['-e', '${idle}'], { stdio: 'ignore' })`,
+      `const child = spawn(process.execPath, ['-e', '${idle}'], { stdio: 'inherit' })`,
       `console.log(child.pid)`,
       idle,
     ].join('\n')
