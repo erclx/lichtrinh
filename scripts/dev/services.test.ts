@@ -132,16 +132,16 @@ describe('superviseServices', () => {
 
   it('kills a grandchild with pipes of its own that ignores the stop', async () => {
     const { group, output } = supervise(200)
-    // Piped rather than inherited, as Miniflare starts workerd.
+    // Piped as Miniflare starts workerd, and printed only once its handler is in.
     const forks = [
       `const { spawn } = require('node:child_process')`,
-      `const script = "process.on('SIGTERM', () => {}); ${idle}"`,
+      `const script = "process.on('SIGTERM', () => {}); console.log('ready ' + process.pid); ${idle}"`,
       `const child = spawn(process.execPath, ['-e', script], { stdio: 'pipe' })`,
-      `console.log(child.pid)`,
+      `child.stdout.pipe(process.stdout)`,
       idle,
     ].join('\n')
     group.start(service('app', forks))
-    const [, grandchildPid] = await untilPrinted(output, /\[app\] (\d+)/)
+    const [, grandchildPid] = await untilPrinted(output, /\[app\] ready (\d+)/)
 
     group.stop()
     await group.done
