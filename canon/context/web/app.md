@@ -16,7 +16,7 @@ Owns the browser app the traveler and the family open, from `index.html` and `we
 Holds the React entry and the route table. `main.tsx` loads `web/i18n/setup.ts` and mounts `App` from `app.tsx`, and `index.css` holds the color roles, the font, the type steps, the 64px `--spacing-target`, and the radius roles `canon/DESIGN.md` describes.
 
 - `app.tsx` renders `SessionProvider`, then the query cache from `canon/context/web/calendar-data.md`, then `UndoProvider`, around a data router built once from `router.tsx`
-- `router.tsx` is the one route table, the session gate over the shell over every page, which screen rows extend and never rename
+- `router.tsx` is the one route table, the session gate over the shell over every page, gathering each feature's `routes.tsx` by glob, so a page is added there and never here
 - Light values sit on `:root` and dark on `:root[data-theme='dark']`, which the head script in `index.html` sets and the `dark:` variant reads
 - Tailwind v4 runs through `@tailwindcss/vite`, so there is no `tailwind.config` file
 
@@ -24,7 +24,7 @@ Holds the React entry and the route table. `main.tsx` loads `web/i18n/setup.ts` 
 
 Holds the translation layer every screen reads its copy through, on i18next and react-i18next, with one `translation` namespace.
 
-- `locales/en.ts` is the shape source, and `locales/vi.ts` satisfies the `Messages` type `resources.ts` derives from it, so a key in one alone fails `tsc`
+- `locales/en/` is the shape source, one file per copy block plus one line in its `index.ts`, and each `locales/vi/` block satisfies its slice of `Messages`, so a key in one alone fails `tsc`
 - `language.ts` picks a device choice first, then the account's, then Vietnamese in production and English in development, and never the browser's
 - `setup.ts` keeps `<html lang>` in step, and its `chooseLanguage` stores a press while `applyLanguage` never does
 - `format.ts` holds the `Intl` formatters, each taking the language from `useLanguage()`, and formats a `YYYY-MM-DD` day in UTC so the device zone never moves it
@@ -48,7 +48,7 @@ Holds the frame around every signed-in page, built against `canon/design/shell/`
 
 ### `web/features/`
 
-Holds one folder per screen area, each importing the session and the shell. Today renders the day's view, and no other feature imports another.
+Holds one folder per screen area, each importing the session and the shell and naming its pages in a `routes.tsx`, with `adminRoutes` behind the admin check. Today renders the day's view, and no other feature imports another.
 
 - `sign-in/`, `accounts/`, and `settings/` are the card, the admin's account pages, and settings with Exchange rates, where `appearance.ts` keeps Auto, Light, or Dark under `lichtrinh.theme`
 - `assistant-settings/` is the admin's page for the workspace PC's status, the assistant and speech models with each speech model's usage, and the offline contact name
@@ -72,7 +72,7 @@ The folders below each carry one small job.
 - `web/lib/`: `cn`, the day helpers, and `api.ts`, whose `apiFetch` parses through a `shared/` schema, throws `ApiFailure`, and sends a `blob` raw under its type
 - `web/hooks/`: `useMediaQuery`, unmatched in the test DOM, and `useNow`, beside `web/public/` holding the icons and social cards
 - `web/test/`: `fake-api.ts` behind `fetch`, invented builders, `media.ts` for a fake recorder and microphone, and `render-route.tsx`
-- `e2e/`: the Playwright specs and the screenshot harness, with its cases in `e2e/capture/cases.ts` and committed frames in `e2e/evidence/`
+- `e2e/`: the Playwright specs and the screenshot harness, with one case file per feature in `e2e/capture/cases/`, shared setup in `e2e/capture/page-setup.ts`, and frames in `e2e/evidence/`
 - `canon/design/`: the accepted frames, written by `bun run design:sync` from `frames.json` and never by hand
 
 ## Gotchas
