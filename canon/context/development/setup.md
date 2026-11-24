@@ -79,7 +79,7 @@ Holds the git hooks that run the checks before a commit or a push leaves.
 ## Gotchas
 
 - A push fails on formatting drift until `bun run format` runs, since the `pre-push` hook writes nothing
-- The root `check` chains into `voice/scripts/verify.ts`, held through every sync by `canon tooling customize package.json:check`, since base overrides that script
+- The root `check` finds `voice/` through its tracked `scripts/verify.json` and runs it as a nested root, so a second call to it in the `check` script runs the voice checks twice
 - `uv add` in `voice/` writes TOML that root oxfmt rejects, so run `bun run format` at the root after a dependency change
 - Local D1 state lives under `.wrangler/state/v3/d1`, or below `LICHTRINH_STATE_ROOT` when set, which keeps e2e, captures, and drives off the developer's database
 - `bun link` links the checkout it ran in, so a verb added on a branch stays invisible to `lichtrinh` until it merges and that checkout pulls

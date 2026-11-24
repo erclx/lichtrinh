@@ -18,13 +18,17 @@ worker/worker-configuration.d.ts
 .env
 .env.*
 !.env.example
+*.local
 
 # Vitest
 coverage/
+.vitest/
 
 # Playwright
 test-results/
 playwright-report/
+blob-report/
+playwright/.cache/
 
 # Captures written by e2e/screenshot.ts, read by scripts/readme-screenshot.sh
 screenshots/
@@ -44,8 +48,7 @@ voice/clips/
 *.opus
 
 # Editors
-.vscode/*
-!.vscode/extensions.json
+.vscode/
 .idea
 .DS_Store
 *.sw?
