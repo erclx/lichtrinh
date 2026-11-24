@@ -1,15 +1,25 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# Project-specific. Both are placeholders the project fills in, and the script
-# refuses to run until it does, since a shipped default would capture the wrong
-# part of the page in every project but the one it was written for.
+# Project-specific. The filter is a placeholder the project fills in, and the
+# script refuses to run until it does, since a shipped default would capture
+# the wrong part of the page in every project but the one it was written for.
 README_FILTER='home/1280' # case label to capture, such as header/1280
-README_EVIDENCE_DIR='e2e/evidence/readme'
+README_EVIDENCE_DIR='e2e/evidence/readme' # where the frames land, empty for <EVIDENCE_ROOT>/readme
 
 if [[ -z "$README_FILTER" ]]; then
   echo "README_FILTER is unset in scripts/readme-screenshot.sh. Name the case label the README frame is captured from, such as header/1280." >&2
   exit 1
+fi
+
+if [[ -z "$README_EVIDENCE_DIR" ]]; then
+  README_EVIDENCE_DIR="$(bun e2e/screenshot.ts --print-evidence-root)/readme"
+fi
+
+# The workflow commits whatever folder this resolved, so it reads it here
+# rather than naming a path of its own.
+if [[ -n "${GITHUB_OUTPUT:-}" ]]; then
+  echo "dir=$README_EVIDENCE_DIR" >>"$GITHUB_OUTPUT"
 fi
 
 source "$(dirname "${BASH_SOURCE[0]}")/lib/preview-server.sh"
@@ -23,4 +33,7 @@ frame_prefix="$(basename "$README_FILTER")"
 
 mkdir -p "$README_EVIDENCE_DIR"
 cp "$frame_dir/$frame_prefix--default.png" "$README_EVIDENCE_DIR/light.png"
-cp "$frame_dir/$frame_prefix--dark.png" "$README_EVIDENCE_DIR/dark.png"
+# A project with no dark case captures no dark frame.
+if [[ -f "$frame_dir/$frame_prefix--dark.png" ]]; then
+  cp "$frame_dir/$frame_prefix--dark.png" "$README_EVIDENCE_DIR/dark.png"
+fi
