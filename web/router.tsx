@@ -1,30 +1,24 @@
 import type { RouteObject } from 'react-router'
 
-import { AccountsPage } from '@/features/accounts/accounts-page'
-import { CreateAccountPage } from '@/features/accounts/create-account-page'
-import { EditAccountPage } from '@/features/accounts/edit-account-page'
-import { AssistantSettingsPage } from '@/features/assistant-settings/assistant-settings-page'
-import { BudgetPage } from '@/features/budget/budget-page'
-import { CalendarScreen } from '@/features/calendar/calendar-screen'
-import { ChatListPage } from '@/features/chat/chat-list-page'
-import { ThreadPage } from '@/features/chat/thread-page'
-import { DayPage } from '@/features/day/day-view'
-import { EntryDetail } from '@/features/entries/entry-detail'
-import { AddEntryPage, EditEntryPage } from '@/features/entries/entry-form'
-import { RatesPage } from '@/features/rates/rates-page'
-import { SettingsPage } from '@/features/settings/settings-page'
-import { TodayScreen } from '@/features/today/today-screen'
-import { TripForm } from '@/features/trips/trip-form'
-import { TripList } from '@/features/trips/trip-list'
-import { TripOverview } from '@/features/trips/trip-overview'
 import { SessionGate } from '@/session/gate'
 import { RequireAdmin } from '@/session/require-admin'
 import { AppShell } from '@/shell/app-shell'
 import { NotFoundPage } from '@/shell/not-found-page'
 
+interface FeatureRoutes {
+  /** Pages under the shell, for anyone signed in. */
+  routes?: RouteObject[]
+  /** Pages under `admin/`, with paths relative to it. */
+  adminRoutes?: RouteObject[]
+}
+
+const features = Object.values(
+  import.meta.glob<FeatureRoutes>('./features/*/routes.tsx', { eager: true }),
+)
+
 /**
- * The one route table. A screen row adds a child under the shell and renames
- * none of the paths here.
+ * The one route table, gathered from each feature's `routes.tsx`. Order is
+ * free, since the router ranks a static path above a parameter.
  */
 export const routes: RouteObject[] = [
   {
@@ -33,29 +27,13 @@ export const routes: RouteObject[] = [
       {
         element: <AppShell />,
         children: [
-          { index: true, element: <TodayScreen /> },
-          { path: 'trips', element: <TripList /> },
-          { path: 'trips/new', element: <TripForm /> },
-          { path: 'trips/:tripId', element: <TripOverview /> },
-          { path: 'trips/:tripId/days/:date', element: <DayPage /> },
-          { path: 'trips/:tripId/budget', element: <BudgetPage /> },
-          { path: 'entries/new', element: <AddEntryPage /> },
-          { path: 'entries/:entryId', element: <EntryDetail /> },
-          { path: 'entries/:entryId/edit', element: <EditEntryPage /> },
-          { path: 'calendar', element: <CalendarScreen /> },
-          { path: 'chats', element: <ChatListPage /> },
-          { path: 'chats/:chatId', element: <ThreadPage /> },
-          { path: 'settings', element: <SettingsPage /> },
+          ...features.flatMap((feature) => feature.routes ?? []),
           {
             path: 'admin',
             element: <RequireAdmin />,
             children: [
               { index: true, element: <NotFoundPage /> },
-              { path: 'accounts', element: <AccountsPage /> },
-              { path: 'accounts/new', element: <CreateAccountPage /> },
-              { path: 'accounts/:id', element: <EditAccountPage /> },
-              { path: 'assistant', element: <AssistantSettingsPage /> },
-              { path: 'rates', element: <RatesPage /> },
+              ...features.flatMap((feature) => feature.adminRoutes ?? []),
             ],
           },
           { path: '*', element: <NotFoundPage /> },

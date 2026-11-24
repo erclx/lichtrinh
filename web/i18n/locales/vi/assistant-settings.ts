@@ -1,0 +1,45 @@
+import type { Messages } from '@/i18n/resources'
+
+export const assistantSettings = {
+  title: 'Trợ lý',
+  loading: 'Đang tải cài đặt trợ lý…',
+  loadFailed: 'Không tải được cài đặt trợ lý.',
+  homeComputer: 'Máy ở nhà',
+  online: 'Đang bật',
+  offline: 'Đang tắt',
+  lastAnsweredToday: 'Trợ lý trả lời lần cuối lúc {{time}} hôm nay.',
+  lastAnsweredOn: 'Trợ lý trả lời lần cuối ngày {{date}}.',
+  neverAnswered: 'Trợ lý chưa trả lời lần nào.',
+  modelHeading: 'Mô hình trợ lý',
+  modelQwen: 'Qwen',
+  modelQwenHint: 'Mặc định · hiểu kỹ nhất',
+  modelGemma: 'Gemma',
+  modelGemmaHint: 'Trả lời nhanh hơn',
+  modelSaved:
+    'Đã lưu. Câu trả lời tiếp theo có thể lâu hơn một chút vì mô hình này đang tải.',
+  contactLabel: 'Tên hiện khi trợ lý nghỉ',
+  contactHint:
+    'Khi trợ lý nghỉ, người đi sẽ thấy tên này là người cần liên hệ. Để trống thì hiện Quản trị viên.',
+  contactTooLong: 'Tên tối đa 60 ký tự.',
+  save: 'Lưu',
+  saving: 'Đang lưu…',
+  contactSaved: 'Đã lưu.',
+  contactCleared: 'Đã xoá. Người đi sẽ thấy Quản trị viên.',
+  note: 'Chỉ quản trị viên thấy trang này. Đổi mô hình có hiệu lực từ tin nhắn sau.',
+  speech: {
+    heading: 'Nhận giọng nói',
+    qwen: 'Qwen3-ASR',
+    qwenHint: 'Mặc định',
+    whisper: 'Whisper turbo',
+    whisperHint: 'Nhanh',
+    phowhisper: 'PhoWhisper',
+    phowhisperHint: 'Học riêng tiếng Việt',
+    unused: 'Chưa dùng',
+    unsent_one: '{{count}} đoạn · chưa gửi đoạn nào',
+    unsent_other: '{{count}} đoạn · chưa gửi đoạn nào',
+    usage_one: 'Đã gửi {{sent}}/{{count}} đoạn · sửa {{share}} số chữ',
+    usage_other: 'Đã gửi {{sent}}/{{count}} đoạn · sửa {{share}} số chữ',
+    saved:
+      'Đã lưu. Đoạn sau sẽ dùng mô hình này và có thể lâu hơn một chút khi nạp.',
+  },
+} satisfies Messages['assistantSettings']

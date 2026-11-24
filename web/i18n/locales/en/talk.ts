@@ -1,0 +1,29 @@
+export const talk = {
+  mic: 'Talk',
+  micOff: 'Talk is off while voice is offline',
+  stop: 'Stop and write it down',
+  starting: 'Opening the microphone…',
+  listening: 'Listening…',
+  transcribing: 'Writing down what you said…',
+  slow: 'The first one after a break takes a little longer.',
+  capped: 'Stopped at one minute.',
+  hint: 'Tap the mic to talk and again to stop. Or type, or tap a sample.',
+  samplesLabel: 'Sample requests',
+  sampleCoffee: 'Add a coffee at 3 pm',
+  sampleDinner: 'Move dinner to 8 pm',
+  sampleTaxi: 'Remove the taxi to the pier',
+  sampleCost: 'How much is today?',
+  review: 'This is what you said. Fix it if needed, then send.',
+  landed: 'Your words are in the message box.',
+  retry:
+    'I did not catch that. Tap the mic and try a little slower, or type it.',
+  failed: "Couldn't write that down. Tap the mic to try again, or type it.",
+  offTitle: 'Voice is offline',
+  offBody:
+    'Speech recognition runs on the computer at home, and it is off. You can still type.',
+  offContact: 'Ask {{name}} to turn voice back on.',
+  offAdmin: 'Ask the admin to turn voice back on.',
+  deniedTitle: 'The microphone is off for this app',
+  deniedBody:
+    'To turn it on, open Settings on the iPhone, go to Safari, then Microphone, and pick Allow. You can still type.',
+} as const

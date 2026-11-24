@@ -1,0 +1,26 @@
+import type { Messages } from '@/i18n/resources'
+
+export const calendar = {
+  views: 'Kiểu xem lịch',
+  month: 'Tháng',
+  week: 'Tuần',
+  day: 'Ngày',
+  tripsLabel: 'Chuyến đi hiển thị',
+  allTrips: 'Tất cả',
+  previousWeek: 'Tuần trước',
+  nextWeek: 'Tuần sau',
+  previousDay: 'Ngày trước',
+  nextDay: 'Ngày sau',
+  entries_one: '{{count}} hoạt động',
+  entries_other: '{{count}} hoạt động',
+  free: 'Trống',
+  nothingPlanned: 'Chưa có gì',
+  continues: 'Còn tiếp đến {{date}}',
+  tripSpan: '{{trip}}, {{dates}}',
+  legend: 'Chuyến đi trong tháng',
+  noTripMonth: 'Tháng này không có chuyến đi nào.',
+  noTripDay: 'Ngày này không có chuyến đi nào.',
+  showAll: 'Xem tất cả chuyến đi',
+  openDay: 'Mở {{trip}} vào ngày này',
+  loadFailed: 'Chưa tải được lịch.',
+} satisfies Messages['calendar']
