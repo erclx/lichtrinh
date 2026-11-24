@@ -1,0 +1,20 @@
+export const rates = {
+  title: 'Exchange rates',
+  intro:
+    'Each trip shows an approximate total in its home currency from these rates. Type the rate your bank shows.',
+  loading: 'Loading the rates…',
+  loadFailed: "Couldn't load the rates.",
+  empty: 'No trip uses two currencies yet, so no rate is needed.',
+  one: '1 {{currency}} =',
+  field: 'How many {{to}} one {{from}} buys',
+  swap: 'Swap to 1 {{currency}} first',
+  notSet: 'No rate yet',
+  setOn: 'Set on {{date}}',
+  invalid: 'Enter a number above zero, such as 25500 or 25500.5',
+  save: 'Save',
+  saving: 'Saving…',
+  saved: 'Rate saved.',
+  clear: 'Clear',
+  clearing: 'Clearing…',
+  cleared: 'Rate cleared.',
+} as const

@@ -1,6 +1,6 @@
 import 'i18next'
 
-import type { en } from './locales/en'
+import type * as en from './locales/en'
 
 declare module 'i18next' {
   interface CustomTypeOptions {

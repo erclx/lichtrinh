@@ -1,0 +1,16 @@
+export const budget = {
+  title: 'Budget',
+  estimated: '{{trip}} · estimated',
+  about: 'about {{amount}}',
+  byKind: 'Cost by kind',
+  byDay: 'By day',
+  food: 'Food',
+  sights: 'Sights',
+  activity: 'Activities',
+  transport: 'Transport',
+  rest: 'Rest',
+  uncategorized: 'Uncategorized',
+  uncosted_one: '{{count}} activity has no cost yet',
+  uncosted_other: '{{count}} activities have no cost yet',
+  noCosts: 'No costs yet. Add a cost to an activity and it shows here.',
+} as const
