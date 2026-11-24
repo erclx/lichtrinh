@@ -5,7 +5,7 @@ set -euo pipefail
 # script refuses to run until it does, since a shipped default would capture
 # the wrong part of the page in every project but the one it was written for.
 README_FILTER='home/1280' # case label to capture, such as header/1280
-README_EVIDENCE_DIR='e2e/evidence/readme' # where the frames land, empty for <EVIDENCE_ROOT>/readme
+README_EVIDENCE_DIR=''    # where the frames land, empty for <EVIDENCE_ROOT>/readme
 
 if [[ -z "$README_FILTER" ]]; then
   echo "README_FILTER is unset in scripts/readme-screenshot.sh. Name the case label the README frame is captured from, such as header/1280." >&2

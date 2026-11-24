@@ -1,6 +1,6 @@
 import type { Locator, Page } from '@playwright/test'
 import { chromium } from '@playwright/test'
-import { existsSync } from 'fs'
+import { existsSync, readdirSync, readFileSync } from 'fs'
 import { mkdir } from 'fs/promises'
 import path from 'path'
 import { pathToFileURL } from 'url'
@@ -13,46 +13,213 @@ import type {
 } from './capture-types'
 
 /**
- * The widths every case is crossed with, 320 being the base a page holds
- * without clipping. Only the base and desktop carry `evidence`, since each
- * committed width multiplies the tracked frames.
+ * The three `evidence` widths are the narrow end of the phone, tablet, and
+ * desktop classes the board draws at. 1536 sweeps alone, so a range past 1280 is still looked at.
  */
 const VIEWPORTS: readonly Viewport[] = [
-  { name: '320', width: 320, height: 800, evidence: true },
-  { name: '768', width: 768, height: 800, evidence: false },
+  { name: '390', width: 390, height: 800, evidence: true },
+  { name: '768', width: 768, height: 800, evidence: true },
   { name: '1280', width: 1280, height: 800, evidence: true },
   { name: '1536', width: 1536, height: 800, evidence: false },
 ]
 
-const CASES_FILE = path.resolve('e2e/capture/cases.ts')
+/**
+ * The WCAG Reflow floor. Every case is loaded here and fails the run on a
+ * sideways scroll or a clipped control, and no frame is written, since nothing
+ * fails on a picture. A case defers it by naming `320` in `excludeViewports`.
+ */
+const REFLOW_FLOOR = { name: '320', width: 320, height: 800 } as const
 
-if (!existsSync(CASES_FILE)) {
+const DEVICE_CLASSES = ['phone', 'tablet', 'desktop'] as const
+
+type DeviceClass = (typeof DEVICE_CLASSES)[number]
+
+const DESIGN_RECORD = 'canon/DESIGN.md'
+
+/**
+ * The classes the `Device classes:` line under `## Layout` declares, all three when the record, section, or line is
+ * absent. The grammar is the design record standard's, and a name outside the three exits 1 rather than dropping one.
+ */
+function readDeviceClasses(): readonly DeviceClass[] {
+  if (!existsSync(DESIGN_RECORD)) return DEVICE_CLASSES
+  let isLayout = false
+  for (const line of readFileSync(DESIGN_RECORD, 'utf8').split('\n')) {
+    const heading = /^##\s+(.+?)\s*$/.exec(line)
+    if (heading) {
+      isLayout = heading[1] === 'Layout'
+      continue
+    }
+    const value = isLayout
+      ? /^\s*(?:[-*+]\s+)?Device classes:(.*)$/i.exec(line)?.[1]
+      : undefined
+    if (value === undefined) continue
+    const names = value
+      .split('.')[0]
+      .split(/,|\band\b/)
+      .map((token) => token.trim().toLowerCase())
+      .filter((token) => token !== '')
+    const unknown = names.find(
+      (name) => !(DEVICE_CLASSES as readonly string[]).includes(name),
+    )
+    if (names.length === 0 || unknown !== undefined) {
+      const named =
+        unknown === undefined ? 'names no device class' : `names '${unknown}'`
+      console.error(
+        `The Device classes: line under ## Layout in ${DESIGN_RECORD} ${named}. It takes phone, tablet, or desktop.`,
+      )
+      process.exit(1)
+    }
+    return DEVICE_CLASSES.filter((deviceClass) => names.includes(deviceClass))
+  }
+  return DEVICE_CLASSES
+}
+
+/** The class a width falls in, at the Material 3 window boundaries of 600 and 840. */
+function deviceClassOf(width: number): DeviceClass {
+  if (width < 600) return 'phone'
+  if (width < 840) return 'tablet'
+  return 'desktop'
+}
+
+const SUPPORTED_CLASSES = readDeviceClasses()
+
+if (process.argv.includes('--print-device-classes')) {
+  console.log(SUPPORTED_CLASSES.join(','))
+  process.exit(0)
+}
+
+/** The widths this project captures, and the 320 check only while it supports phones. */
+const SUPPORTED_RUNS = [
+  ...(SUPPORTED_CLASSES.includes('phone')
+    ? [{ kind: 'reflow' as const, viewport: REFLOW_FLOOR }]
+    : []),
+  ...VIEWPORTS.filter((viewport) =>
+    SUPPORTED_CLASSES.includes(deviceClassOf(viewport.width)),
+  ).map((viewport) => ({ kind: 'frame' as const, viewport })),
+]
+
+const CASES_FILE = 'e2e/capture/cases.ts'
+const CASES_DIR = 'e2e/capture/cases'
+
+/** The evidence root a project holding the folder alone writes under, the seed's own value. */
+const DEFAULT_EVIDENCE_ROOT = 'e2e/evidence'
+
+/**
+ * The single file first, then each per-feature file in name order, so parallel
+ * branches each add a file rather than all appending to one.
+ */
+const caseFiles: string[] = [
+  ...(existsSync(CASES_FILE) ? [CASES_FILE] : []),
+  ...(existsSync(CASES_DIR)
+    ? readdirSync(CASES_DIR)
+        .filter((name) => name.endsWith('.ts'))
+        .sort()
+        .map((name) => `${CASES_DIR}/${name}`)
+    : []),
+]
+
+if (caseFiles.length === 0) {
   console.error(
-    'e2e/capture/cases.ts is missing. Run canon tooling sync to seed it.',
+    `Neither ${CASES_FILE} nor a ${CASES_DIR}/*.ts file exists. Run canon tooling sync to seed one.`,
   )
   process.exit(1)
 }
 
-const { CASES, EVIDENCE_ROOT } = (await import(
-  pathToFileURL(CASES_FILE).href
-)) as CaptureModule
-
-/** One case at one viewport, which is the unit a filter selects and a context is built for. */
-interface CaptureRun {
+/** A case beside the file that declared it, so a collision can name both. */
+interface SourcedCase {
   readonly captureCase: CaptureCase
-  readonly viewport: Viewport
-  readonly label: string
+  readonly file: string
 }
 
-const ALL_RUNS: readonly CaptureRun[] = CASES.flatMap((captureCase) =>
-  VIEWPORTS.filter(
-    (viewport) => !captureCase.excludeViewports?.includes(viewport.name),
-  ).map((viewport) => ({
-    captureCase,
-    viewport,
-    label: `${captureCase.section}/${viewport.name}--${captureCase.theme}`,
-  })),
+const modules = await Promise.all(
+  caseFiles.map(
+    async (file) =>
+      [
+        file,
+        (await import(
+          pathToFileURL(path.resolve(file)).href
+        )) as Partial<CaptureModule>,
+      ] as const,
+  ),
 )
+
+const SOURCED: SourcedCase[] = []
+for (const [file, module] of modules) {
+  if (!Array.isArray(module.CASES)) {
+    console.error(`${file} exports no CASES array.`)
+    process.exit(1)
+  }
+  for (const captureCase of module.CASES) SOURCED.push({ captureCase, file })
+}
+
+const EVIDENCE_ROOT =
+  modules.find(([file]) => file === CASES_FILE)?.[1].EVIDENCE_ROOT ??
+  DEFAULT_EVIDENCE_ROOT
+
+// A caller such as the README script reads the resolved root here rather
+// than parsing the case files itself, and nothing is captured.
+if (process.argv.includes('--print-evidence-root')) {
+  console.log(EVIDENCE_ROOT)
+  process.exit(0)
+}
+
+/**
+ * One case at one width, which is the unit a filter selects and a context is
+ * built for. A `frame` run writes images and a `reflow` run only checks.
+ */
+interface CaptureRun {
+  readonly captureCase: CaptureCase
+  readonly kind: 'frame' | 'reflow'
+  readonly viewport: Pick<Viewport, 'name' | 'width' | 'height'> &
+    Partial<Pick<Viewport, 'evidence'>>
+  readonly label: string
+  readonly file: string
+}
+
+const VIEWPORT_NAMES = new Set([
+  ...VIEWPORTS.map((viewport) => viewport.name),
+  REFLOW_FLOOR.name,
+])
+
+for (const { captureCase, file } of SOURCED) {
+  for (const name of captureCase.excludeViewports ?? []) {
+    if (!VIEWPORT_NAMES.has(name)) {
+      console.warn(
+        `${file}: case ${captureCase.section}/${captureCase.theme} excludes '${name}', which no viewport carries. Ignored.`,
+      )
+    }
+  }
+}
+
+const ALL_RUNS: readonly CaptureRun[] = SOURCED.flatMap(
+  ({ captureCase, file }) =>
+    SUPPORTED_RUNS.filter(
+      ({ viewport }) => !captureCase.excludeViewports?.includes(viewport.name),
+    ).map(({ kind, viewport }) => ({
+      captureCase,
+      kind,
+      viewport,
+      file,
+      label: `${captureCase.section}/${viewport.name}--${captureCase.theme}`,
+    })),
+)
+
+// Two runs sharing a label write one output file, and the later would
+// overwrite the earlier with no sign.
+const firstFileByLabel = new Map<string, string>()
+const collisions: string[] = []
+for (const { label, file } of ALL_RUNS) {
+  const first = firstFileByLabel.get(label)
+  if (first === undefined) firstFileByLabel.set(label, file)
+  else collisions.push(`  ${label}: ${first} and ${file}`)
+}
+
+if (collisions.length > 0) {
+  console.error(
+    `Two cases write the same output file. Give one a distinct section or theme:\n${collisions.join('\n')}`,
+  )
+  process.exit(1)
+}
 
 const args = process.argv.slice(2)
 const checkConsoleClean = args.includes('--check-console-clean')
@@ -247,6 +414,62 @@ async function resolveMask(
   return mask
 }
 
+/** How many clipped controls one run names before it stops listing them. */
+const CLIPPED_LISTED = 5
+
+/**
+ * Content wider than the viewport, and each visible control partly past its edge or clipping its label.
+ * A control wholly off the page is hidden on purpose, such as a skip link, and a 1px box is a screen-reader label.
+ */
+async function readReflow(page: Page): Promise<string[]> {
+  return page.evaluate((listed) => {
+    const root = document.documentElement
+    const problems: string[] = []
+    if (root.scrollWidth > root.clientWidth) {
+      problems.push(
+        `the page scrolls sideways, ${root.scrollWidth}px of content in a ${root.clientWidth}px viewport`,
+      )
+    }
+    const scrollsSideways = (node: Element): boolean => {
+      for (let at = node.parentElement; at !== null; at = at.parentElement) {
+        if (at === document.body) return false
+        const { overflowX } = getComputedStyle(at)
+        if (overflowX === 'auto' || overflowX === 'scroll') return true
+      }
+      return false
+    }
+    const describe = (node: Element): string => {
+      const text = (node.textContent ?? '').trim().slice(0, 40)
+      const id = node.id === '' ? '' : `#${node.id}`
+      return `${node.tagName.toLowerCase()}${id}${text === '' ? '' : ` "${text}"`}`
+    }
+    const clipped: string[] = []
+    const controls = document.querySelectorAll(
+      'a[href], button, input, select, textarea, summary, [role="button"], [role="link"]',
+    )
+    for (const control of controls) {
+      const box = control.getBoundingClientRect()
+      const style = getComputedStyle(control)
+      if (box.width <= 1 || box.height <= 1) continue
+      if (style.visibility === 'hidden') continue
+      if (box.right <= 0 || box.left >= root.clientWidth) continue
+      const pastEdge =
+        (box.left < 0 || box.right > root.clientWidth) &&
+        !scrollsSideways(control)
+      const clipsLabel =
+        style.overflowX !== 'visible' &&
+        control.scrollWidth > control.clientWidth + 1
+      if (pastEdge) clipped.push(`${describe(control)} runs past the edge`)
+      else if (clipsLabel) clipped.push(`${describe(control)} clips its label`)
+    }
+    problems.push(...clipped.slice(0, listed))
+    if (clipped.length > listed) {
+      problems.push(`${clipped.length - listed} more clipped controls`)
+    }
+    return problems
+  }, CLIPPED_LISTED)
+}
+
 async function shoot(
   page: Page,
   dir: string,
@@ -271,9 +494,10 @@ async function shoot(
 
 const browser = await chromium.launch()
 const consoleErrors: string[] = []
+const reflowFailures: string[] = []
 let ranCases = 0
 
-for (const { captureCase, viewport, label } of RUNS) {
+for (const { captureCase, kind, viewport, label } of RUNS) {
   if (captureCase.evidence && requireBaseUrl) continue
 
   ranCases++
@@ -300,6 +524,16 @@ for (const { captureCase, viewport, label } of RUNS) {
   await page.waitForLoadState('networkidle')
 
   const sections = await settle(page, label, captureCase.sections ?? [])
+
+  if (kind === 'reflow') {
+    for (const problem of await readReflow(page)) {
+      reflowFailures.push(`${label}: ${problem}`)
+    }
+    console.log(`checked ${label}`)
+    await context.close()
+    continue
+  }
+
   const mask = await resolveMask(page, label, captureCase.mask ?? [])
 
   const sweepDir = path.join(OUT_DIR, captureCase.section)
@@ -329,6 +563,14 @@ if (requireBaseUrl && ranCases === 0) {
     'every CASES entry is flagged evidence: true, so --require-base-url skipped all of them and checked nothing',
   )
   process.exit(1)
+}
+
+if (reflowFailures.length > 0) {
+  console.error(
+    `${reflowFailures.length} reflow failures at ${REFLOW_FLOOR.width}px, the WCAG Reflow floor. Fix the layout, or name '${REFLOW_FLOOR.name}' in the case's excludeViewports to defer it:`,
+  )
+  for (const failure of reflowFailures) console.error(`  ${failure}`)
+  process.exitCode = 1
 }
 
 if (checkConsoleClean && consoleErrors.length > 0) {

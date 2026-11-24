@@ -42,7 +42,7 @@
     },
     "tooling": {
       "version": "5.121.0",
-      "syncedAt": "2026-11-24T02:47:32.115Z",
+      "syncedAt": "2026-11-24T02:53:24.557Z",
       "files": {
         ".github/dependabot.yml": "sha256:2bf9d9e1a383709d6aeafe691d85a9eee8470f78969a9718a72d4b2ad8dbad86",
         ".github/workflows/phase-label-gate.yml": "sha256:40abb5f8b078badce41d6e2697ce569f00bb2dcda963b5ea476f84ec02d315fd",
@@ -59,7 +59,7 @@
         ".oxlintrc.json": "sha256:67cf3ee2bfdb2fcbdae9f731f793e7d10a265bfb957d25085efe8ba00c1931e7",
         "commitlint.config.js": "sha256:741d826bc2a3d77c1097df6c11808f669737158dd5037caed6edfbb15a6966a0",
         "e2e/capture-types.ts": "sha256:916c17f45e0502d7851d3ede353bbc4c193ea6288d35018602f4511f4052b3a3",
-        "e2e/screenshot.ts": "sha256:7eafa422af504daa60e2614709b953d368fa8278220d030b13896facfe79b5d5",
+        "e2e/screenshot.ts": "sha256:ad52cf14f00263b3ee005a8e7553aa9798ddb12b88f39c01eae496f699157b16",
         "playwright.config.ts": "sha256:b80c1f2908961d3086464c4a446b9477a4d16019aa46384ccc120dc506e4e4c5",
         "scripts/lib/preview-server.sh": "sha256:c138516e8246f87275a8ba0fbd252567d80ed6091c6228fdf0b19c7767fc5a15",
         "scripts/readme-screenshot.sh": "sha256:adff1d85ed1ccee6d9df9c6ee12cf13e1798dbdc911b624d82d13e20a77e5725",
@@ -74,7 +74,6 @@
         "web/test/setup.ts": "sha256:81c5f1d7ba79bea949bc636250c52d71d18f2d56bfeff58ac15181786b93211d"
       },
       "chain": ["vite-react", "web", "base", "public"],
-      "appRoot": "web",
       "dispositions": {
         "package.json:screenshot": {
           "disposition": "customized",
@@ -100,7 +99,8 @@
           "disposition": "customized",
           "base": "sha256:18f8004a943d6e438bdb420eb96ba75de5b4b9a838f1e1fde59677e478c60230"
         }
-      }
+      },
+      "appRoot": "web"
     }
   }
 }
