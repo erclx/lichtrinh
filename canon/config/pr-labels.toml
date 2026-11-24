@@ -9,11 +9,17 @@
 # Run `canon labels sync` once to create the ones the remote lacks, and again
 # after adding a row.
 #
+# `canon labels sync` colors each label it creates from a fixed palette in row
+# order. A row may take the table form to choose its own color, such as
+# `app = { paths = ["src/"], color = "1f6feb" }`, and `canon labels sync
+# --check` reports a declared color the remote holds differently without
+# editing it.
+#
 # The matching rule and the `[declined]` table are described in the `git-pr`
 # skill's labels reference.
 
 [domains]
-tooling = [
+tooling = { color = "8c959f", paths = [
   ".github/",
   ".husky/",
   "scripts/",
@@ -33,9 +39,9 @@ tooling = [
   "vitest.config.ts",
   "playwright.config.ts",
   "release-please-config.json",
-]
-claude = [".claude/", "CLAUDE.md"]
-docs = [
+] }
+claude = { paths = [".claude/", "CLAUDE.md"], color = "d2a8ff" }
+docs = { color = "0075ca", paths = [
   "README.md",
   "docs/",
   "canon/REQUIREMENTS.md",
@@ -43,15 +49,19 @@ docs = [
   "canon/context/",
   "CONTRIBUTING.md",
   "SECURITY.md",
-]
-app = ["web/", "index.html", "components.json"]
-api = ["worker/", "wrangler.jsonc", "drizzle.config.ts"]
-shared = ["shared/"]
-e2e = ["e2e/"]
-voice = ["voice/"]
-bridge = ["bridge/"]
-design = ["canon/design/"]
-cli = ["cli/"]
+] }
+app = { paths = ["web/", "index.html", "components.json"], color = "1f6feb" }
+api = { paths = [
+  "worker/",
+  "wrangler.jsonc",
+  "drizzle.config.ts",
+], color = "2da44e" }
+shared = { paths = ["shared/"], color = "56d364" }
+e2e = { paths = ["e2e/"], color = "d29922" }
+voice = { paths = ["voice/"], color = "bf8700" }
+bridge = { paths = ["bridge/"], color = "0598bc" }
+design = { paths = ["canon/design/"], color = "a371f7" }
+cli = { paths = ["cli/"], color = "6e7781" }
 
 # Paths deliberately left unlabelled, keyed by the reason.
 [declined]
