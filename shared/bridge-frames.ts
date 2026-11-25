@@ -1,7 +1,12 @@
 import { z } from 'zod'
 
 import { assistantModel } from './assistant.ts'
-import { clipType, MAX_CLIP_BYTES, voiceModel } from './voice.ts'
+import {
+  clipType,
+  MAX_CLIP_BYTES,
+  spokenLanguage,
+  voiceModel,
+} from './voice.ts'
 
 // The relay and the workspace PC's bridge deploy apart, so the bridge opens
 // with this version and the relay closes a socket speaking another. A change
@@ -16,6 +21,13 @@ export const REPLACED = 4001
 
 const turnId = z.string().min(1)
 const transcriptionId = z.uuid()
+
+// One turn of speaking, as `<account id>.<the browser's id>`. It names a path
+// on the voice server, so nothing that could climb out of one fits.
+const liveId = z
+  .string()
+  .max(128)
+  .regex(/^[\w-]+\.[\w-]+$/)
 
 // A frame is JSON text, so a clip rides it as base64.
 const MAX_CLIP_BASE64 = Math.ceil(MAX_CLIP_BYTES / 3) * 4
@@ -55,8 +67,22 @@ export const downFrame = z.discriminatedUnion('type', [
     model: voiceModel,
     contentType: clipType,
     audio: z.base64().max(MAX_CLIP_BASE64),
+    // Sent only to a bridge that said `live_ready`, since an older one drops
+    // the whole frame over a field it does not know.
+    language: spokenLanguage.optional(),
   }),
   z.strictObject({ type: z.literal('voice_warm'), model: voiceModel }),
+  // The bytes of a clip still being spoken, from byte `from`. Sent only to a
+  // bridge that said `live_ready`.
+  z.strictObject({
+    type: z.literal('live'),
+    liveId,
+    model: voiceModel,
+    language: spokenLanguage,
+    contentType: clipType,
+    from: z.int().nonnegative().max(MAX_CLIP_BYTES),
+    audio: z.base64().max(MAX_CLIP_BASE64),
+  }),
 ])
 export type DownFrame = z.infer<typeof downFrame>
 
@@ -114,6 +140,17 @@ export const upFrame = z.discriminatedUnion('type', [
   }),
   // Sent when the voice server's health changes, and once after each ready.
   z.strictObject({ type: z.literal('voice_status'), online: z.boolean() }),
+  // Sent once after each ready, so a relay knows this bridge answers `live`.
+  // It is a frame of its own since an older relay refuses a longer hello.
+  z.strictObject({ type: z.literal('live_ready') }),
+  // `heard` is the bytes the voice server holds, where the next piece starts.
+  z.strictObject({
+    type: z.literal('live_text'),
+    liveId,
+    text: z.string(),
+    heard: z.int().nonnegative(),
+  }),
+  z.strictObject({ type: z.literal('live_failed'), liveId }),
 ])
 export type UpFrame = z.infer<typeof upFrame>
 

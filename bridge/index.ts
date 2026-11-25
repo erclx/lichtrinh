@@ -108,6 +108,7 @@ function onFrame(opened: BridgeSocket, frame: DownFrame) {
     )
     return
   }
+  if (frame.type === 'live') return
   if (frame.type === 'tool_result') {
     pending.get(frame.callId)?.resolve(frame.result)
     pending.delete(frame.callId)

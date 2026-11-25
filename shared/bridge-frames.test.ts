@@ -72,3 +72,61 @@ describe('the voice frames', () => {
     expect(frame).toBeUndefined()
   })
 })
+
+const LIVE_ID = `invented-user.${CLIP_ID}`
+
+describe('the live frames', () => {
+  const piece = {
+    type: 'live',
+    liveId: LIVE_ID,
+    model: 'qwen3-asr-1.7b',
+    language: 'vi',
+    contentType: 'audio/webm',
+    from: 4096,
+    audio: 'aW52ZW50ZWQ=',
+  }
+
+  it('carries a piece down with the byte it starts at', () => {
+    expect(readFrame(downFrame, JSON.stringify(piece))).toEqual(piece)
+  })
+
+  it.each([
+    { type: 'live_ready' },
+    { type: 'live_text', liveId: LIVE_ID, text: 'Invented words', heard: 8192 },
+    { type: 'live_failed', liveId: LIVE_ID },
+  ])('carries $type up', (frame) => {
+    expect(readFrame(upFrame, JSON.stringify(frame))).toEqual(frame)
+  })
+
+  it('drops a live id that would change the path it rides', () => {
+    const frame = JSON.stringify({ ...piece, liveId: '../health' })
+
+    expect(readFrame(downFrame, frame)).toBeUndefined()
+  })
+
+  it('drops a piece in a language no account speaks', () => {
+    const frame = JSON.stringify({ ...piece, language: 'xx' })
+
+    expect(readFrame(downFrame, frame)).toBeUndefined()
+  })
+})
+
+describe('a transcribe across two ages of bridge', () => {
+  const clip = {
+    type: 'transcribe',
+    transcriptionId: CLIP_ID,
+    model: 'qwen3-asr-1.7b',
+    contentType: 'audio/webm',
+    audio: 'aW52ZW50ZWQ=',
+  }
+
+  it('reads one from a relay older than the language', () => {
+    expect(readFrame(downFrame, JSON.stringify(clip))).toEqual(clip)
+  })
+
+  it('reads one naming the language', () => {
+    const named = { ...clip, language: 'vi' }
+
+    expect(readFrame(downFrame, JSON.stringify(named))).toEqual(named)
+  })
+})

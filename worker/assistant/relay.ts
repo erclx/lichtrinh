@@ -222,6 +222,13 @@ export class AssistantRelay extends DurableObject<Env> {
       )
       return
     }
+    if (
+      frame.type === 'live_ready' ||
+      frame.type === 'live_text' ||
+      frame.type === 'live_failed'
+    ) {
+      return
+    }
     const turn = this.turn
     if (turn?.socket !== ws || frame.turnId !== turn.input.messageId) return
     this.enqueue(turn, () => this.receive(turn, frame))
