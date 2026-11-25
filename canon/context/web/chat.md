@@ -27,7 +27,8 @@ Holds the mic in the composer, from a tap to the words landing in the box for th
 
 - `talk.ts` is the reducer over ready, starting, listening, transcribing, review, retry, denied, off, and failed, and only the middle three take the message row
 - `use-talk.ts` warms voice on a tap, opens one session per tap so a late answer from a dropped one changes nothing, and sends the whole clip once on Stop
-- `recorder.ts` records webm with Opus or else Safari's mp4 at 32 kbps, and closes the microphone on Stop, at 60 seconds, and when the page hides
+- `recorder.ts` records webm with Opus or else an older Safari's mp4 at 32 kbps, and closes the microphone on Stop, at 60 seconds, and when the page hides
+- `live.ts` sends the clip piece by piece while it records, around `apiFetch` so a lost piece changes nothing else, and `live-words.tsx` lays the answers over the thread
 - `edit-ratio.ts` measures the share of words changed between the box right after the words landed and the text sent, which rides the send as `voice`
 
 ## Gotchas

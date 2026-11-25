@@ -17,12 +17,12 @@ Holds the Worker entry and the Hono app mounted on `/api`. The root `wrangler.js
 
 - Every failure answers `{ error: { code, message } }` from `shared/errors.ts`, and a caller branches on `code` alone
 - A thrown error answers `internal_error` and logs the route and the error class, never its message, which can carry SQL or text a person typed
-- A body past 64 KB gets `body_too_large` before any route reads it. `PUT /api/voice/transcriptions/:id` alone takes 2 MiB, matched on its method and whole path.
+- A body past 64 KB gets `body_too_large` before any route reads it. The clip and live routes under `/api/voice` alone take 2 MiB, matched on their method and whole path.
 - Specs run inside workerd as the `worker` Vitest project, calling `app.request(path, init, env)` with no server running
 
 ### `worker/auth/`
 
-Holds sign-in and the guard every route sits behind. The app runs the body limit, then `csrf()`, then a check that answers `415 unsupported_media_type` to any unsafe-method body other than JSON, then the guard. The clip route passes `audio/webm` and `audio/mp4` too, and every other route still refuses them.
+Holds sign-in and the guard every route sits behind. The app runs the body limit, then `csrf()`, then a check that answers `415 unsupported_media_type` to any unsafe-method body other than JSON, then the guard. The clip and live routes pass `audio/webm` and `audio/mp4` too, and every other route still refuses them.
 
 - `guard.ts` lets a signed-out caller reach health, sign-in, and the bridge's `GET /api/bridge/connect` alone, so a new route, an unknown path included, answers `401 unauthenticated`
 - `guard.ts` puts `user` and `sessionId` on the Hono context. `requireAdmin` answers `403 forbidden` on `/api/admin/*`, and `requireChat` does so for an account whose `canChat` is off.
@@ -46,6 +46,8 @@ Holds the speech model setting and the `transcriptions` record the admin ranks m
 
 - The relay sends a clip only to a bridge whose hello said `voice` and whose last `voice_status` read online, and answers `503 voice_unavailable` otherwise
 - A clip waits up to 60 seconds beside the running turn, never behind it, and a socket closing with one pending answers `502 voice_failed` at once
+- `PUT /api/voice/live/:id` puts a piece of a clip still being spoken to a bridge that said `live_ready`, waiting 5 seconds. It writes no row and logs no line, and its id carries the account.
+- The relay names the language of a clip to such a bridge alone, since every frame is a strict object and an older bridge would drop the whole clip over it
 - A row holds the outcome, the timings, and the transcript's length, never its text. A send carrying `voice` marks the sender's own row with the edit ratio the browser measured.
 
 ### `shared/`
