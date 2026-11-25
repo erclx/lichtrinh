@@ -1,0 +1,1047 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width" />
+    <title>Owner panel, up</title>
+    <link rel="stylesheet" href="../assets/panel/fonts/fonts.css" />
+    <style>
+      :root {
+        --background: #f8f8fc;
+        --foreground: #1f1d33;
+        --card: #fff;
+        --primary: #1f1d33;
+        --primary-foreground: #fff;
+        --muted: #ececf6;
+        --muted-foreground: #4d4c62;
+        --border: #dcdcea;
+      }
+      :root[data-theme='dark'] {
+        --background: #121220;
+        --foreground: #f1f0fb;
+        --card: #1b1b2c;
+        --primary: #f1f0fb;
+        --primary-foreground: #121220;
+        --muted: #26263b;
+        --muted-foreground: #b0aecb;
+        --border: #34344f;
+      }
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+      body {
+        background: var(--background);
+        color: var(--foreground);
+        font-family: 'Nunito', sans-serif;
+        font-size: 21px;
+        line-height: 1.4;
+        font-variant-numeric: tabular-nums;
+      }
+      .lbl {
+        margin: 12px 16px;
+        padding: 10px 14px;
+        border: 2px dashed var(--border);
+        border-radius: 10px;
+        font-size: 15px;
+        line-height: 1.45;
+        color: var(--muted-foreground);
+      }
+      .lbl b {
+        color: var(--foreground);
+        font-size: 17px;
+        font-weight: 800;
+        display: block;
+      }
+      .app {
+        max-width: 1408px;
+        margin: 0 auto;
+        padding: 0 16px 32px;
+      }
+      .top {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 10px 0 14px;
+        gap: 12px;
+      }
+      .brand {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        font-weight: 800;
+        font-size: 22px;
+      }
+      .brand small {
+        font-size: 18px;
+        font-weight: 700;
+        color: var(--muted-foreground);
+      }
+      .clock {
+        font-size: 18px;
+        color: var(--muted-foreground);
+        font-weight: 700;
+        white-space: nowrap;
+      }
+      .verdict {
+        background: var(--card);
+        border: 2.5px solid var(--foreground);
+        border-radius: 28px;
+        padding: 20px;
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: space-between;
+        align-items: center;
+        gap: 16px;
+      }
+      .verdict h1 {
+        font-size: 34px;
+        line-height: 1.15;
+        font-weight: 900;
+      }
+      .verdict p {
+        color: var(--muted-foreground);
+        margin-top: 4px;
+      }
+      .acts {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+      }
+      .btn {
+        height: 64px;
+        padding: 0 26px;
+        border-radius: 999px;
+        border: 2px solid var(--border);
+        background: var(--card);
+        font-weight: 800;
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+      }
+      .btn.pri {
+        background: var(--primary);
+        color: var(--primary-foreground);
+        border-color: var(--primary);
+      }
+      h2 {
+        font-size: 18px;
+        font-weight: 800;
+        color: var(--muted-foreground);
+        margin: 22px 4px 8px;
+      }
+      .grid {
+        display: grid;
+        gap: 12px;
+        align-items: start;
+      }
+      .svc {
+        background: var(--card);
+        border: 2px solid var(--border);
+        border-radius: 24px;
+        padding: 16px;
+      }
+      .svc.down {
+        border: 2.5px solid var(--foreground);
+      }
+      .hd {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+      .ic {
+        width: 48px;
+        height: 48px;
+        border-radius: 14px;
+        background: var(--muted);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex: none;
+      }
+      .nm {
+        font-weight: 800;
+        font-size: 22px;
+        line-height: 1.25;
+        flex: 1;
+      }
+      .st {
+        font-weight: 800;
+        font-size: 18px;
+        height: 36px;
+        padding: 0 14px;
+        border-radius: 999px;
+        background: var(--muted);
+        display: inline-flex;
+        align-items: center;
+        white-space: nowrap;
+      }
+      .st.bad {
+        background: var(--primary);
+        color: var(--primary-foreground);
+      }
+      .svc p {
+        color: var(--muted-foreground);
+        font-size: 18px;
+        margin-top: 8px;
+      }
+      .svc p.det {
+        color: var(--foreground);
+      }
+      .svc .acts {
+        margin-top: 14px;
+      }
+      .log {
+        background: var(--muted);
+        border-radius: 18px;
+        padding: 12px 14px;
+        font-size: 18px;
+        line-height: 1.5;
+        color: var(--muted-foreground);
+        margin-top: 14px;
+      }
+      .log b {
+        color: var(--foreground);
+        font-weight: 800;
+      }
+      .disc {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        height: 64px;
+        margin: 10px -4px -12px;
+        padding: 0 4px;
+        border-top: 2px solid var(--border);
+        font-size: 18px;
+        font-weight: 800;
+      }
+      .disc svg {
+        color: var(--muted-foreground);
+      }
+      .card {
+        background: var(--card);
+        border: 2px solid var(--border);
+        border-radius: 24px;
+        padding: 16px;
+      }
+      .gpu {
+        display: flex;
+        height: 28px;
+        border-radius: 999px;
+        overflow: hidden;
+        background: var(--muted);
+      }
+      .gpu i {
+        display: block;
+        height: 100%;
+        background: var(--foreground);
+        border-radius: 999px;
+      }
+      .leg {
+        display: flex;
+        gap: 6px 20px;
+        flex-wrap: wrap;
+        font-size: 18px;
+        color: var(--muted-foreground);
+        margin-top: 10px;
+      }
+      .leg b {
+        color: var(--foreground);
+        font-weight: 800;
+      }
+      .facts {
+        display: grid;
+        gap: 8px;
+      }
+      .fact {
+        background: var(--muted);
+        border-radius: 18px;
+        padding: 12px 14px;
+      }
+      .fact b {
+        display: block;
+        font-size: 22px;
+        font-weight: 800;
+        line-height: 1.25;
+      }
+      .fact span {
+        font-size: 18px;
+        color: var(--muted-foreground);
+      }
+      .grid.svcs {
+        align-items: stretch;
+      }
+      .svc {
+        display: flex;
+        flex-direction: column;
+      }
+      .svc .grow {
+        flex: 1;
+      }
+      .top {
+        flex-wrap: wrap;
+      }
+      @media (max-width: 599px) {
+        .verdict {
+          padding: 16px;
+        }
+        .verdict h1 {
+          font-size: 27px;
+        }
+        .verdict .acts {
+          width: 100%;
+          flex-wrap: nowrap;
+        }
+        .verdict .acts .btn {
+          flex: 1;
+          justify-content: center;
+          padding: 0 12px;
+        }
+      }
+
+      body {
+        min-height: 100vh;
+        padding-bottom: 120px;
+      }
+      .top {
+        flex-wrap: wrap;
+      }
+      button {
+        font: inherit;
+        color: inherit;
+        cursor: pointer;
+      }
+      button.btn:disabled {
+        opacity: 0.5;
+        cursor: default;
+      }
+      button:focus-visible {
+        outline: 3px solid var(--foreground);
+        outline-offset: 2px;
+      }
+      .grid.svcs {
+        grid-template-columns: repeat(4, 1fr);
+        align-items: stretch;
+      }
+      .svc {
+        display: flex;
+        flex-direction: column;
+      }
+      .svc .grow {
+        flex: 1;
+      }
+      .disc {
+        width: calc(100% + 8px);
+        background: none;
+        border: 0;
+        border-top: 2px solid var(--border);
+        margin-top: 14px;
+      }
+      .disc[aria-expanded='true'] svg {
+        transform: rotate(180deg);
+      }
+      .low {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 0 12px;
+      }
+      .facts {
+        grid-template-columns: repeat(4, 1fr);
+      }
+      .msgs .row {
+        display: grid;
+        grid-template-columns: 86px 150px 1fr 110px;
+        gap: 12px;
+        padding: 14px 4px;
+        border-top: 2px solid var(--border);
+        font-size: 18px;
+        align-items: baseline;
+      }
+      .msgs .row:first-child {
+        border-top: 0;
+      }
+      .msgs .k {
+        font-weight: 800;
+      }
+      .msgs .t {
+        font-size: 21px;
+      }
+      .msgs .w,
+      .msgs .tm {
+        color: var(--muted-foreground);
+      }
+      .note {
+        position: fixed;
+        left: 12px;
+        bottom: 12px;
+        right: 12px;
+        max-width: 560px;
+        background: var(--card);
+        border: 2px dashed var(--border);
+        border-radius: 18px;
+        padding: 10px 12px;
+        font-size: 15px;
+        line-height: 1.4;
+        color: var(--muted-foreground);
+        z-index: 50;
+      }
+      .note b {
+        color: var(--foreground);
+      }
+      .note .sim {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+        margin-top: 8px;
+      }
+      .note button {
+        height: 40px;
+        padding: 0 14px;
+        border-radius: 999px;
+        border: 2px solid var(--border);
+        background: var(--muted);
+        font-size: 15px;
+        font-weight: 800;
+      }
+      .scrim {
+        position: fixed;
+        inset: 0;
+        background: rgb(31 29 51 / 0.45);
+        z-index: 60;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 16px;
+      }
+      :root[data-theme='dark'] .scrim {
+        background: rgb(0 0 0 / 0.6);
+      }
+      .dlg {
+        background: var(--card);
+        border-radius: 28px;
+        padding: 24px;
+        max-width: 440px;
+        width: 100%;
+      }
+      .dlg h3 {
+        font-size: 27px;
+        line-height: 1.2;
+        font-weight: 900;
+      }
+      .dlg p {
+        color: var(--muted-foreground);
+        margin: 8px 0 18px;
+      }
+      .dlg .acts .btn {
+        flex: 1;
+        justify-content: center;
+      }
+      @media (max-width: 1023px) {
+        .grid.svcs {
+          grid-template-columns: repeat(2, 1fr);
+        }
+        .facts {
+          grid-template-columns: repeat(2, 1fr);
+        }
+      }
+      @media (max-width: 599px) {
+        .grid.svcs,
+        .low {
+          grid-template-columns: 1fr;
+        }
+        .verdict {
+          padding: 16px;
+        }
+        .verdict h1 {
+          font-size: 27px;
+        }
+        .verdict .acts {
+          width: 100%;
+          flex-wrap: nowrap;
+        }
+        .verdict .acts .btn {
+          flex: 1;
+          justify-content: center;
+          padding: 0 12px;
+        }
+        .msgs .row {
+          grid-template-columns: 70px 1fr;
+          gap: 2px 10px;
+        }
+        .msgs .t {
+          grid-column: 1/-1;
+        }
+        .msgs .w {
+          grid-column: 1/-1;
+        }
+      }
+
+      .svc .main {
+        display: flex;
+        flex-direction: column;
+      }
+      .svc.quiet {
+        background: transparent;
+        border-style: dashed;
+      }
+      .grid.svcs {
+        align-items: stretch;
+      }
+      .facts {
+        grid-template-columns: repeat(3, 1fr) !important;
+      }
+      .gpu u {
+        display: block;
+        height: 100%;
+        background: var(--muted-foreground);
+        opacity: 0.55;
+      }
+      .gpu i {
+        border-radius: 0;
+      }
+      .leg span {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+      }
+      .leg s {
+        width: 14px;
+        height: 14px;
+        border-radius: 5px;
+        background: var(--foreground);
+      }
+      .leg .k2 {
+        background: var(--muted-foreground);
+        opacity: 0.55;
+      }
+      .leg .k3 {
+        background: var(--muted);
+        border: 2px solid var(--border);
+      }
+      .msgs .row {
+        grid-template-columns: 86px 110px 1fr 190px;
+      }
+      .msgs em {
+        font-style: normal;
+        color: var(--muted-foreground);
+      }
+      .vlog {
+        flex-basis: 100%;
+      }
+      .vlog .log {
+        margin-top: 0;
+      }
+      .vlog h3 {
+        font-size: 18px;
+        font-weight: 800;
+        margin-bottom: 8px;
+      }
+      body {
+        padding-bottom: 24px;
+      }
+      .lbl {
+        margin: 12px 16px 0;
+      }
+      .disc {
+        flex: none;
+      }
+      .three {
+        grid-template-columns: repeat(3, 1fr) !important;
+      }
+      .btn {
+        white-space: nowrap;
+      }
+      @media (min-width: 1024px) {
+        .svcs:not(.three) .det {
+          min-height: 50px;
+        }
+      }
+      .wide {
+        grid-column: 1/-1;
+        flex-direction: row !important;
+        gap: 28px;
+      }
+      .wide .grow {
+        display: none;
+      }
+      .wide .main {
+        flex: 1;
+      }
+      .wide .log {
+        flex: 1.4;
+        margin-top: 0;
+      }
+      @media (max-width: 1023px) {
+        .three {
+          grid-template-columns: repeat(2, 1fr) !important;
+        }
+        .three .quiet {
+          grid-column: 1/-1;
+        }
+        .three .quiet .main {
+          display: grid;
+          grid-template-columns: 1fr auto;
+        }
+        .three .quiet .hd {
+          grid-column: 1/-1;
+        }
+        .three .quiet .acts {
+          grid-column: 2;
+          grid-row: 2/4;
+          margin: 4px 0 0;
+        }
+        .low {
+          grid-template-columns: 1fr;
+        }
+        .msgs .row {
+          grid-template-columns: 70px 96px 1fr 180px;
+        }
+        .verdict .acts .btn {
+          padding: 0 22px;
+        }
+      }
+      @media (max-width: 599px) {
+        .three,
+        .grid.svcs {
+          grid-template-columns: 1fr !important;
+        }
+        .wide {
+          flex-direction: column !important;
+          gap: 14px;
+        }
+        .msgs .row {
+          grid-template-columns: 70px 1fr;
+        }
+        .three .quiet .main {
+          display: flex;
+        }
+        .three .quiet .acts {
+          margin-top: 14px;
+        }
+        .verdict .acts .btn {
+          padding: 0 10px;
+          gap: 6px;
+        }
+      }
+
+      .n3 {
+        grid-template-columns: repeat(3, 1fr) !important;
+      }
+      .n2 {
+        grid-template-columns: repeat(2, 1fr) !important;
+      }
+      .n1,
+      .n0 {
+        grid-template-columns: 1fr !important;
+      }
+      body {
+        padding-bottom: 110px !important;
+      }
+      .svc .log {
+        margin-bottom: 0;
+      }
+      .note {
+        max-width: 620px;
+        right: auto;
+        margin-right: 12px;
+      }
+      .note summary {
+        cursor: pointer;
+        min-height: 32px;
+        color: var(--foreground);
+        font-weight: 800;
+      }
+      .dlg .btn {
+        padding: 0 14px;
+      }
+      @media (max-width: 1023px) {
+        .n4,
+        .n3 {
+          grid-template-columns: repeat(2, 1fr) !important;
+        }
+        .solo {
+          grid-column: 1/-1;
+        }
+      }
+      @media (max-width: 599px) {
+        .n4,
+        .n3,
+        .n2 {
+          grid-template-columns: 1fr !important;
+        }
+        .dlg .acts {
+          flex-direction: column;
+        }
+        .dlg .acts .btn {
+          flex: none;
+          width: 100%;
+        }
+      }
+      body {
+        padding-bottom: 24px !important;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="app">
+      <div class="top">
+        <div class="brand">
+          <svg
+            viewBox="0 0 64 64"
+            fill="none"
+            width="34"
+            height="34"
+            aria-hidden="true"
+            style="flex: none"
+          >
+            <rect
+              x="8"
+              y="12"
+              width="48"
+              height="46"
+              rx="14"
+              fill="#ffffff"
+              style="stroke: var(--foreground)"
+              stroke-width="4"
+            ></rect>
+            <path
+              d="M10 27h44v-3a10 10 0 0 0-10-10H20a10 10 0 0 0-10 10z"
+              fill="#dcd8ff"
+            ></path>
+            <path
+              d="M8 27h48"
+              style="stroke: var(--foreground)"
+              stroke-width="4"
+            ></path>
+            <rect
+              x="19.5"
+              y="5"
+              width="6"
+              height="14"
+              rx="3"
+              style="fill: var(--foreground)"
+            ></rect>
+            <rect
+              x="38.5"
+              y="5"
+              width="6"
+              height="14"
+              rx="3"
+              style="fill: var(--foreground)"
+            ></rect>
+            <rect
+              x="17"
+              y="33.5"
+              width="30"
+              height="4.6"
+              rx="2.3"
+              fill="#ffd9bf"
+              style="stroke: var(--foreground)"
+              stroke-width="1.8"
+            ></rect>
+            <rect
+              x="17"
+              y="40.5"
+              width="22"
+              height="4.6"
+              rx="2.3"
+              fill="#ffcfe1"
+              style="stroke: var(--foreground)"
+              stroke-width="1.8"
+            ></rect>
+            <rect
+              x="17"
+              y="47.5"
+              width="26"
+              height="4.6"
+              rx="2.3"
+              fill="#c9f1dd"
+              style="stroke: var(--foreground)"
+              stroke-width="1.8"
+            ></rect></svg
+          ><span>Lịch trình</span><small>This PC</small>
+        </div>
+        <span class="clock">Sat 22 Nov 2031, 14:24</span>
+      </div>
+      <div id="app">
+        <div class="verdict" id="verdict" aria-live="polite">
+          <div>
+            <h1>Everything is up</h1>
+            <p>Voice, the local model, and the bridge are all ready.</p>
+          </div>
+          <div class="acts">
+            <button class="btn" data-a="askstop" data-k="">Stop all</button>
+          </div>
+        </div>
+        <h2>Services</h2>
+        <div class="grid svcs n4">
+          <div class="svc" data-svc="voice">
+            <div class="main">
+              <div class="hd">
+                <span class="ic"
+                  ><svg
+                    viewBox="0 0 24 24"
+                    width="24"
+                    height="24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2.2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    aria-hidden="true"
+                  >
+                    <rect x="9" y="3" width="6" height="11" rx="3"></rect>
+                    <path
+                      d="M5.5 11a6.5 6.5 0 0 0 13 0M12 17.5V21"
+                    ></path></svg></span
+                ><span class="nm">Voice</span><span class="st">Running</span>
+              </div>
+              <p>Speech to text for the talk button</p>
+              <p class="det">Listening on this PC. Talk is on.</p>
+              <div class="acts">
+                <button class="btn" data-a="restart" data-k="voice">
+                  Restart</button
+                ><button class="btn" data-a="stop" data-k="voice">Stop</button>
+              </div>
+            </div>
+            <div class="grow"></div>
+            <button
+              class="disc"
+              data-a="logs"
+              data-k="voice"
+              aria-expanded="false"
+            >
+              <span>Recent log lines</span
+              ><svg
+                viewBox="0 0 24 24"
+                width="22"
+                height="22"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2.2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                aria-hidden="true"
+              >
+                <path d="M6 9l6 6 6-6"></path>
+              </svg>
+            </button>
+          </div>
+          <div class="svc" data-svc="model">
+            <div class="main">
+              <div class="hd">
+                <span class="ic"
+                  ><svg
+                    viewBox="0 0 24 24"
+                    width="24"
+                    height="24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2.2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    aria-hidden="true"
+                  >
+                    <rect x="6" y="6" width="12" height="12" rx="3"></rect>
+                    <path
+                      d="M9.5 3v3M14.5 3v3M9.5 18v3M14.5 18v3M3 9.5h3M3 14.5h3M18 9.5h3M18 14.5h3"
+                    ></path></svg></span
+                ><span class="nm">Local model</span
+                ><span class="st">Loaded</span>
+              </div>
+              <p>The assistant on this PC</p>
+              <p class="det">Frees the card in 12 min.</p>
+              <div class="acts">
+                <button class="btn" data-a="unload" data-k="model">
+                  Unload
+                </button>
+              </div>
+            </div>
+            <div class="grow"></div>
+            <button
+              class="disc"
+              data-a="logs"
+              data-k="model"
+              aria-expanded="false"
+            >
+              <span>Recent log lines</span
+              ><svg
+                viewBox="0 0 24 24"
+                width="22"
+                height="22"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2.2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                aria-hidden="true"
+              >
+                <path d="M6 9l6 6 6-6"></path>
+              </svg>
+            </button>
+          </div>
+          <div class="svc" data-svc="bridge">
+            <div class="main">
+              <div class="hd">
+                <span class="ic"
+                  ><svg
+                    viewBox="0 0 24 24"
+                    width="24"
+                    height="24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2.2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    aria-hidden="true"
+                  >
+                    <path
+                      d="M3 17h18M3 17V9M21 17V9M3 9c3 5 15 5 18 0M8 17v-4.5M12 17v-4M16 17v-4.5"
+                    ></path></svg></span
+                ><span class="nm">Bridge</span><span class="st">Connected</span>
+              </div>
+              <p>Links this PC to the family’s app</p>
+              <p class="det">Connected since 11:11.</p>
+              <div class="acts">
+                <button class="btn" data-a="restart" data-k="bridge">
+                  Restart</button
+                ><button class="btn" data-a="stop" data-k="bridge">Stop</button>
+              </div>
+            </div>
+            <div class="grow"></div>
+            <button
+              class="disc"
+              data-a="logs"
+              data-k="bridge"
+              aria-expanded="false"
+            >
+              <span>Recent log lines</span
+              ><svg
+                viewBox="0 0 24 24"
+                width="22"
+                height="22"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2.2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                aria-hidden="true"
+              >
+                <path d="M6 9l6 6 6-6"></path>
+              </svg>
+            </button>
+          </div>
+          <div class="svc quiet" data-svc="stage">
+            <div class="main">
+              <div class="hd">
+                <span class="ic"
+                  ><svg
+                    viewBox="0 0 24 24"
+                    width="24"
+                    height="24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2.2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    aria-hidden="true"
+                  >
+                    <path
+                      d="M9 3h6M10 3v6l-5 9a2 2 0 0 0 1.8 3h10.4a2 2 0 0 0 1.8-3l-5-9V3M7.5 15h9"
+                    ></path></svg></span
+                ><span class="nm">Staging</span><span class="st">Off</span>
+              </div>
+              <p>Links this PC to the test copy</p>
+              <p class="det">Off is normal here. Start all skips it.</p>
+              <div class="acts">
+                <button class="btn" data-a="start" data-k="stage">Start</button>
+              </div>
+            </div>
+            <div class="grow"></div>
+            <button
+              class="disc"
+              data-a="logs"
+              data-k="stage"
+              aria-expanded="false"
+            >
+              <span>Recent log lines</span
+              ><svg
+                viewBox="0 0 24 24"
+                width="22"
+                height="22"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2.2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                aria-hidden="true"
+              >
+                <path d="M6 9l6 6 6-6"></path>
+              </svg>
+            </button>
+          </div>
+        </div>
+        <div class="low">
+          <div>
+            <h2>Graphics card</h2>
+            <div class="card">
+              <div class="gpu">
+                <i style="width: 69.0625%"></i><u style="width: 21.875%"></u>
+              </div>
+              <div class="leg">
+                <span><s class="k1"></s>Local model <b>22.1</b></span
+                ><span><s class="k2"></s>Other, voice included <b>7.0</b></span
+                ><span
+                  ><s class="k3"></s>Free <b id="free">2.9 of 32 GiB</b></span
+                >
+              </div>
+            </div>
+          </div>
+          <div>
+            <h2>Activity</h2>
+            <div class="facts">
+              <div class="fact"><b>14:21</b><span>Last turn</span></div>
+              <div class="fact"><b>12</b><span>Turns today</span></div>
+              <div class="fact"><b>1</b><span>Failed today</span></div>
+            </div>
+          </div>
+        </div>
+        <h2>Messages</h2>
+        <div class="card msgs">
+          <div class="row">
+            <span class="tm">14:21</span><span class="k">Reply</span
+            ><span class="t" lang="vi"
+              >Xong. Tôi đã thêm ăn phở sáng mai lúc 7 giờ.</span
+            ><span class="w">lichtrinh-assistant</span>
+          </div>
+          <div class="row">
+            <span class="tm">14:21</span><span class="k">Message</span
+            ><span class="t" lang="vi">thêm ăn phở sáng mai lúc 7 giờ</span
+            ><span class="w"></span>
+          </div>
+          <div class="row">
+            <span class="tm">14:02</span><span class="k">Reply</span
+            ><span class="t" lang="vi"
+              >Tôi đã dời chuyến đi thuyền sang 17:30.</span
+            ><span class="w">lichtrinh-assistant</span>
+          </div>
+          <div class="row">
+            <span class="tm">14:02</span><span class="k">Message</span
+            ><span class="t" lang="vi">doi chuyen di thuyen sang 5 ruoi</span
+            ><span class="w"></span>
+          </div>
+          <div class="row">
+            <span class="tm">11:38</span><span class="k">Reply</span
+            ><span class="t" lang="en"><em>No reply, the turn failed</em></span
+            ><span class="w">lichtrinh-assistant</span>
+          </div>
+          <div class="row">
+            <span class="tm">11:38</span><span class="k">Message</span
+            ><span class="t" lang="vi">mai co gi</span><span class="w"></span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>
