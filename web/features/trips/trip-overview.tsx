@@ -104,6 +104,12 @@ export function TripOverview() {
         >
           {t('budget.title')}
         </Link>
+        <Link
+          to={`${tripPath}/history`}
+          className={cn(buttonVariants({ variant: 'secondary' }))}
+        >
+          {t('history.title')}
+        </Link>
       </div>
 
       <h2 className="pt-6 pb-1 font-heading text-lg font-extrabold">

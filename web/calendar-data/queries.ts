@@ -1,7 +1,7 @@
 import type { EntryRange } from '@shared/entries.ts'
-import { useQuery } from '@tanstack/react-query'
+import { useInfiniteQuery, useQuery } from '@tanstack/react-query'
 
-import { getEntry, getTrip, listEntries, listTrips } from './api'
+import { getEntry, getTrip, listChanges, listEntries, listTrips } from './api'
 
 /**
  * Every calendar read's key, named once here since the offline plan persists
@@ -13,6 +13,7 @@ export const calendarKeys = {
   trip: (id: string) => ['calendar', 'trip', id] as const,
   entries: (range: EntryRange) => ['calendar', 'entries', range] as const,
   entry: (id: string) => ['calendar', 'entry', id] as const,
+  changes: (tripId: string) => ['calendar', 'changes', tripId] as const,
   rates: () => ['calendar', 'rates'] as const,
 }
 
@@ -43,5 +44,16 @@ export function useEntry(id: string) {
   return useQuery({
     queryKey: calendarKeys.entry(id),
     queryFn: () => getEntry(id),
+  })
+}
+
+/** A trip's history by pages, newest first, idle while `tripId` is undefined. */
+export function useChanges(tripId: string | undefined) {
+  return useInfiniteQuery({
+    queryKey: calendarKeys.changes(tripId ?? ''),
+    queryFn: ({ pageParam }) => listChanges(tripId ?? '', pageParam),
+    initialPageParam: undefined as string | undefined,
+    getNextPageParam: (page) => page.nextBefore ?? undefined,
+    enabled: tripId !== undefined,
   })
 }

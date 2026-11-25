@@ -1,4 +1,4 @@
-import { removed, undone } from '@shared/changes.ts'
+import { changePage, removed, undone } from '@shared/changes.ts'
 import {
   type CreateEntryRequest,
   entryList,
@@ -82,5 +82,14 @@ export function undoChange(changeId: string, undoId: string) {
     method: 'POST',
     body: { undoId },
     schema: undone,
+  })
+}
+
+/** A page of a trip's history, newest first, older than `before` when given. */
+export function listChanges(tripId: string, before?: string) {
+  const query =
+    before === undefined ? '' : `?${new URLSearchParams({ before })}`
+  return apiFetch(`/trips/${segment(tripId)}/changes${query}`, {
+    schema: changePage,
   })
 }
