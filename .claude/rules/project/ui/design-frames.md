@@ -9,6 +9,7 @@ paths:
 ## Language
 
 - Give every frame a VI and EN toggle with a 64px tap area, defaulting to English, so the operator reads each frame in both languages.
+- Draw the owner panel's frames in English alone with no toggle, on the board's `panel/` project and under `canon/design/panel/`, since the owner alone reads that page.
 
 ## Icons
 

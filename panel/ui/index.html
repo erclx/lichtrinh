@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <script>
+      // Before the first paint, so the page never flashes the other theme.
+      ;(function () {
+        var scheme = window.matchMedia('(prefers-color-scheme: dark)')
+        function apply() {
+          document.documentElement.dataset.theme = scheme.matches
+            ? 'dark'
+            : 'light'
+        }
+        apply()
+        scheme.addEventListener('change', apply)
+      })()
+    </script>
+    <link rel="icon" type="image/svg+xml" href="../../web/public/favicon.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Lichtrinh owner panel</title>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="./main.tsx"></script>
+  </body>
+</html>

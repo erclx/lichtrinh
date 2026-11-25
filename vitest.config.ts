@@ -44,6 +44,7 @@ export default mergeConfig(
             setupFiles: ['web/test/setup.ts'],
             include: [
               'web/**/*.test.{ts,tsx}',
+              'panel/ui/**/*.test.{ts,tsx}',
               'shared/**/*.test.ts',
               'pwa-manifest.test.ts',
             ],
@@ -87,6 +88,14 @@ export default mergeConfig(
             name: 'bridge',
             environment: 'node',
             include: ['bridge/**/*.test.ts'],
+          },
+        },
+        {
+          extends: true,
+          test: {
+            name: 'panel',
+            environment: 'node',
+            include: ['panel/server/**/*.test.ts'],
           },
         },
         {

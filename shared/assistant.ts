@@ -16,6 +16,12 @@ export type AssistantModel = z.infer<typeof assistantModel>
 export const DEFAULT_ASSISTANT_MODEL: AssistantModel = 'lichtrinh-assistant'
 
 /**
+ * Keeps the model loaded between the traveler's messages, so a reply does not
+ * pay the load again, and frees the graphics card after a quiet quarter hour.
+ */
+export const MODEL_KEEP_ALIVE = '15m'
+
+/**
  * Whether the assistant can answer now. `online` means the workspace PC's
  * bridge holds a live socket, and `lastAnsweredAt` is the last reply it
  * finished, or null before the first.

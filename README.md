@@ -47,6 +47,7 @@ Run `bun link` once in the checkout, then `lichtrinh --help` from any folder for
 - `lichtrinh admin create <username>` makes an admin account and prints its password once
 - `lichtrinh bridge run` connects the assistant on the workspace PC, and `lichtrinh bridge eval` scores a model alias
 - `lichtrinh voice serve` runs the speech recognition server the talk button sends clips to
+- `lichtrinh panel install` puts a shortcut on the Windows desktop that starts voice and the bridge and opens a panel over them
 
 ## License
 
