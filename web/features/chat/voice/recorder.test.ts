@@ -91,6 +91,27 @@ describe('record', () => {
     expect(onHidden).toHaveBeenCalledOnce()
   })
 
+  it('hands over the bytes recorded past an offset, in the clip type', async () => {
+    const { stream } = aFakeStream()
+    const recording = record(stream, webm, quiet)
+    await Promise.resolve()
+    FakeMediaRecorder.last?.slice(6, 8, 9)
+
+    const piece = recording.since(2)
+
+    expect([...new Uint8Array(await piece.arrayBuffer())]).toEqual([8, 9])
+    expect(piece.type).toBe('audio/webm')
+  })
+
+  it('hands over no bytes past the end', async () => {
+    const { stream } = aFakeStream()
+    const recording = record(stream, webm, quiet)
+    await Promise.resolve()
+
+    expect(recording.since(1).size).toBe(0)
+    expect(recording.since(40).size).toBe(0)
+  })
+
   it('closes the microphone on cancel', () => {
     const { stream, track } = aFakeStream()
     const recording = record(stream, webm, quiet)

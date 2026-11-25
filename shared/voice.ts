@@ -21,7 +21,7 @@ export type VoiceModel = z.infer<typeof voiceModel>
 
 export const DEFAULT_VOICE_MODEL: VoiceModel = 'qwen3-asr-1.7b'
 
-/** What the browser records, being webm on Chrome and mp4 on Safari. */
+/** What the browser records, being webm, or mp4 on an older Safari. */
 export const clipType = z.enum(['audio/webm', 'audio/mp4'])
 export type ClipType = z.infer<typeof clipType>
 
