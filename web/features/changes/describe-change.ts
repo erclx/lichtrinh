@@ -10,22 +10,15 @@ import {
   formatTime,
 } from '@/i18n/format'
 import type { Language } from '@/i18n/resources'
+import { zoneLabel } from '@/lib/zone-label'
 
 interface Reading {
   /** The currency the trip was in when the change was made. */
   currency: string
+  /** When the change was made, which sets a zone's offset. */
+  at: Date
   t: TFunction
   language: Language
-}
-
-function zoneName(zone: string, language: Language) {
-  const part = new Intl.DateTimeFormat(language, {
-    timeZone: zone,
-    timeZoneName: 'longGeneric',
-  })
-    .formatToParts(new Date(0))
-    .find(({ type }) => type === 'timeZoneName')
-  return part?.value ?? zone
 }
 
 const startOf = (entry: EntryFields) => ({
@@ -74,7 +67,7 @@ function entrySentence(
   after: EntryFields,
   reading: Reading,
 ): string {
-  const { currency, t, language } = reading
+  const { currency, at, t, language } = reading
   const { title } = after
   const kind = (entry: EntryFields) =>
     entry.kind === null ? t('history.noKind') : t(kindLabelKey[entry.kind])
@@ -104,8 +97,8 @@ function entrySentence(
     moved.push(() =>
       t('history.changedZone', {
         title,
-        from: zoneName(before.timeZone, language),
-        to: zoneName(after.timeZone, language),
+        from: zoneLabel(before.timeZone, language, at),
+        to: zoneLabel(after.timeZone, language, at),
       }),
     )
   }
@@ -121,7 +114,7 @@ function entrySentence(
 function tripSentence(
   before: TripFields,
   after: TripFields,
-  { t, language }: Reading,
+  { at, t, language }: Reading,
 ): string {
   const span = (trip: TripFields) =>
     formatDateSpan(trip.startsOn, trip.endsOn, language)
@@ -140,8 +133,8 @@ function tripSentence(
   if (before.timeZone !== after.timeZone) {
     moved.push(() =>
       t('history.changedTripZone', {
-        from: zoneName(before.timeZone, language),
-        to: zoneName(after.timeZone, language),
+        from: zoneLabel(before.timeZone, language, at),
+        to: zoneLabel(after.timeZone, language, at),
       }),
     )
   }
@@ -177,7 +170,7 @@ export function describeChange(
   t: TFunction,
   language: Language,
 ): string {
-  const reading = { currency, t, language }
+  const reading = { currency, at: new Date(change.at), t, language }
   if (change.entity === 'trip') {
     const { before, after } = change
     if (before !== null && after !== null) {

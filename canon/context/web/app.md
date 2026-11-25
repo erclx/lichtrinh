@@ -69,7 +69,7 @@ Holds the app's own components, being the mark, the language toggle, the pickers
 
 The folders below each carry one small job.
 
-- `web/lib/`: `cn`, the day helpers, and `api.ts`, whose `apiFetch` parses through a `shared/` schema, throws `ApiFailure`, and sends a `blob` raw under its type
+- `web/lib/`: `cn`, the day helpers, the zone label, and `api.ts`, whose `apiFetch` parses through a `shared/` schema, throws `ApiFailure`, and sends a `blob` raw under its type
 - `web/hooks/`: `useMediaQuery`, unmatched in the test DOM, and `useNow`, beside `web/public/` holding the icons and social cards
 - `web/test/`: `fake-api.ts` behind `fetch`, invented builders, `media.ts` for a fake recorder and microphone, and `render-route.tsx`
 - `e2e/`: the Playwright specs and the screenshot harness, with one case file per feature in `e2e/capture/cases/`, shared setup in `e2e/capture/page-setup.ts`, and frames in `e2e/evidence/`

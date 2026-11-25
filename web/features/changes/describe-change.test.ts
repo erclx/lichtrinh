@@ -158,11 +158,14 @@ describe('describeChange on an entry', () => {
     expect(read.map((text) => text.replaceAll(' ', ' '))).toEqual([en, vi])
   })
 
-  it('reads a new zone by its name', async () => {
-    const change = dinnerEdit({ timeZone: 'Asia/Tokyo' })
+  it('reads a new zone by its city, at the offset of that day', async () => {
+    const change = entryChange(
+      { ...dinner, timeZone: 'Europe/Berlin' },
+      { ...dinner, timeZone: 'Europe/Paris' },
+    )
 
-    expect(await sentence(change, 'en')).toMatch(
-      /^Changed the time zone of “Dinner” [A-Z][a-z]+ Time → Japan/,
+    expect(await sentence(change, 'en')).toBe(
+      'Changed the time zone of “Dinner” Berlin (GMT+2) → Paris (GMT+2)',
     )
   })
 
@@ -230,11 +233,11 @@ describe('describeChange on a trip', () => {
     )
   })
 
-  it('reads a new zone by its name', async () => {
+  it('reads a new zone by its city', async () => {
     const change = tripEdit({ timeZone: 'Asia/Tokyo' })
 
-    expect(await sentence(change, 'en')).toMatch(
-      /^Changed the trip time zone [A-Z][a-z]+ Time → Japan/,
+    expect(await sentence(change, 'en')).toBe(
+      'Changed the trip time zone Ho Chi Minh (GMT+7) → Tokyo (GMT+9)',
     )
   })
 })
