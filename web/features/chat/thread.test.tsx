@@ -18,6 +18,7 @@ import {
   aUserMessage,
 } from '@/test/chat'
 import { failure, fakeApi, json } from '@/test/fake-api'
+import { aFakeStream, FakeMediaRecorder } from '@/test/media'
 
 type Routes = Parameters<typeof fakeApi>[0]
 
@@ -373,5 +374,61 @@ describe('Thread', () => {
         await screen.findByRole('button', { name: 'Try again' }),
       ).toBeInTheDocument()
     })
+  })
+
+  describe('live words', () => {
+    const turnId = '5c7d1e2f-3a4b-4c5d-8e9f-0a1b2c3d4e5f'
+
+    beforeEach(() => {
+      vi.stubGlobal('MediaRecorder', FakeMediaRecorder)
+      vi.spyOn(crypto, 'randomUUID').mockReturnValue(turnId)
+      const { stream } = aFakeStream()
+      vi.stubGlobal('navigator', {
+        ...navigator,
+        mediaDevices: { getUserMedia: async () => stream },
+      })
+    })
+
+    afterEach(() => {
+      vi.restoreAllMocks()
+    })
+
+    it.each(['page', 'panel'] as const)(
+      'stand over an inert list in the %s layout, and leave it whole on landing',
+      async (layout) => {
+        const user = userEvent.setup()
+        chatApi([aUserMessage({ text: 'pho sang mai' })], {
+          [`PUT /voice/live/${turnId}?from=0`]: () =>
+            json({ text: 'doi an toi', heard: 1 }),
+          [`PUT /voice/transcriptions/${turnId}`]: () =>
+            json({
+              id: turnId,
+              text: 'doi an toi sang 8 gio',
+              model: 'qwen3-asr-1.7b',
+              audioMs: 2100,
+              ms: 900,
+            }),
+        })
+        renderThread(layout)
+        const asked = await screen.findByText('pho sang mai')
+        expect(asked.closest('[inert]')).toBeNull()
+
+        await user.click(screen.getByRole('button', { name: 'Talk' }))
+        await screen.findByText('doi an toi')
+        const covered = asked.closest('[inert]')
+        await user.click(
+          screen.getByRole('button', { name: 'Stop and write it down' }),
+        )
+
+        expect(
+          await screen.findByLabelText('Message the assistant'),
+        ).toHaveValue('doi an toi sang 8 gio')
+        expect(covered).not.toBeNull()
+        // The very row the words covered, never a list drawn again.
+        expect(screen.getByText('pho sang mai')).toBe(asked)
+        expect(asked.closest('[inert]')).toBeNull()
+        expect(screen.queryByText('doi an toi')).toBeNull()
+      },
+    )
   })
 })

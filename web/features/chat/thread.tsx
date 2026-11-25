@@ -1,5 +1,5 @@
 import type { ChatMessage } from '@shared/chats.ts'
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router'
 
@@ -22,6 +22,7 @@ import {
 } from '@/features/chat/turn'
 import { useAssistantStatus } from '@/features/chat/use-assistant-status'
 import { useTurn } from '@/features/chat/use-turn'
+import { LiveWords } from '@/features/chat/voice/live-words'
 import { useLanguage } from '@/i18n/use-language'
 import { cn } from '@/lib/utils'
 
@@ -47,6 +48,8 @@ export function Thread({ chatId, layout }: ThreadProps) {
   const { online, voiceOnline } = useAssistantStatus()
   const start = useStartChat()
   const navigate = useNavigate()
+  const [liveWords, setLiveWords] = useState('')
+  const covered = liveWords !== ''
   const offline = online === false
   const running = turn !== null && isRunning(turn)
 
@@ -87,69 +90,73 @@ export function Thread({ chatId, layout }: ThreadProps) {
 
   return (
     <div className={cn('flex flex-col', panel ? 'min-h-0 flex-1' : 'flex-1')}>
-      <div
-        className={cn(
-          'flex flex-col gap-3',
-          panel ? 'min-h-0 flex-1 overflow-y-auto px-4 py-3' : 'flex-1 pb-3',
-        )}
-      >
-        {offline && <OfflineCard contactName={contact.data ?? null} />}
-        {thread.isPending ? (
-          <p role="status" className="text-base text-muted-foreground">
-            {t('shell.loading')}
-          </p>
-        ) : thread.isError && thread.data === undefined ? (
-          <LoadFailed
-            message={t('chat.threadLoadFailed')}
-            error={thread.error}
-            onRetry={() => void thread.refetch()}
-          />
-        ) : items.length === 0 ? (
-          <p className="text-base text-muted-foreground">
-            {t('chat.threadEmpty')}
-          </p>
-        ) : (
-          <ol className="flex flex-col gap-3">
-            {items.map((item) => {
-              if (item.kind === 'sent') {
-                return <Asked key={item.id} text={item.text} />
-              }
-              if (item.kind === 'live') {
+      <div className={cn('relative flex flex-1 flex-col', panel && 'min-h-0')}>
+        <div
+          inert={covered}
+          className={cn(
+            'flex flex-1 flex-col gap-3',
+            panel ? 'min-h-0 overflow-y-auto px-4 py-3' : 'pb-3',
+          )}
+        >
+          {offline && <OfflineCard contactName={contact.data ?? null} />}
+          {thread.isPending ? (
+            <p role="status" className="text-base text-muted-foreground">
+              {t('shell.loading')}
+            </p>
+          ) : thread.isError && thread.data === undefined ? (
+            <LoadFailed
+              message={t('chat.threadLoadFailed')}
+              error={thread.error}
+              onRetry={() => void thread.refetch()}
+            />
+          ) : items.length === 0 ? (
+            <p className="text-base text-muted-foreground">
+              {t('chat.threadEmpty')}
+            </p>
+          ) : (
+            <ol className="flex flex-col gap-3">
+              {items.map((item) => {
+                if (item.kind === 'sent') {
+                  return <Asked key={item.id} text={item.text} />
+                }
+                if (item.kind === 'live') {
+                  return (
+                    <li key={`live-${item.turn.sent.id}`} className={reply}>
+                      <LiveReply turn={item.turn} onRetry={retry(item.retry)} />
+                    </li>
+                  )
+                }
+                const { message } = item
+                if (message.role === 'user') {
+                  return <Asked key={message.id} text={message.text} />
+                }
                 return (
-                  <li key={`live-${item.turn.sent.id}`} className={reply}>
-                    <LiveReply turn={item.turn} onRetry={retry(item.retry)} />
+                  <li key={message.id} className={reply}>
+                    <SavedReply message={message} onRetry={retry(item.retry)} />
                   </li>
                 )
-              }
-              const { message } = item
-              if (message.role === 'user') {
-                return <Asked key={message.id} text={message.text} />
-              }
-              return (
-                <li key={message.id} className={reply}>
-                  <SavedReply message={message} onRetry={retry(item.retry)} />
-                </li>
-              )
-            })}
-          </ol>
-        )}
-        {turn?.phase === 'refused' &&
-          (turn.refusal === 'no_trip' ? (
-            <TripGoneCard
-              onNewChat={startChat}
-              pending={start.isPending}
-              error={start.isError ? start.error : null}
-            />
-          ) : (
-            <p role="alert" className="rounded-md bg-muted p-3 text-sm">
-              {turn.refusal === 'assistant_busy'
-                ? t('chat.busy')
-                : turn.refusal === 'network'
-                  ? t('errors.network')
-                  : t('errors.generic')}
-            </p>
-          ))}
-        <div ref={end} className={panel ? undefined : 'scroll-mb-28'} />
+              })}
+            </ol>
+          )}
+          {turn?.phase === 'refused' &&
+            (turn.refusal === 'no_trip' ? (
+              <TripGoneCard
+                onNewChat={startChat}
+                pending={start.isPending}
+                error={start.isError ? start.error : null}
+              />
+            ) : (
+              <p role="alert" className="rounded-md bg-muted p-3 text-sm">
+                {turn.refusal === 'assistant_busy'
+                  ? t('chat.busy')
+                  : turn.refusal === 'network'
+                    ? t('errors.network')
+                    : t('errors.generic')}
+              </p>
+            ))}
+          <div ref={end} className={panel ? undefined : 'scroll-mb-28'} />
+        </div>
+        {covered && <LiveWords text={liveWords} layout={layout} />}
       </div>
       <div
         className={cn(
@@ -166,6 +173,7 @@ export function Thread({ chatId, layout }: ThreadProps) {
           contactName={contact.data ?? null}
           onSend={send}
           onStop={stop}
+          onLive={setLiveWords}
         />
       </div>
       <p aria-live="polite" className="sr-only">

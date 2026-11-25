@@ -7,8 +7,14 @@ import userEvent from '@testing-library/user-event'
 
 import { Composer } from '@/features/chat/composer'
 import { applyLanguage } from '@/i18n/setup'
+import { onReach, onUnauthenticated } from '@/lib/api'
 import { failure, fakeApi, json } from '@/test/fake-api'
-import { aFakeStream, FakeMediaRecorder, type FakeTrack } from '@/test/media'
+import {
+  aFakeStream,
+  FakeMediaRecorder,
+  type FakeTrack,
+  setVisibility,
+} from '@/test/media'
 
 interface Options {
   running?: boolean
@@ -27,6 +33,7 @@ function renderComposer({
 }: Options = {}) {
   const onSend = vi.fn(async (_text: string, _voice?: VoiceSend) => accepted)
   const onStop = vi.fn()
+  const onLive = vi.fn<(words: string) => void>()
   const client = new QueryClient()
   const composer = (voice: boolean | null) => (
     <QueryClientProvider client={client}>
@@ -38,13 +45,17 @@ function renderComposer({
         contactName={null}
         onSend={onSend}
         onStop={onStop}
+        onLive={onLive}
       />
     </QueryClientProvider>
   )
-  const { rerender } = render(composer(voiceOnline))
+  const { rerender, unmount } = render(composer(voiceOnline))
   return {
     onSend,
     onStop,
+    unmount,
+    /** The live words standing now, as the thread would show them. */
+    live: () => onLive.mock.lastCall?.[0] ?? '',
     box: screen.getByLabelText('Message the assistant'),
     /** Answers a later status read with this voice state. */
     readVoice: (voice: boolean | null) => rerender(composer(voice)),
@@ -410,6 +421,241 @@ describe('Composer with the mic', () => {
       screen.getByRole('heading', { name: 'Voice is offline' }),
     ).toBeInTheDocument()
     expect(screen.queryByText(/Tap the mic to talk/)).toBeNull()
+    expect(screen.queryByRole('list', { name: 'Sample requests' })).toBeNull()
+  })
+})
+
+const livePath = `PUT /voice/live/${clipId}?from=0`
+const warmed = { 'POST /assistant/warm': () => json(null, 202) }
+
+describe('Composer with live words', () => {
+  const stopButton = () =>
+    screen.findByRole('button', { name: 'Stop and write it down' })
+
+  async function listen(user: ReturnType<typeof userEvent.setup>) {
+    await user.click(screen.getByRole('button', { name: 'Talk' }))
+    await screen.findByText('Listening…', { ignore: '[role=status]' })
+  }
+
+  it('hands the words up while the traveler still speaks', async () => {
+    const user = userEvent.setup()
+    fakeApi({
+      ...warmed,
+      [livePath]: () => json({ text: 'doi an toi', heard: 1 }),
+    })
+    const { live } = renderComposer()
+
+    await listen(user)
+
+    await vi.waitFor(() => expect(live()).toBe('doi an toi'))
+    expect(await stopButton()).toBeInTheDocument()
+  })
+
+  it('keeps the words through transcribing and clears them on landing', async () => {
+    const user = userEvent.setup()
+    let land: (answer: Response) => void = () => undefined
+    fakeApi({
+      ...warmed,
+      [livePath]: () => json({ text: 'doi an toi', heard: 1 }),
+      [clipPath]: () =>
+        new Promise<Response>((resolve) => {
+          land = resolve
+        }),
+    })
+    const { live } = renderComposer()
+    await listen(user)
+    await vi.waitFor(() => expect(live()).toBe('doi an toi'))
+
+    await user.click(await stopButton())
+    await screen.findByText('Writing down what you said…', {
+      ignore: '[role=status]',
+    })
+    const whileWriting = live()
+    land(json(aTranscription('doi an toi sang 8 gio')))
+
+    expect(await screen.findByLabelText('Message the assistant')).toHaveValue(
+      'doi an toi sang 8 gio',
+    )
+    expect(whileWriting).toBe('doi an toi')
+    expect(live()).toBe('')
+  })
+
+  it('clears the words when the clip fails', async () => {
+    const user = userEvent.setup()
+    fakeApi({
+      ...warmed,
+      [livePath]: () => json({ text: 'doi an toi', heard: 1 }),
+      [clipPath]: () => failure('voice_failed', 502),
+    })
+    const { live } = renderComposer()
+    await listen(user)
+    await vi.waitFor(() => expect(live()).toBe('doi an toi'))
+
+    await user.click(await stopButton())
+    await screen.findByLabelText('Message the assistant')
+
+    expect(live()).toBe('')
+  })
+
+  it('clears the words when the page hides and drops the clip', async () => {
+    const user = userEvent.setup()
+    fakeApi({
+      ...warmed,
+      [livePath]: () => json({ text: 'doi an toi', heard: 1 }),
+    })
+    const { live } = renderComposer()
+    await listen(user)
+    await vi.waitFor(() => expect(live()).toBe('doi an toi'))
+
+    setVisibility('hidden')
+    await screen.findByLabelText('Message the assistant')
+    setVisibility('visible')
+
+    expect(live()).toBe('')
+  })
+
+  /** Keeps the signal of each live request, beside the fake API. */
+  function watchLiveSignals() {
+    const signals: AbortSignal[] = []
+    const answer = globalThis.fetch
+    vi.stubGlobal('fetch', (input: string, init: RequestInit = {}) => {
+      if (input.includes('/voice/live/') && init.signal) {
+        signals.push(init.signal)
+      }
+      return answer(input, init)
+    })
+    return signals
+  }
+
+  const unanswered = () => new Promise<Response>(() => undefined)
+
+  it('drops the piece in flight on Stop', async () => {
+    const user = userEvent.setup()
+    fakeApi({
+      ...warmed,
+      [livePath]: unanswered,
+      [clipPath]: () => json(aTranscription('doi an toi sang 8 gio')),
+    })
+    const signals = watchLiveSignals()
+    renderComposer()
+    await listen(user)
+    await vi.waitFor(() => expect(signals).toHaveLength(1))
+
+    await user.click(await stopButton())
+
+    expect(signals[0].aborted).toBe(true)
+    expect(await screen.findByLabelText('Message the assistant')).toHaveValue(
+      'doi an toi sang 8 gio',
+    )
+  })
+
+  it('drops the piece in flight when the thread unmounts', async () => {
+    const user = userEvent.setup()
+    fakeApi({ ...warmed, [livePath]: unanswered })
+    const signals = watchLiveSignals()
+    const { unmount } = renderComposer()
+    await listen(user)
+    await vi.waitFor(() => expect(signals).toHaveLength(1))
+
+    unmount()
+
+    expect(signals[0].aborted).toBe(true)
+  })
+
+  it('never lets a late answer from one tap reach the next', async () => {
+    const user = userEvent.setup()
+    const answers: ((response: Response) => void)[] = []
+    fakeApi({
+      ...warmed,
+      [livePath]: () =>
+        new Promise<Response>((resolve) => {
+          answers.push(resolve)
+        }),
+    })
+    const { live } = renderComposer()
+    await listen(user)
+    await vi.waitFor(() => expect(answers).toHaveLength(1))
+    setVisibility('hidden')
+    await screen.findByLabelText('Message the assistant')
+    setVisibility('visible')
+
+    await listen(user)
+    await vi.waitFor(() => expect(answers).toHaveLength(2))
+    answers[0](json({ text: 'First turn', heard: 1 }))
+    answers[1](json({ text: 'Second turn', heard: 1 }))
+
+    await vi.waitFor(() => expect(live()).toBe('Second turn'))
+  })
+
+  it.each([
+    ['voice goes away', () => failure('voice_unavailable', 503)],
+    ['the piece is refused', () => failure('voice_failed', 502)],
+    ['the session lapses', () => failure('unauthenticated', 401)],
+    [
+      'no answer arrives',
+      () => {
+        throw new Error('offline')
+      },
+    ],
+    ['the answer is not one it knows', () => json({ words: 'doi' })],
+  ])('changes nothing else when %s', async (_, answer) => {
+    const user = userEvent.setup()
+    const lapsed = vi.fn()
+    const reached = vi.fn()
+    const stopLapsed = onUnauthenticated(lapsed)
+    const stopReached = onReach((ok) => reached(ok))
+    const { requests } = fakeApi({
+      ...warmed,
+      [livePath]: answer,
+      [clipPath]: () => json(aTranscription('doi an toi sang 8 gio')),
+    })
+    const { live } = renderComposer({ voiceOnline: null })
+
+    await listen(user)
+    await vi.waitFor(() =>
+      expect(requests.map((one) => one.path)).toContain(
+        `/voice/live/${clipId}?from=0`,
+      ),
+    )
+    const notice = screen.queryByRole('heading')
+    await user.click(await stopButton())
+
+    expect(await screen.findByLabelText('Message the assistant')).toHaveValue(
+      'doi an toi sang 8 gio',
+    )
+    expect(notice).toBeNull()
+    expect(live()).toBe('')
+    expect(lapsed).not.toHaveBeenCalled()
+    expect(reached).not.toHaveBeenCalledWith(false)
+    stopLapsed()
+    stopReached()
+  })
+
+  it('leaves a screen reader on Listening, never the words', async () => {
+    const user = userEvent.setup()
+    fakeApi({
+      ...warmed,
+      [livePath]: () => json({ text: 'doi an toi', heard: 1 }),
+    })
+    const { live } = renderComposer()
+
+    await listen(user)
+    await vi.waitFor(() => expect(live()).toBe('doi an toi'))
+
+    expect(screen.getByRole('status')).toHaveTextContent('Listening…')
+  })
+
+  it('steps the samples aside for the words on an empty thread', async () => {
+    const user = userEvent.setup()
+    fakeApi({
+      ...warmed,
+      [livePath]: () => json({ text: 'doi an toi', heard: 1 }),
+    })
+    const { live } = renderComposer({ empty: true })
+
+    await listen(user)
+    await vi.waitFor(() => expect(live()).toBe('doi an toi'))
+
     expect(screen.queryByRole('list', { name: 'Sample requests' })).toBeNull()
   })
 })
