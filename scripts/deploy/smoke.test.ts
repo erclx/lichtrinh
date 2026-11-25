@@ -2,13 +2,13 @@ import { describe, expect, it } from 'vitest'
 
 import { type SmokeCheck, smokeCheck } from './smoke'
 
-const SCRIPT = '/assets/index-new.js'
+const STAMP = 'a1b2c3-new'
 
 function shell({
-  script = SCRIPT,
+  stamp = STAMP,
   noindex = true,
-}: { script?: string; noindex?: boolean } = {}) {
-  return new Response(`<script type="module" src="${script}"></script>`, {
+}: { stamp?: string; noindex?: boolean } = {}) {
+  return new Response(`<meta name="build" content="${stamp}">`, {
     headers: noindex ? { 'x-robots-tag': 'noindex' } : {},
   })
 }
@@ -32,7 +32,7 @@ function smoke(
   const requests: { url: string; init: RequestInit }[] = []
   const check: SmokeCheck = {
     host: 'app.example.com',
-    script: SCRIPT,
+    stamp: STAMP,
     fetch: async (url, init) => {
       requests.push({ url, init })
       const answer = { ...HEALTHY, ...answers }[new URL(url).pathname]
@@ -91,9 +91,9 @@ describe('smokeCheck', () => {
   })
 
   it('keeps polling while the old version still answers', async () => {
-    const shells = ['/assets/index-old.js', '/assets/index-old.js']
+    const shells = ['a1b2c3-old', 'a1b2c3-old']
     const { check, clock } = smoke({
-      '/': () => shell({ script: shells.shift() ?? SCRIPT }),
+      '/': () => shell({ stamp: shells.shift() ?? STAMP }),
     })
 
     expect(await smokeCheck(check)).toBe('ok')
@@ -102,7 +102,7 @@ describe('smokeCheck', () => {
 
   it('fails when the old version never gives way', async () => {
     const { check } = smoke({
-      '/': () => shell({ script: '/assets/index-old.js' }),
+      '/': () => shell({ stamp: 'a1b2c3-old' }),
     })
 
     expect(await smokeCheck(check)).toBe('failed')
@@ -110,8 +110,8 @@ describe('smokeCheck', () => {
 
   it('takes any build when it is told of none, as after a rollback', async () => {
     const { check } = smoke(
-      { '/': () => shell({ script: '/assets/index-old.js' }) },
-      { script: undefined },
+      { '/': () => shell({ stamp: 'a1b2c3-old' }) },
+      { stamp: undefined },
     )
 
     expect(await smokeCheck(check)).toBe('ok')

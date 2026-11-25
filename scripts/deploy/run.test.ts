@@ -64,7 +64,7 @@ function deploy(
   const steps: string[] = []
   const commands: Command[] = []
   const lines: string[] = []
-  const scripts: (string | undefined)[] = []
+  const stamps: (string | undefined)[] = []
   const queues: Record<Step, CommandResult[]> = {
     build: [],
     'dry-run': [],
@@ -90,14 +90,14 @@ function deploy(
     readBuild: async () => ({
       name: 'lichtrinh-staging',
       host: 'staging.example.com',
-      script: '/assets/index-new.js',
+      stamp: 'a1b2c3-new',
     }),
     seedStaging: async () => {
       steps.push('seed')
     },
-    smoke: async (_host, script) => {
+    smoke: async (_host, stamp) => {
       steps.push('smoke')
-      scripts.push(script)
+      stamps.push(stamp)
       return smokes.shift() ?? 'ok'
     },
     write: (text) => lines.push(text),
@@ -109,7 +109,7 @@ function deploy(
     run,
     steps,
     commands,
-    scripts,
+    stamps,
     find,
     output: () => lines.join(''),
   }
@@ -146,7 +146,7 @@ describe('a deploy that works', () => {
       readBuild: async () => ({
         name: 'lichtrinh-production',
         host: 'app.example.com',
-        script: '/assets/index-new.js',
+        stamp: 'a1b2c3-new',
       }),
     })
 
@@ -173,12 +173,12 @@ describe('a deploy that works', () => {
     expect(find('migrate')).toContain('--remote')
   })
 
-  it('checks for the script the build holds', async () => {
-    const { run, scripts } = deploy()
+  it('checks for the stamp the build holds', async () => {
+    const { run, stamps } = deploy()
 
     await runDeploy(run)
 
-    expect(scripts).toEqual(['/assets/index-new.js'])
+    expect(stamps).toEqual(['a1b2c3-new'])
   })
 
   it('builds for the target without the account credentials', async () => {
@@ -208,12 +208,25 @@ describe('a refused run', () => {
     expect(steps).toEqual([])
   })
 
+  it('stops after the build when nothing would tell its version from the last', async () => {
+    const { run, steps } = deploy({
+      readBuild: async () => ({
+        name: 'lichtrinh-staging',
+        host: 'staging.example.com',
+        stamp: undefined,
+      }),
+    })
+
+    expect(await runDeploy(run)).toBe(1)
+    expect(steps).toEqual(['build'])
+  })
+
   it('stops after the build when the built Worker is the other copy', async () => {
     const { run, steps } = deploy({
       readBuild: async () => ({
         name: 'lichtrinh-production',
         host: 'app.example.com',
-        script: '/assets/index-new.js',
+        stamp: 'a1b2c3-new',
       }),
     })
 
@@ -323,7 +336,7 @@ describe('a failed smoke check', () => {
   })
 
   it('takes any build in the check after the rollback', async () => {
-    const { run, scripts } = deploy(
+    const { run, stamps } = deploy(
       {},
       {
         smokes: ['failed', 'ok'],
@@ -333,7 +346,7 @@ describe('a failed smoke check', () => {
 
     await runDeploy(run)
 
-    expect(scripts.at(-1)).toBeUndefined()
+    expect(stamps.at(-1)).toBeUndefined()
   })
 
   it('says so when the rollback is refused', async () => {
@@ -351,6 +364,16 @@ describe('a failed smoke check', () => {
 
     expect(await runDeploy(run)).toBe(1)
     expect(output()).toContain('still serves')
+  })
+
+  it('asks for a check by hand when it cannot read what the rollback left', async () => {
+    const { run, output } = deploy(
+      {},
+      { smokes: ['failed'], answers: { status: [serving(OLD), failed()] } },
+    )
+
+    expect(await runDeploy(run)).toBe(1)
+    expect(output()).toContain('check it by hand')
   })
 
   it('has nothing to roll back to on a first deploy', async () => {
@@ -400,15 +423,31 @@ describe('a deploy that exits red', () => {
     expect(steps).not.toContain('seed')
   })
 
-  it('says so when it cannot tell what serves', async () => {
+  it('rolls back when it cannot tell what serves', async () => {
+    const { run, steps, find } = deploy(
+      {},
+      {
+        answers: {
+          deploy: [failed()],
+          status: [serving(OLD), failed(), serving(OLD)],
+        },
+      },
+    )
+
+    expect(await runDeploy(run)).toBe(1)
+    expect(steps).toContain('rollback')
+    expect(find('rollback')).toContain(`rollback ${OLD}`)
+  })
+
+  it('says so when it cannot tell what serves and has nothing to roll back to', async () => {
     const { run, output, steps } = deploy(
       {},
-      { answers: { deploy: [failed()], status: [serving(OLD), failed()] } },
+      { answers: { deploy: [failed()], status: [MISSING_WORKER, failed()] } },
     )
 
     expect(await runDeploy(run)).toBe(1)
     expect(steps).not.toContain('rollback')
-    expect(output()).toContain('could not be read')
+    expect(output()).toContain('check it by hand')
   })
 })
 
@@ -497,11 +536,7 @@ describe('readArgs', () => {
 describe('readBuild', () => {
   let root = ''
 
-  afterEach(async () => {
-    await rm(root, { recursive: true, force: true })
-  })
-
-  it('reads the Worker name, the host, and the script off the built output', async () => {
+  async function write(html: string) {
     root = await mkdtemp(join(tmpdir(), 'lichtrinh-build-'))
     await mkdir(join(root, '.wrangler/deploy'), { recursive: true })
     await mkdir(join(root, 'dist/lichtrinh'), { recursive: true })
@@ -518,15 +553,26 @@ describe('readBuild', () => {
         assets: { directory: '../client' },
       }),
     )
-    await writeFile(
-      join(root, 'dist/client/index.html'),
-      '<script type="module" crossorigin src="/assets/index-a1.js"></script>',
-    )
+    await writeFile(join(root, 'dist/client/index.html'), html)
+  }
+
+  afterEach(async () => {
+    await rm(root, { recursive: true, force: true })
+  })
+
+  it('reads the Worker name, the host, and the stamp off the built output', async () => {
+    await write('<meta name="build" content="a1b2c3">')
 
     expect(await readBuild(root)).toEqual({
       name: 'lichtrinh-staging',
       host: 'staging.example.com',
-      script: '/assets/index-a1.js',
+      stamp: 'a1b2c3',
     })
+  })
+
+  it('reads a build made outside CI as having no stamp', async () => {
+    await write('<title>Anything</title>')
+
+    expect((await readBuild(root)).stamp).toBeUndefined()
   })
 })

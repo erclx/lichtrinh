@@ -32,9 +32,11 @@ const appVersion: string = JSON.parse(
   ),
 )['.']
 
-// The variable the Cloudflare plugin reads too, so the names and the Worker a
-// build carries always belong to one copy.
+// The variable the Cloudflare plugin picks the Worker by.
 const staging = process.env.CLOUDFLARE_ENV === 'staging'
+
+// A Worker-only change moves no hashed file name, so this tells builds apart.
+const commit = process.env.GITHUB_SHA
 
 export default defineConfig({
   define: {
@@ -44,6 +46,12 @@ export default defineConfig({
     react(),
     tailwindcss(),
     cloudflare(cloudflareOptions),
+    commit !== undefined && {
+      name: 'commit-stamp',
+      transformIndexHtml: () => [
+        { tag: 'meta', attrs: { name: 'build', content: commit } },
+      ],
+    },
     staging && {
       name: 'staging-title',
       transformIndexHtml: (html: string) =>

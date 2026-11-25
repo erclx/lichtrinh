@@ -34,7 +34,8 @@ export interface CommandResult {
 export interface Build {
   name: string
   host: string
-  script: string
+  /** The commit in the built shell, undefined for a build made outside CI. */
+  stamp: string | undefined
 }
 
 /** Everything the run reads or starts, passed in so a test sets each one. */
@@ -47,7 +48,7 @@ export interface DeployRun {
   run: (command: Command) => Promise<CommandResult>
   readBuild: () => Promise<Build>
   seedStaging: () => Promise<void>
-  smoke: (host: string, script: string | undefined) => Promise<SmokeResult>
+  smoke: (host: string, stamp: string | undefined) => Promise<SmokeResult>
   write: (text: string) => void
 }
 
@@ -90,6 +91,9 @@ export async function runDeploy(run: DeployRun): Promise<number> {
       credentials: false,
     })
     return code
+  }
+  if (build.stamp === undefined) {
+    return stop(run, 'The build carries no commit stamp.')
   }
   return deployBuild(run, build)
 }
@@ -134,7 +138,7 @@ async function deployBuild(run: DeployRun, build: Build): Promise<number> {
   if (deployed.code !== 0) return afterRedDeploy(run, build, before)
 
   const seeded = run.target !== 'staging' || (await seed(run))
-  const result = await run.smoke(build.host, build.script)
+  const result = await run.smoke(build.host, build.stamp)
   if (result === 'blocked') {
     return stop(run, 'The smoke check was blocked, so nothing rolled back.')
   }
@@ -151,7 +155,10 @@ async function deployBuild(run: DeployRun, build: Build): Promise<number> {
   return 0
 }
 
-/** A deploy can switch traffic and still fail, such as on its host. */
+/**
+ * A deploy can switch traffic and still fail, such as on its host. An unread
+ * version rolls back too, since restoring the one already live changes nothing.
+ */
 async function afterRedDeploy(
   run: DeployRun,
   build: Build,
@@ -159,10 +166,10 @@ async function afterRedDeploy(
 ): Promise<number> {
   const after = await readServing(run)
   if (after.state === 'unreadable') {
-    return stop(
-      run,
-      'The deploy failed and the serving version could not be read, so check it by hand.',
+    run.write(
+      'The deploy failed and the serving version could not be read, so check it by hand.\n',
     )
+    return rollBack(run, build, before)
   }
   const moved =
     after.state === 'version' &&
@@ -188,7 +195,7 @@ async function rollBack(
       '--name',
       build.name,
       '--message',
-      'Smoke check failed',
+      'Rolled back by the deploy run',
       '--yes',
     ),
     credentials: true,
@@ -197,8 +204,14 @@ async function rollBack(
     return stop(run, `The rollback was refused. Restore ${before.id} by hand.`)
   }
   const after = await readServing(run)
+  if (after.state === 'unreadable') {
+    return stop(
+      run,
+      'The rollback ran but the serving version could not be read, so check it by hand.',
+    )
+  }
   if (after.state !== 'version' || after.id !== before.id) {
-    return stop(run, `The rollback ran but another version still serves.`)
+    return stop(run, 'The rollback ran but another version still serves.')
   }
   const result = await run.smoke(build.host, undefined)
   return stop(
@@ -331,9 +344,8 @@ export async function readBuild(root: string): Promise<Build> {
     resolve(configPath, '..', config.assets.directory, 'index.html'),
     'utf8',
   )
-  const script = /<script type="module"[^>]* src="([^"]+)"/.exec(html)?.[1]
-  if (script === undefined) throw new Error('The built shell names no script')
-  return { name: config.name, host: config.routes[0].pattern, script }
+  const stamp = /<meta name="build" content="([^"]+)"/.exec(html)?.[1]
+  return { name: config.name, host: config.routes[0].pattern, stamp }
 }
 
 const CREDENTIALS = ['CLOUDFLARE_API_TOKEN', 'CLOUDFLARE_ACCOUNT_ID']
@@ -398,8 +410,8 @@ if (import.meta.main) {
         fetch,
       })
     },
-    smoke: (host, script) =>
-      smokeCheck({ host, script, fetch, write, now: Date.now, wait }),
+    smoke: (host, stamp) =>
+      smokeCheck({ host, stamp, fetch, write, now: Date.now, wait }),
     write,
   })
 }

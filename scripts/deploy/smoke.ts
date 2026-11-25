@@ -3,8 +3,8 @@ export type SmokeResult = 'ok' | 'failed' | 'blocked'
 
 export interface SmokeCheck {
   host: string
-  /** The build's own script path, or undefined when any live build will do. */
-  script: string | undefined
+  /** The build's commit stamp, or undefined when any live build will do. */
+  stamp: string | undefined
   fetch: (url: string, init: RequestInit) => Promise<Response>
   write: (text: string) => void
   now: () => number
@@ -55,7 +55,7 @@ async function findProblem(check: SmokeCheck): Promise<Problem | undefined> {
   if (!/\bnoindex\b/.test(shell.headers.get('x-robots-tag') ?? '')) {
     return { result: 'failed', detail: 'answered / without noindex' }
   }
-  if (check.script !== undefined && !shell.text.includes(check.script)) {
+  if (check.stamp !== undefined && !shell.text.includes(check.stamp)) {
     return { result: 'failed', detail: 'answers / from another build' }
   }
   for (const [path, status] of API_ROUTES) {
