@@ -20,3 +20,13 @@ Holds one module per role, and every calendar screen reads through it rather tha
 - `mutations.ts` holds create, update, delete, and undo, each refreshing every key under `calendar` on success, since a write moves totals across days and trips
 - `query-client.ts` refreshes a visible screen on focus and every 30 seconds, stops in a hidden tab, and retries a lost answer alone, never a refusal
 - A create takes its `id` from the caller, which keeps one for the form's life so a retry after a lost answer reuses it, and an undo takes its `undoId` the same way
+
+### `web/features/changes/`
+
+Holds a trip's Change history page at `/trips/:tripId/history`, built against `canon/design/budget/`'s history frames.
+
+- A row reads by its before and after alone, so an undo reads like any change beside an Undo tag
+- A row groups and times on the trip's clock, and an older cost reads in the currency the trip was in then
+- A conflict keeps Undo on the row, since undoing the later change makes the older one undoable again
+- Undoing a trip's creation removes the trip and this page with it, so the undo status offers the way back
+- The undo itself is `web/components/change-undo.ts`, which the chat's change card shares
