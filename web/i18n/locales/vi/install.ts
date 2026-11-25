@@ -7,7 +7,7 @@ export const install = {
   lead: 'Làm một lần trên iPhone, sau đó mở như một ứng dụng.',
   shareTitle: 'Chạm nút menu, rồi chạm “Chia sẻ”',
   shareDetail:
-    'Nút menu có ba gạch hoặc ba chấm, nằm cạnh thanh địa chỉ. Nếu nút Chia sẻ đã có sẵn ở cuối màn hình thì chạm vào nút đó.',
+    'Nút có ba gạch hoặc ba chấm, cạnh thanh địa chỉ. Nếu đã thấy nút Chia sẻ ở cuối màn hình thì chạm vào đó.',
   chooseTitle: 'Chọn “Thêm vào Màn hình chính”',
   chooseDetail:
     'Kéo xuống nếu chưa thấy. Sau đó để bật “Mở dưới dạng ứng dụng web”.',
