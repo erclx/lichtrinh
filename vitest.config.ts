@@ -5,6 +5,22 @@ import { defineConfig, mergeConfig } from 'vitest/config'
 
 import viteConfig from './vite.config.ts'
 
+// Made for the run, so no private key sits in the repository.
+async function vapidTestKeys() {
+  const { subtle } = globalThis.crypto
+  const pair = await subtle.generateKey(
+    { name: 'ECDSA', namedCurve: 'P-256' },
+    true,
+    ['sign', 'verify'],
+  )
+  const point = await subtle.exportKey('raw', pair.publicKey)
+  const { d } = await subtle.exportKey('jwk', pair.privateKey)
+  return {
+    VAPID_PUBLIC_KEY: Buffer.from(point).toString('base64url'),
+    VAPID_PRIVATE_KEY: d ?? '',
+  }
+}
+
 export default mergeConfig(
   viteConfig,
   defineConfig({
@@ -58,6 +74,8 @@ export default mergeConfig(
               miniflare: {
                 bindings: {
                   BRIDGE_SECRET: 'test-bridge-secret',
+                  NOTICE_FROM: 'notices@example.com',
+                  ...(await vapidTestKeys()),
                   TEST_MIGRATIONS: await readD1Migrations(
                     path.join(import.meta.dirname, 'worker/db/migrations'),
                   ),
