@@ -1,0 +1,3 @@
+# Cloudflare answers these paths without the Worker, so the header is set here.
+/*
+  X-Robots-Tag: noindex
