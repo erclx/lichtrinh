@@ -3,7 +3,7 @@ export const install = {
   lead: 'Do this once on the iPhone, then open it like an app.',
   shareTitle: 'Tap the menu button, then “Share”',
   shareDetail:
-    'It has three lines or three dots, beside the address bar. If you already see Share at the bottom of the screen, tap that.',
+    'The menu button has three lines or three dots, beside the address bar. If you already see Share at the bottom of the screen, tap that.',
   chooseTitle: 'Choose “Add to Home Screen”',
   chooseDetail:
     'Scroll down if you do not see it. Then keep “Open as Web App” on.',
