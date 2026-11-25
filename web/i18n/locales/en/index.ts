@@ -2,6 +2,7 @@
 export { accounts } from './accounts'
 export { app } from './app'
 export { assistantSettings } from './assistant-settings'
+export { backup } from './backup'
 export { budget } from './budget'
 export { calendar } from './calendar'
 export { chat } from './chat'
