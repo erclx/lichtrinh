@@ -6,6 +6,8 @@ import path from 'path'
 import { defineConfig } from 'vite'
 import { VitePWA } from 'vite-plugin-pwa'
 
+import { manifest } from './pwa-manifest.ts'
+
 const portOffset = Number(process.env.WORKTREE_PORT_OFFSET) || 0
 
 // Moves local D1 state under another folder, so e2e runs and review drives
@@ -40,11 +42,11 @@ export default defineConfig({
     cloudflare(cloudflareOptions),
     // A worker holding the built app, so a reload with no connection still
     // opens it. It never answers under `/api/`, so a cached answer cannot
-    // outlive a sign-out, and the home-screen manifest is a later row's.
+    // outlive a sign-out.
     VitePWA({
       registerType: 'autoUpdate',
       injectRegister: false,
-      manifest: false,
+      manifest,
       workbox: {
         globPatterns: ['**/*.{js,css,html,svg,png,ico,woff2}'],
         // The social cards are for link previews, never read in the app.
