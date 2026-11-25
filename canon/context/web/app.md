@@ -81,4 +81,4 @@ The folders below each carry one small job.
 - The `cn` merge reads an unknown `text-*` name as a color and drops it beside `text-primary-foreground`, so the type steps take Tailwind's own `sm` to `2xl` names
 - `bun run design:sync` needs the global `frameboard` binary and the gitignored board at the main worktree root, so CI never checks it
 - A generated shadcn component imports `cn` from the `cn` package, so leave its import as the CLI wrote it while project code uses `@/lib/utils`
-- Playwright's Linux WebKit drops the `Secure` session cookie over plain `http://localhost`, so a signed-in e2e journey skips that engine
+- Playwright's Linux WebKit drops the `Secure` session cookie over plain `http://localhost`, so `playwright.config.ts` declares Chromium alone
