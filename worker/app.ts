@@ -25,12 +25,12 @@ export const MAX_BODY_BYTES = 64 * 1024
 const UNSAFE_METHOD = /^(POST|PUT|PATCH|DELETE)$/
 const JSON_TYPE = /^application\/json\s*(;|$)/i
 
-// The one route taking audio. Matching the method and the whole path keeps
+// The two routes taking audio. Matching the method and the whole path keeps
 // every other route on the JSON limit and type.
-const CLIP_PATH = /^\/api\/voice\/transcriptions\/[^/]+$/
+const AUDIO_PATH = /^\/api\/voice\/(transcriptions|live)\/[^/]+$/
 
-function sendsClip(c: Context) {
-  return c.req.method === 'PUT' && CLIP_PATH.test(c.req.path)
+function sendsAudio(c: Context) {
+  return c.req.method === 'PUT' && AUDIO_PATH.test(c.req.path)
 }
 
 export const app = new Hono<AuthEnv>().basePath('/api')
@@ -40,7 +40,7 @@ const tooLarge = (c: Context) =>
 const jsonLimit = bodyLimit({ maxSize: MAX_BODY_BYTES, onError: tooLarge })
 const clipLimit = bodyLimit({ maxSize: MAX_CLIP_BYTES, onError: tooLarge })
 
-app.use('*', (c, next) => (sendsClip(c) ? clipLimit : jsonLimit)(c, next))
+app.use('*', (c, next) => (sendsAudio(c) ? clipLimit : jsonLimit)(c, next))
 
 // Refuses a cross-origin form post. A form cannot send JSON, and a JSON body
 // from another origin needs a preflight this API never grants, so the check
@@ -50,11 +50,11 @@ app.use('*', csrf())
 app.use('*', async (c, next) => {
   const hasBody = c.req.raw.body !== null
   const contentType = c.req.header('content-type')
-  const clip = sendsClip(c) && readClipType(contentType) !== undefined
+  const audio = sendsAudio(c) && readClipType(contentType) !== undefined
   if (
     UNSAFE_METHOD.test(c.req.method) &&
     hasBody &&
-    !clip &&
+    !audio &&
     !JSON_TYPE.test(contentType ?? '')
   ) {
     return c.json(

@@ -96,9 +96,14 @@ export async function sayVoice(bridge: FakeBridge, online: boolean) {
   })
 }
 
-/** A bridge online whose voice server answers. */
-export async function connectVoiceBridge() {
+/**
+ * A bridge online whose voice server answers, and which answers live pieces
+ * unless the case asks for one older than them.
+ */
+export async function connectVoiceBridge({ live = true } = {}) {
   const bridge = await connectBridge({ voice: true })
+  // Ahead of the voice status, so the wait below covers both.
+  if (live) bridge.send({ type: 'live_ready' })
   await sayVoice(bridge, true)
   return bridge
 }
@@ -130,6 +135,24 @@ export async function answerClip(
           transcriptionId: frame.transcriptionId,
           ...answer,
         },
+  )
+  return frame
+}
+
+type Live = Extract<DownFrame, { type: 'live' }>
+
+/** Reads the next frame, which has to be a live piece, and answers it. */
+export async function answerLive(
+  bridge: FakeBridge,
+  answer: { text: string; heard: number } | 'failed',
+): Promise<Live> {
+  const frame = await bridge.next()
+  if (frame.type !== 'live') throw new Error(`Expected live, got ${frame.type}`)
+  const { liveId } = frame
+  bridge.send(
+    answer === 'failed'
+      ? { type: 'live_failed', liveId }
+      : { type: 'live_text', liveId, ...answer },
   )
   return frame
 }

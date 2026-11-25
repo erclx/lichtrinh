@@ -1,6 +1,11 @@
 import { assistantStatus } from '@shared/assistant.ts'
 import { apiError } from '@shared/errors.ts'
-import { transcription, voiceAdmin, voiceSettings } from '@shared/voice.ts'
+import {
+  liveText,
+  transcription,
+  voiceAdmin,
+  voiceSettings,
+} from '@shared/voice.ts'
 import { env } from 'cloudflare:workers'
 import { eq } from 'drizzle-orm'
 import { afterEach, describe, expect, it } from 'vitest'
@@ -11,13 +16,14 @@ import { settings, transcriptions } from '../db/schema.ts'
 import type { FakeBridge } from '../test/bridge.ts'
 import {
   answerClip,
+  answerLive,
   connectBridge,
   connectVoiceBridge,
   sayVoice,
 } from '../test/bridge.ts'
 import { bare, json } from '../test/requests.ts'
 import { signedIn } from '../test/users.ts'
-import { FAKE_CLIP, sendClip } from '../test/voice.ts'
+import { FAKE_CLIP, sendClip, sendPiece } from '../test/voice.ts'
 
 const open: FakeBridge[] = []
 
@@ -275,6 +281,161 @@ describe('voice off, plainly', () => {
 
     expect(res.status).toBe(503)
     expect(await errorCode(res)).toBe('voice_unavailable')
+  })
+})
+
+describe('PUT /api/voice/live/:id', () => {
+  it('answers the words so far and where the next piece starts', async () => {
+    const admin = await signedIn({ role: 'admin' })
+    await setModel(admin.cookie, { model: 'whisper-large-v3-turbo' })
+    const { cookie, user } = await chatter()
+    const bridge = await voiceOnline()
+    const id = crypto.randomUUID()
+
+    const pending = sendPiece(cookie, { id, from: 4096 })
+    const frame = await answerLive(bridge, {
+      text: 'Invented words',
+      heard: 4115,
+    })
+    const res = await pending
+
+    expect(res.status).toBe(200)
+    expect(liveText.parse(await res.json())).toEqual({
+      text: 'Invented words',
+      heard: 4115,
+    })
+    expect(frame).toMatchObject({
+      liveId: `${user.id}.${id}`,
+      model: 'whisper-large-v3-turbo',
+      language: 'vi',
+      contentType: 'audio/webm',
+      from: 4096,
+    })
+    expect(atob(frame.audio)).toBe('invented clip bytes')
+  })
+
+  it('keeps two accounts using one id apart', async () => {
+    const first = await chatter()
+    const second = await chatter()
+    const bridge = await voiceOnline()
+    const id = crypto.randomUUID()
+
+    const firstPiece = sendPiece(first.cookie, { id })
+    const firstFrame = await bridge.next()
+    const secondPiece = sendPiece(second.cookie, { id })
+    await answerLive(bridge, { text: 'Second words', heard: 2 })
+    if (firstFrame.type !== 'live') throw new Error('No live frame')
+    bridge.send({
+      type: 'live_text',
+      liveId: firstFrame.liveId,
+      text: 'First words',
+      heard: 1,
+    })
+
+    expect(await (await firstPiece).json()).toEqual({
+      text: 'First words',
+      heard: 1,
+    })
+    expect(await (await secondPiece).json()).toEqual({
+      text: 'Second words',
+      heard: 2,
+    })
+  })
+
+  it('writes no row for a piece', async () => {
+    const { cookie, user } = await chatter()
+    const bridge = await voiceOnline()
+    const pending = sendPiece(cookie)
+    await answerLive(bridge, { text: 'Invented words', heard: 19 })
+    await pending
+
+    const rows = await createDb(env.DB)
+      .select()
+      .from(transcriptions)
+      .where(eq(transcriptions.userId, user.id))
+      .all()
+
+    expect(rows).toEqual([])
+  })
+
+  it('answers voice_unavailable with no bridge', async () => {
+    const { cookie } = await chatter()
+
+    const res = await sendPiece(cookie)
+
+    expect(res.status).toBe(503)
+    expect(await errorCode(res)).toBe('voice_unavailable')
+  })
+
+  it('answers voice_unavailable from a bridge older than live pieces', async () => {
+    const { cookie } = await chatter()
+    open.push(await connectVoiceBridge({ live: false }))
+
+    const res = await sendPiece(cookie)
+
+    expect(res.status).toBe(503)
+    expect(await errorCode(res)).toBe('voice_unavailable')
+  })
+
+  it('answers voice_failed for a piece the voice server could not read', async () => {
+    const { cookie } = await chatter()
+    const bridge = await voiceOnline()
+
+    const pending = sendPiece(cookie)
+    await answerLive(bridge, 'failed')
+    const res = await pending
+
+    expect(res.status).toBe(502)
+    expect(await errorCode(res)).toBe('voice_failed')
+  })
+
+  it('leaves voice online after a piece fails', async () => {
+    const { cookie } = await chatter()
+    const bridge = await voiceOnline()
+    const pending = sendPiece(cookie)
+    await answerLive(bridge, 'failed')
+    await pending
+
+    expect((await readVoiceStatus(cookie))?.online).toBe(true)
+  })
+
+  it('refuses an account with chat off', async () => {
+    const { cookie } = await signedIn({ canChat: false })
+
+    expect((await sendPiece(cookie)).status).toBe(403)
+  })
+
+  it('refuses a type the browser does not record', async () => {
+    const { cookie } = await chatter()
+
+    const res = await sendPiece(cookie, { type: 'audio/ogg' })
+
+    expect(res.status).toBe(415)
+  })
+
+  it.each([
+    ['an id that is not a uuid', { id: 'not-a-uuid' }],
+    ['an empty piece', { body: new Uint8Array(0) }],
+    ['a start below zero', { from: -1 }],
+    ['a start that is not a number', { from: 'later' }],
+    ['a start past the longest clip', { from: 2 * 1024 * 1024 + 1 }],
+  ])('refuses %s', async (_, options) => {
+    const { cookie } = await chatter()
+
+    const res = await sendPiece(cookie, options)
+
+    expect(res.status).toBe(400)
+    expect(await errorCode(res)).toBe('validation_failed')
+  })
+
+  it('refuses a piece past 2 MiB', async () => {
+    const { cookie } = await chatter()
+
+    const res = await sendPiece(cookie, {
+      body: new Uint8Array(2 * 1024 * 1024 + 1),
+    })
+
+    expect(res.status).toBe(413)
   })
 })
 

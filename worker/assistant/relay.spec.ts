@@ -9,12 +9,13 @@ import { app } from '../app.ts'
 import type { FakeBridge } from '../test/bridge.ts'
 import {
   answerClip,
+  answerLive,
   connectBridge,
   connectVoiceBridge,
 } from '../test/bridge.ts'
 import { chatterWithChat, readEvents, sendMessage } from '../test/chats.ts'
 import { bare } from '../test/requests.ts'
-import { sendClip } from '../test/voice.ts'
+import { sendClip, sendPiece } from '../test/voice.ts'
 import type { TurnInput } from './relay.ts'
 import { AssistantRelay, relayOf } from './relay.ts'
 
@@ -447,5 +448,120 @@ describe('a clip beside the turn', () => {
     const res = await clip
 
     expect(res.status).toBe(200)
+  })
+})
+
+describe('a live piece beside everything else', () => {
+  async function voiceOnline(options: { live?: boolean } = {}) {
+    const bridge = await connectVoiceBridge(options)
+    open.push(bridge)
+    return bridge
+  }
+
+  function setLiveTimeout(ms: number) {
+    return runInDurableObject(relayOf(env), (relay: AssistantRelay) => {
+      relay.liveTimeoutMs = ms
+    })
+  }
+
+  it('answers while a turn runs, without waiting for the turn', async () => {
+    const { cookie, chat } = await chatterWithChat()
+    const bridge = await voiceOnline()
+    const reply = await sendMessage(cookie, chat.id)
+    const turn = await nextOf(bridge, 'turn')
+
+    const piece = sendPiece(cookie)
+    await answerLive(bridge, { text: 'Invented', heard: 19 })
+    const res = await piece
+
+    expect(res.status).toBe(200)
+    bridge.send({
+      type: 'final',
+      turnId: turn.turnId,
+      text: 'Done.',
+      heldRemoval: false,
+    })
+    expect((await readEvents(reply)).at(-1)?.type).toBe('done')
+  })
+
+  it('never holds back the clip sent at Stop', async () => {
+    const { cookie } = await chatterWithChat()
+    const bridge = await voiceOnline()
+    const piece = sendPiece(cookie)
+    const live = await nextOf(bridge, 'live')
+
+    const clip = sendClip(cookie)
+    await answerClip(bridge, { text: 'Invented', audioMs: 700 })
+
+    expect((await clip).status).toBe(200)
+    bridge.send({
+      type: 'live_text',
+      liveId: live.liveId,
+      text: 'Late',
+      heard: 19,
+    })
+    expect((await piece).status).toBe(200)
+  })
+
+  it('gives up on a piece that outlasts its wait', async () => {
+    const { cookie } = await chatterWithChat()
+    const bridge = await voiceOnline()
+    await setLiveTimeout(50)
+
+    const piece = sendPiece(cookie)
+    await nextOf(bridge, 'live')
+    const res = await piece
+
+    await setLiveTimeout(5_000)
+    expect(res.status).toBe(502)
+  })
+
+  it('gives up at once when the socket closes with a piece pending', async () => {
+    const { cookie } = await chatterWithChat()
+    const bridge = await connectVoiceBridge()
+    const piece = sendPiece(cookie)
+    await nextOf(bridge, 'live')
+
+    await bridge.close()
+
+    expect((await piece).status).toBe(502)
+  })
+
+  it('answers a retried piece rather than the one it replaces', async () => {
+    const { cookie } = await chatterWithChat()
+    const bridge = await voiceOnline()
+    const id = crypto.randomUUID()
+    const lost = sendPiece(cookie, { id })
+    await nextOf(bridge, 'live')
+
+    const retry = sendPiece(cookie, { id })
+    await answerLive(bridge, { text: 'Invented', heard: 19 })
+
+    expect((await retry).status).toBe(200)
+    expect((await lost).status).toBe(502)
+  })
+
+  it('names the language of a clip to a bridge that reads live pieces', async () => {
+    const { cookie } = await chatterWithChat()
+    const bridge = await voiceOnline()
+
+    const clip = sendClip(cookie)
+    const frame = await answerClip(bridge, { text: 'Invented', audioMs: 700 })
+    await clip
+
+    expect(frame.language).toBe('vi')
+  })
+
+  it('sends a bridge older than live pieces no field it cannot read', async () => {
+    const { cookie } = await chatterWithChat()
+    const bridge = await voiceOnline({ live: false })
+
+    await sendPiece(cookie)
+    const clip = sendClip(cookie)
+    // The first frame it reads is the clip, so the piece never reached it.
+    const frame = await answerClip(bridge, { text: 'Invented', audioMs: 700 })
+    await clip
+
+    expect(frame).not.toHaveProperty('language')
   })
 })

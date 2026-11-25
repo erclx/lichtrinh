@@ -23,3 +23,24 @@ export function sendClip(
     env,
   )
 }
+
+/** Sends the bytes of a clip still being spoken, from the byte named. */
+export function sendPiece(
+  cookie: string,
+  options: {
+    id?: string
+    from?: number | string
+    type?: string
+    body?: BodyInit
+  } = {},
+) {
+  return app.request(
+    `/api/voice/live/${options.id ?? crypto.randomUUID()}?from=${options.from ?? 0}`,
+    {
+      method: 'PUT',
+      headers: { cookie, 'content-type': options.type ?? 'audio/webm' },
+      body: options.body ?? FAKE_CLIP,
+    },
+    env,
+  )
+}
