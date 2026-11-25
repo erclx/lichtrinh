@@ -5,6 +5,7 @@ export const settings = {
   appearanceAuto: 'Auto',
   appearanceLight: 'Light',
   appearanceDark: 'Dark',
+  addToHomeScreen: 'Add to home screen',
   manageAccounts: 'Manage accounts',
   assistant: 'Assistant',
   signOut: 'Sign out',

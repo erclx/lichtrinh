@@ -137,6 +137,14 @@ export function ChevronIcon(props: IconProps) {
   )
 }
 
+export function DownloadIcon(props: IconProps) {
+  return (
+    <Icon {...props}>
+      <path d="M12 3v12M7 10l5 5 5-5M5 21h14" />
+    </Icon>
+  )
+}
+
 /** The glyph Safari draws on its own Share button. */
 export function ShareIcon(props: IconProps) {
   return (

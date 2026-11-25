@@ -11,6 +11,7 @@ import {
   AccountsIcon,
   AssistantIcon,
   ChevronIcon,
+  DownloadIcon,
   GlobeIcon,
   SignOutIcon,
   ThemeIcon,
@@ -79,6 +80,17 @@ export function SettingsPage() {
             {t('settings.appearance')}
           </span>
           <AppearanceToggle />
+        </li>
+        <li className={divider}>
+          <Link to="/settings/install" className={cn(row, pressable)}>
+            <span aria-hidden="true" className={rowIcon}>
+              <DownloadIcon className="size-6" />
+            </span>
+            <span className="flex-1 text-base font-extrabold">
+              {t('settings.addToHomeScreen')}
+            </span>
+            <ChevronIcon className="size-6 text-muted-foreground" />
+          </Link>
         </li>
         {user?.role === 'admin' && (
           <li className={divider}>
