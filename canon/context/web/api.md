@@ -54,7 +54,7 @@ Holds the speech model setting, the language an account speaks and is answered i
 
 Tells each admin once per outage that the assistant or voice is off, by push, email, or both. Each admin turns push on per device and saves one email address, through `/api/admin/notices`.
 
-- `outage.ts` claims an outage in one upsert, releases it when every send fails, and frees a crashed one after 30 seconds. An outage ends at the up time the relay stores.
+- `outage.ts` claims an outage in one upsert, releases it when every send fails, and frees a crashed one after 30 seconds. It ends at the up time the relay stores, so a silent socket is closed.
 - `recipients.ts` reads role and session on every send, so a demotion, a sign-out, or an expiry stops a notice
 - `push.ts` posts only to a fixed list of push services and follows no redirect, since a saved endpoint is an address the Worker calls
 - `email.ts` sends as the `NOTICE_FROM` secret. An unset sender or VAPID key takes its row off the page, and no refusal code fails a request.

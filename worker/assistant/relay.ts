@@ -5,6 +5,7 @@ import {
   PROTOCOL_MISMATCH,
   readFrame,
   REPLACED,
+  SILENT,
   upFrame,
 } from '@shared/bridge-frames.ts'
 import type { ChatEvent, ChatMessage, MessageStatus } from '@shared/chats.ts'
@@ -141,6 +142,7 @@ export class AssistantRelay extends DurableObject<Env> {
   // Fields rather than the constants, so a spec can shorten a wait.
   clipTimeoutMs = CLIP_TIMEOUT_MS
   liveTimeoutMs = LIVE_TIMEOUT_MS
+  silentAfterMs = SILENT_AFTER_MS
 
   constructor(ctx: DurableObjectState, env: Env) {
     super(ctx, env)
@@ -358,6 +360,8 @@ export class AssistantRelay extends DurableObject<Env> {
     this.ctx.storage.kv.put(`up:${kind}`, Date.now())
   }
 
+  // A socket found silent is closed, so a bridge that only slept comes back
+  // with a hello and its outage ends.
   private liveSocket(): WebSocket | undefined {
     const now = Date.now()
     return this.ctx.getWebSockets().find((ws) => {
@@ -365,7 +369,10 @@ export class AssistantRelay extends DurableObject<Env> {
       const { readyAt } = ws.deserializeAttachment() as Attachment
       if (readyAt === null) return false
       const pinged = this.ctx.getWebSocketAutoResponseTimestamp(ws)?.getTime()
-      return now - Math.max(readyAt, pinged ?? 0) < SILENT_AFTER_MS
+      if (now - Math.max(readyAt, pinged ?? 0) < this.silentAfterMs) return true
+      ws.close(SILENT, 'No ping heard')
+      logOutcome('bridge_silent')
+      return false
     })
   }
 

@@ -26,15 +26,17 @@ function clockTime({ at, lang }) {
 
 self.addEventListener('push', (event) => {
   const push = readPush(event)
-  const title = push.title ?? 'Lịch trình'
+  const title = push.title || 'Lịch trình'
   const words = [push.before, clockTime(push), push.after]
   event.waitUntil(
     self.registration.showNotification(title, {
       body: push.before === undefined ? '' : words.join(''),
       lang: push.lang,
       icon: '/icon-192x192.png',
-      // A later notice of the same kind takes the last one's place.
+      // A later notice of the same kind takes the last one's place, and
+      // alerts again, which a browser leaves off by default.
       tag: title,
+      renotify: true,
     }),
   )
 })

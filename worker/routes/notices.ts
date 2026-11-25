@@ -14,6 +14,7 @@ import {
   pushDevice,
   type SentNotice,
 } from '@shared/notices.ts'
+import { waitUntil } from 'cloudflare:workers'
 import { and, eq, ne } from 'drizzle-orm'
 import type { Context } from 'hono'
 import { Hono } from 'hono'
@@ -81,19 +82,25 @@ export const noticeRoutes = new Hono<AuthEnv>()
       return c.json(fail('forbidden', 'An admin sends no notice'), 403)
     }
     const db = createDb(c.env.DB)
-    const services: Services = await relayOf(c.env).services()
-    const { online, upAt } = services[kind]
-    if (online) return refuse(c, 'not_down')
 
     for (let ask = 0; ask < ASKS; ask++) {
       if (ask > 0) await scheduler.wait(ASK_AGAIN_MS)
+      // Stamped ahead of the read, so a service up in between ends this claim.
       const claim: Claim = {
         id: crypto.randomUUID(),
         kind,
         userId: user.id,
         at: new Date(),
       }
-      if (await claimOutage(db, claim, upAt)) return sendClaimed(c, db, claim)
+      const services: Services = await relayOf(c.env).services()
+      const { online, upAt } = services[kind]
+      if (online) return refuse(c, 'not_down')
+      if (await claimOutage(db, claim, upAt)) {
+        const sending = sendClaimed(c, db, claim)
+        // So a traveler who closes the app leaves no notice sent and unmarked.
+        waitUntil(sending)
+        return sending
+      }
       const sent = (await currentNotices(db, services)).find(
         (notice) => notice.kind === kind,
       )

@@ -19,6 +19,9 @@ export const PROTOCOL_MISMATCH = 4000
 /** The close code an older bridge gets when a newer one connects. */
 export const REPLACED = 4001
 
+/** The close code a bridge gets once it stopped pinging. It dials again. */
+export const SILENT = 4002
+
 const turnId = z.string().min(1)
 const transcriptionId = z.uuid()
 

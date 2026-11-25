@@ -1,4 +1,5 @@
 import type { DownFrame } from '@shared/bridge-frames.ts'
+import { SILENT } from '@shared/bridge-frames.ts'
 import { chatThread } from '@shared/chats.ts'
 import { apiError } from '@shared/errors.ts'
 import { runInDurableObject } from 'cloudflare:test'
@@ -572,6 +573,12 @@ describe('when each service last came up', () => {
     return relayOf(env).services()
   }
 
+  function setSilentAfter(ms: number) {
+    return runInDurableObject(relayOf(env), (relay: AssistantRelay) => {
+      relay.silentAfterMs = ms
+    })
+  }
+
   it('moves the assistant to now on a hello and leaves voice alone', async () => {
     const before = await services()
     const at = Date.now()
@@ -618,6 +625,23 @@ describe('when each service last came up', () => {
 
     await bridge.close()
 
+    expect((await services()).assistant).toEqual({
+      online: false,
+      upAt: up.assistant.upAt,
+    })
+  })
+
+  it('hangs up on a bridge gone silent, so its return is a new hello', async () => {
+    const bridge = await connectBridge()
+    const up = await services()
+    await setSilentAfter(0)
+
+    const silent = await services()
+
+    await setSilentAfter(60_000)
+    expect(silent.assistant.online).toBe(false)
+    expect((await bridge.closed).code).toBe(SILENT)
+    // Live again by the clock alone, yet down until it says hello.
     expect((await services()).assistant).toEqual({
       online: false,
       upAt: up.assistant.upAt,

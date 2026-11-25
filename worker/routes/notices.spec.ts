@@ -283,6 +283,30 @@ describe('POST /api/notices', () => {
     expect(pushes).toEqual([admin.endpoint])
   })
 
+  it('answers not_down when the assistant is back by the time another send fails', async () => {
+    await adminWith({ push: true })
+    const { cookie, user } = await chatter()
+    const db = createDb(env.DB)
+    await db.insert(outageNotices).values({
+      kind: 'assistant',
+      claimId: 'under-way',
+      userId: user.id,
+      claimedAt: new Date(),
+      sentAt: null,
+    })
+    vi.spyOn(scheduler, 'wait').mockImplementationOnce(async () => {
+      open.push(await connectBridge())
+      await db.delete(outageNotices)
+    })
+
+    const res = await notify(cookie)
+
+    expect(res.status).toBe(409)
+    expect(await errorCode(res)).toBe('not_down')
+    expect(await noticeRows()).toEqual([])
+    expect(pushes).toEqual([])
+  })
+
   it('opens a new outage once the assistant has come back', async () => {
     await adminWith({ push: true })
     const { cookie } = await chatter()

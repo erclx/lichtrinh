@@ -26,12 +26,13 @@ export async function sendEmail(
   env: Env,
   to: string,
   words: EmailWords,
+  timeoutMs = TIMEOUT_MS,
 ): Promise<EmailOutcome> {
   const from = env.NOTICE_FROM
   if (!from) return 'failed'
   let timer: ReturnType<typeof setTimeout> | undefined
   const late = new Promise<never>((_resolve, reject) => {
-    timer = setTimeout(() => reject(new Error('timed out')), TIMEOUT_MS)
+    timer = setTimeout(() => reject(new Error('timed out')), timeoutMs)
   })
   try {
     await Promise.race([

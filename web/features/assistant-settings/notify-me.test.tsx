@@ -376,6 +376,20 @@ describe('NotifyMe', () => {
     expect(requests.map(({ method }) => method)).toEqual(['DELETE'])
   })
 
+  it('asks for the address again once a saved email was turned off', async () => {
+    const user = userEvent.setup()
+    fakeApi({ 'DELETE /admin/notices/email': () => json(aSetting()) })
+    renderSection(emailSaved())
+    await user.click(choice('Email', 'Off'))
+    await vi.waitFor(() =>
+      expect(screen.queryByLabelText('Email address')).toBeNull(),
+    )
+
+    await user.click(choice('Email', 'On'))
+
+    expect(screen.getByLabelText('Email address')).toHaveValue('')
+  })
+
   it('closes an email never saved without a call', async () => {
     const user = userEvent.setup()
     const { requests } = fakeApi({})

@@ -38,12 +38,12 @@ Each run, and the copies it leaves, work in the ways below.
 
 Names each copy's bindings, `EMAIL` among them. Notices stay off until the operator takes these steps, once per copy, and either way can be left out. The page drops Email without `NOTICE_FROM`, and Push without both keys. A new key pair ends every device's push until its admin chooses Off, then On.
 
-| Step                                                                                                           | Turns on |
-| -------------------------------------------------------------------------------------------------------------- | -------- |
-| Onboard the copy's own host as a sending domain in Cloudflare Email Service                                    | Email    |
-| `wrangler secret put NOTICE_FROM --env <copy>`, an address on that host                                        | Email    |
-| Add each admin's address as a destination address, and confirm it from the email Cloudflare sends              | Email    |
-| `bunx web-push generate-vapid-keys`, then `wrangler secret put` for `VAPID_PUBLIC_KEY` and `VAPID_PRIVATE_KEY` | Push     |
+| Step                                                                                                                 | Turns on |
+| -------------------------------------------------------------------------------------------------------------------- | -------- |
+| Onboard the copy's own host as a sending domain in Cloudflare Email Service                                          | Email    |
+| `wrangler secret put NOTICE_FROM --env <copy>`, an address on that host                                              | Email    |
+| Add each admin's address as a destination address, and confirm it from the email Cloudflare sends                    | Email    |
+| `bunx web-push@3.6.7 generate-vapid-keys`, then `wrangler secret put` for `VAPID_PUBLIC_KEY` and `VAPID_PRIVATE_KEY` | Push     |
 
 ## Gotchas
 

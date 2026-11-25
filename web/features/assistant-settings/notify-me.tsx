@@ -248,6 +248,8 @@ function EmailRow({ address, on, onTurn, onSetting }: EmailRowProps) {
     setPending(true)
     try {
       onSetting(await turnEmailOff())
+      // No address is saved now, so On shows one is owed.
+      setTyped('')
       onTurn(false)
     } catch (error) {
       setOutcome({ kind: 'failed', error })
