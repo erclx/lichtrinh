@@ -43,6 +43,9 @@ const REFUSALS = {
   no_trip: [409, 'There is no trip for a chat to plan'],
   voice_unavailable: [503, 'Voice is not answering on the workspace PC'],
   voice_failed: [502, 'The workspace PC could not transcribe the clip'],
+  not_down: [409, 'That service is answering, so nothing was sent'],
+  notice_failed: [502, 'No notice went out'],
+  email_unconfirmed: [409, 'Confirm that address with the mail service'],
 } as const satisfies Partial<
   Record<ApiErrorCode, readonly [ContentfulStatusCode, string]>
 >

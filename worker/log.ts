@@ -17,6 +17,10 @@ export function logOutcome(
     model?: string
     /** A currency pair such as `USD:VND`, two codes the route already checked. */
     pair?: string
+    /** What a notice was about, being the assistant or voice. */
+    kind?: 'assistant' | 'voice'
+    /** How many pushes and emails a notice went out as. */
+    sent?: number
     changes?: number
     trips?: number
     entries?: number

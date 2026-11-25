@@ -14,6 +14,7 @@ import { changeRoutes } from './routes/changes.ts'
 import { chatRoutes } from './routes/chats.ts'
 import { entryRoutes } from './routes/entries.ts'
 import { healthRoutes } from './routes/health.ts'
+import { noticeRoutes } from './routes/notices.ts'
 import { rateRoutes } from './routes/rates.ts'
 import { settingsRoutes } from './routes/settings.ts'
 import { tripRoutes } from './routes/trips.ts'
@@ -82,6 +83,7 @@ app.route('/', assistantRoutes)
 app.route('/', chatRoutes)
 app.route('/', voiceRoutes)
 app.route('/', rateRoutes)
+app.route('/', noticeRoutes)
 
 app.notFound((c) => c.json(fail('not_found', 'No such API route'), 404))
 
