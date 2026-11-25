@@ -1,9 +1,9 @@
 // Runs alike in the Worker and in Bun on standard Web Crypto, so the admin
 // command and sign-in hash a password the same way.
 
-// An estimate for the free plan's 10 ms CPU cap, scaled down from a staging
-// reading at 100k, which `.claude/rules/project/code/passwords.md` records. A
-// stored hash keeps its own count, so changing this one breaks no account.
+// An unmeasured estimate, per `.claude/rules/project/code/passwords.md`. A row
+// on an older count still signs in at its old cost, and an unknown name answers
+// in equal time only once every account is reset onto this one.
 export const PBKDF2_ITERATIONS = 25_000
 
 const SCHEME = 'pbkdf2-sha256'
