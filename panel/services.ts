@@ -1,6 +1,9 @@
 /** Beside the dev servers' ports, with none of their worktree offset. */
 export const PANEL_PORT = 4180
 
+/** The page's title, which the shortcut finds an open window by. */
+export const PANEL_TITLE = 'Lichtrinh owner panel'
+
 export const TARGET = 'lichtrinh.target'
 export const PANEL_UNIT = 'lichtrinh-panel.service'
 

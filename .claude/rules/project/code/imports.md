@@ -20,7 +20,7 @@ paths:
 
 ## Owner panel
 
-- Import `shared/` from `panel/` through `@shared/*`, and import `@/components/` and `web/index.css` from `panel/ui/` alone, since the status server runs under Bun with no page.
+- Import `shared/` from `panel/` through `@shared/*`, and import `@/components/`, `@/lib/utils`, and `web/index.css` from `panel/ui/` alone, since the status server runs under Bun with no page.
 - Never import `web/features/`, `worker/`, `bridge/`, or `voice/` from `panel/`, since the panel watches those processes and runs beside none of their state.
 - Read `panel/services.ts` from `cli/panel/`, so a unit name has one source, and import nothing else of `panel/` there.
 

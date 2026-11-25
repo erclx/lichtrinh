@@ -1,0 +1,4 @@
+@import '../../web/index.css';
+
+/* The build reads classes from this folder alone, and the kit sits outside it. */
+@source '../../web/components';
