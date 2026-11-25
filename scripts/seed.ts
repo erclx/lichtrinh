@@ -225,15 +225,19 @@ function addDays(date: string, days: number): string {
 }
 
 /**
- * An invented trip around `today`, for the owner's own runs alone, so the
- * home screen has a now and a next. Every test and capture reads the 2031
- * fixtures, which this leaves alone.
+ * An invented trip around `today`, for the owner's own runs and staging alone,
+ * so the home screen has a now and a next. Every test and capture reads the
+ * 2031 fixtures, which this leaves alone. `key` prefixes each id, so a trip
+ * gone stale keeps its rows beside a fresh one.
  */
-export function todayFixtures(today: string): {
+export function todayFixtures(
+  today: string,
+  key = 'dev',
+): {
   trip: FixtureTrip
   entries: FixtureEntry[]
 } {
-  const tripId = 'dev-trip-today'
+  const tripId = `${key}-trip-today`
   const entry = (
     id: string,
     offset: number,
@@ -242,7 +246,7 @@ export function todayFixtures(today: string): {
       'title' | 'kind' | 'startTime' | 'endTime' | 'costMinor'
     >,
   ): FixtureEntry => ({
-    id: `dev-entry-${id}`,
+    id: `${key}-entry-${id}`,
     tripId,
     notes: null,
     startsOn: addDays(today, offset),
@@ -531,13 +535,23 @@ function migrate(state: string) {
   if (status !== 0) throw new Error(`Migrations exited with ${status}`)
 }
 
-/** The part of the D1 binding the seed calls. */
-interface SeedDatabase {
-  prepare(query: string): { bind(...values: unknown[]): unknown }
+/** The part of the D1 binding the seed's statements are written against. */
+export interface SeedDatabase<Statement = unknown> {
+  prepare(query: string): { bind(...values: unknown[]): Statement }
+}
+
+interface LocalDatabase extends SeedDatabase {
   batch(statements: unknown[]): Promise<unknown>
 }
 
-interface Calendar {
+/** The date where every fixture trip is, whatever this machine's zone. */
+export function fixtureToday(now: Date): string {
+  return new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'Asia/Ho_Chi_Minh',
+  }).format(now)
+}
+
+export interface Calendar {
   trips: readonly FixtureTrip[]
   entries: readonly FixtureEntry[]
 }
@@ -545,33 +559,17 @@ interface Calendar {
 async function insertAccounts(state: string, calendar: Calendar) {
   // Loaded here, so the e2e specs reading the fixtures never load wrangler.
   const { getPlatformProxy } = await import('wrangler')
-  const proxy = await getPlatformProxy<{ DB: SeedDatabase }>({
+  const proxy = await getPlatformProxy<{ DB: LocalDatabase }>({
     persist: { path: join(state, 'v3') },
     remoteBindings: false,
   })
   try {
-    // A rerun skips existing accounts, keeping any password a drive changed.
-    const insert = proxy.env.DB.prepare(
-      `INSERT INTO users
-         (id, username, display_name, role, created_at, password_hash, can_chat, language)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-       ON CONFLICT (username) DO NOTHING`,
+    const hashes = await Promise.all(
+      FIXTURE_ACCOUNTS.map(({ password }) => hashPassword(password)),
     )
-    const rows = await Promise.all(
-      FIXTURE_ACCOUNTS.map(async (account) =>
-        insert.bind(
-          account.id,
-          account.username,
-          account.displayName,
-          account.role,
-          Date.now(),
-          await hashPassword(account.password),
-          account.canChat ? 1 : 0,
-          account.language,
-        ),
-      ),
+    await proxy.env.DB.batch(
+      accountRows(proxy.env.DB, Date.now(), (_account, index) => hashes[index]),
     )
-    await proxy.env.DB.batch(rows)
     await proxy.env.DB.batch(calendarRows(proxy.env.DB, calendar))
     await proxy.env.DB.batch(historyRows(proxy.env.DB))
     await proxy.env.DB.batch(chatRows(proxy.env.DB))
@@ -581,10 +579,42 @@ async function insertAccounts(state: string, calendar: Calendar) {
   }
 }
 
+/**
+ * A rerun skips existing accounts, keeping any password changed since. An
+ * account with a null hash refuses every sign-in until the admin resets it.
+ */
+export function accountRows<Statement>(
+  db: SeedDatabase<Statement>,
+  at: number,
+  hashOf: (account: FixtureAccount, index: number) => string | null,
+): Statement[] {
+  const insert = db.prepare(
+    `INSERT INTO users
+       (id, username, display_name, role, created_at, password_hash, can_chat, language)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+     ON CONFLICT (username) DO NOTHING`,
+  )
+  return FIXTURE_ACCOUNTS.map((account, index) =>
+    insert.bind(
+      account.id,
+      account.username,
+      account.displayName,
+      account.role,
+      at,
+      hashOf(account, index),
+      account.canChat ? 1 : 0,
+      account.language,
+    ),
+  )
+}
+
 // Written straight into the tables rather than through the calendar rules,
 // which need the Worker's types the e2e specs importing this file lack. The
 // rows carry no history of their own, beyond what `historyRows` adds.
-function calendarRows(db: SeedDatabase, { trips, entries }: Calendar) {
+export function calendarRows<Statement>(
+  db: SeedDatabase<Statement>,
+  { trips, entries }: Calendar,
+): Statement[] {
   const at = Date.UTC(2031, 4, 1)
   const trip = db.prepare(
     `INSERT INTO trips
@@ -636,7 +666,7 @@ function calendarRows(db: SeedDatabase, { trips, entries }: Calendar) {
 }
 
 // Under the `rate:<FROM>:<TO>` key the rates route reads.
-function rateRows(db: SeedDatabase) {
+export function rateRows<Statement>(db: SeedDatabase<Statement>): Statement[] {
   const rate = db.prepare(
     `INSERT INTO settings (key, value, updated_at, updated_by)
      VALUES (?, ?, ?, 'fixture-admin')
@@ -668,7 +698,10 @@ function zoneOf(fixture: FixtureEntry) {
   return FIXTURE_TRIPS.find(({ id }) => id === fixture.tripId)?.timeZone
 }
 
-function changeRow(db: SeedDatabase, fixture: FixtureChange) {
+function changeRow<Statement>(
+  db: SeedDatabase<Statement>,
+  fixture: FixtureChange,
+): Statement {
   const entry = fixture.after ?? fixture.before
   if (entry === null) throw new Error(`${fixture.id} changes no entry`)
   return db
@@ -692,7 +725,9 @@ function changeRow(db: SeedDatabase, fixture: FixtureChange) {
 }
 
 // The removed entry keeps its row, marked deleted, so its undo can restore it.
-function historyRows(db: SeedDatabase) {
+export function historyRows<Statement>(
+  db: SeedDatabase<Statement>,
+): Statement[] {
   const removed = FIXTURE_REMOVED_ENTRY
   const at = Date.UTC(2031, 4, 1)
   const removedAt = FIXTURE_CHANGES.at(-1)?.at ?? at
@@ -728,7 +763,7 @@ function historyRows(db: SeedDatabase) {
 
 // The assistant's entry carries its change, so the seeded chat's card can
 // undo it.
-function chatRows(db: SeedDatabase) {
+export function chatRows<Statement>(db: SeedDatabase<Statement>): Statement[] {
   const traveler = 'fixture-traveler'
   const added = FIXTURE_ASSISTANT_ENTRY
   const addedAt = (FIXTURE_CHATS[0]?.openedAt ?? 0) + 60_000
@@ -815,11 +850,7 @@ if (import.meta.main) {
   const calendar = { trips: [...FIXTURE_TRIPS], entries: [...FIXTURE_ENTRIES] }
   // `--today` is for the owner's own runs, never for a test or a capture.
   if (process.argv.includes('--today')) {
-    const around = todayFixtures(
-      new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Ho_Chi_Minh' }).format(
-        new Date(),
-      ),
-    )
+    const around = todayFixtures(fixtureToday(new Date()))
     calendar.trips.push(around.trip)
     calendar.entries.push(...around.entries)
   }
