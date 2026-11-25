@@ -7,7 +7,8 @@ export interface ClipFormat {
   type: ClipType
 }
 
-// Chrome records webm with Opus, and Safari records mp4 with AAC alone.
+// Chrome and Safari from 18.4 record webm with Opus, and an older Safari
+// records mp4 with AAC alone.
 const FORMATS: readonly ClipFormat[] = [
   { mime: 'audio/webm;codecs=opus', type: 'audio/webm' },
   { mime: 'audio/mp4', type: 'audio/mp4' },
@@ -48,6 +49,8 @@ export async function openMic(): Promise<MediaStream> {
 }
 
 export interface Recording {
+  /** The bytes recorded past an offset, in the clip's type. */
+  since: (from: number) => Blob
   /** Ends the clip and closes the microphone, resolving the whole clip. */
   stop: () => Promise<Blob>
   /** Ends the clip and closes the microphone, keeping nothing. */
@@ -95,6 +98,11 @@ export function record(
     if (chunks.length === 1) onAudio()
   }
 
+  function since(from: number): Blob {
+    const whole = new Blob(chunks)
+    return whole.slice(from, whole.size, format.type)
+  }
+
   function release() {
     clearTimeout(cap)
     document.removeEventListener('visibilitychange', onVisibility)
@@ -130,5 +138,5 @@ export function record(
   document.addEventListener('visibilitychange', onVisibility)
   recorder.start(SLICE_MS)
 
-  return { stop, cancel }
+  return { since, stop, cancel }
 }

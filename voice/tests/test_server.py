@@ -40,9 +40,13 @@ def make_client(tmp_path: Path) -> Iterator[MakeClient]:
 
 
 def post_clip(
-    client: TestClient, clip: bytes, model: str | None = None
+    client: TestClient,
+    clip: bytes,
+    model: str | None = None,
+    language: str | None = None,
 ) -> dict[str, object]:
-    data = {} if model is None else {'model': model}
+    fields = {'model': model, 'language': language}
+    data = {name: value for name, value in fields.items() if value is not None}
     response = client.post(
         '/v1/audio/transcriptions',
         files={'file': ('clip.webm', clip, 'audio/webm')},
@@ -90,6 +94,28 @@ class TestTranscriptions:
 
         assert body['status'] == 400
         assert error_code(body) == 'unknown_model'
+
+    def test_hears_a_clip_in_the_language_named(self, make_client: MakeClient) -> None:
+        client = make_client()
+
+        body = post_clip(client, encode_tone(0.5), language='en')
+
+        assert str(body['text']).startswith('qwen3-asr-1.7b:en:')
+
+    @pytest.mark.parametrize(
+        ('model', 'language'),
+        [('qwen3-asr-1.7b', 'fr'), ('phowhisper-large', 'en')],
+        ids=['no-model-hears-it', 'this-model-does-not'],
+    )
+    def test_refuses_a_language_the_model_does_not_hear(
+        self, make_client: MakeClient, model: str, language: str
+    ) -> None:
+        client = make_client()
+
+        body = post_clip(client, encode_tone(0.5), model, language)
+
+        assert body['status'] == 400
+        assert error_code(body) == 'unknown_language'
 
     @pytest.mark.parametrize(
         ('clip', 'code'),
@@ -174,6 +200,160 @@ class TestTranscriptions:
 
         assert 'outcome=ok' in caplog.text
         assert str(body['text']) not in caplog.text
+
+
+def put_piece(
+    client: TestClient,
+    piece: bytes,
+    start: int = 0,
+    turn: str = 'invented-user.turn-1',
+    **query: str,
+) -> dict[str, object]:
+    response = client.put(
+        f'/v1/live/{turn}',
+        params={'from': str(start), **query},
+        content=piece,
+        headers={'content-type': 'audio/webm'},
+    )
+    return {'status': response.status_code, **response.json()}
+
+
+class TestLive:
+    @pytest.fixture
+    def client(self, make_client: MakeClient) -> TestClient:
+        client = make_client()
+        client.post('/v1/warm')
+        return client
+
+    def test_answers_the_words_so_far_and_the_bytes_held(
+        self, client: TestClient
+    ) -> None:
+        piece = encode_tone(1.0)
+
+        body = put_piece(client, piece)
+
+        assert body['status'] == 200
+        assert body['heard'] == len(piece)
+        assert str(body['text']).startswith('step1:qwen3-asr-1.7b:')
+        assert abs(sample_count(body['text']) - 16_000) < 800
+
+    def test_a_later_piece_grows_the_turn_and_steps_it_again(
+        self, client: TestClient
+    ) -> None:
+        clip = encode_tone(2.0)
+        half = len(clip) // 2
+        first = put_piece(client, clip[:half])
+
+        second = put_piece(client, clip[half:], half)
+
+        assert str(second['text']).startswith('step2:')
+        assert sample_count(second['text']) > sample_count(first['text'])
+        assert second['heard'] == len(clip)
+
+    def test_a_repeated_piece_answers_the_same_text_and_no_new_step(
+        self, client: TestClient
+    ) -> None:
+        piece = encode_tone(1.0)
+        first = put_piece(client, piece)
+
+        second = put_piece(client, piece)
+
+        assert second == first
+
+    def test_an_unknown_turn_is_asked_for_from_its_start(
+        self, client: TestClient
+    ) -> None:
+        body = put_piece(client, b'later bytes', 4096)
+
+        assert (body['status'], body['text'], body['heard']) == (200, '', 0)
+
+    def test_a_prefix_it_cannot_read_yet_keeps_the_last_text(
+        self, client: TestClient
+    ) -> None:
+        clip = encode_tone(1.0, 'mp4', 'aac')
+        half = len(clip) // 2
+
+        body = put_piece(client, clip[:half])
+
+        assert (body['status'], body['text'], body['heard']) == (200, '', half)
+
+    def test_hears_the_turn_in_the_model_and_language_named(
+        self, make_client: MakeClient
+    ) -> None:
+        client = make_client()
+        client.post('/v1/warm', json={'model': 'whisper-large-v3-turbo'})
+
+        body = put_piece(
+            client, encode_tone(0.5), model='whisper-large-v3-turbo', language='en'
+        )
+
+        assert str(body['text']).startswith('step1:whisper-large-v3-turbo:en:')
+
+    def test_a_model_still_loading_costs_the_words_alone(
+        self, make_client: MakeClient
+    ) -> None:
+        client = make_client()
+        piece = encode_tone(0.5)
+
+        body = put_piece(client, piece)
+
+        assert (body['status'], body['text'], body['heard']) == (200, '', len(piece))
+
+    @pytest.mark.parametrize(
+        ('query', 'status', 'code'),
+        [
+            ({'model': 'whisper-1'}, 400, 'unknown_model'),
+            ({'language': 'fr'}, 400, 'unknown_language'),
+            ({'model': 'phowhisper-large', 'language': 'en'}, 400, 'unknown_language'),
+            ({'from': '-1'}, 422, 'invalid_request'),
+            ({'form': '0'}, 422, 'invalid_request'),
+        ],
+        ids=['model', 'language', 'unheard-language', 'negative-start', 'unknown'],
+    )
+    def test_refuses_a_bad_request(
+        self, client: TestClient, query: dict[str, str], status: int, code: str
+    ) -> None:
+        response = client.put(
+            '/v1/live/invented-user.turn-1',
+            params={'from': '0', **query},
+            content=b'piece',
+        )
+
+        assert response.status_code == status
+        assert error_code(response.json()) == code
+
+    def test_refuses_a_turn_past_the_byte_limit(self, make_client: MakeClient) -> None:
+        client = make_client(max_bytes=10_000)
+        put_piece(client, b'\x00' * 6_000)
+
+        body = put_piece(client, b'\x00' * 6_000, 6_000)
+
+        assert body['status'] == 413
+        assert error_code(body) == 'clip_too_large'
+
+    def test_answers_503_when_the_step_kills_the_worker(
+        self, make_client: MakeClient, tmp_path: Path
+    ) -> None:
+        card = str(tmp_path / 'card')
+        client = make_client(
+            lambda model: [sys.executable, str(FAKE_WORKER), model.id, card, 'die']
+        )
+        client.post('/v1/warm')
+
+        body = put_piece(client, encode_tone(0.5))
+
+        assert body['status'] == 503
+        assert error_code(body) == 'worker_unavailable'
+
+    def test_logs_neither_the_text_nor_the_turn_it_belongs_to(
+        self, client: TestClient, caplog: pytest.LogCaptureFixture
+    ) -> None:
+        caplog.set_level(logging.INFO, logger='voice')
+
+        body = put_piece(client, encode_tone(0.5))
+
+        assert str(body['text']) not in caplog.text
+        assert 'invented-user' not in caplog.text
 
 
 class TestWarm:
@@ -273,6 +453,20 @@ def test_the_access_log_drops_the_query_string(path: str, logged: str) -> None:
     strip_query(record)
 
     assert record.getMessage() == f'127.0.0.1:5000 - "GET {logged} HTTP/1.1" 200'
+
+
+def test_the_access_log_drops_a_live_request_and_the_account_it_names() -> None:
+    record = logging.LogRecord(
+        'uvicorn.access',
+        logging.INFO,
+        __file__,
+        0,
+        '%s - "%s %s HTTP/%s" %d',
+        ('127.0.0.1:5000', 'PUT', '/v1/live/invented-user.turn-1?from=0', '1.1', 200),
+        None,
+    )
+
+    assert not strip_query(record)
 
 
 def error_code(body: object) -> object:

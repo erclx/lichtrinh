@@ -9,6 +9,16 @@ class Family(StrEnum):
     WHISPER = 'whisper'
 
 
+class Language(StrEnum):
+    """The languages an account can speak, matching the app's own list."""
+
+    VIETNAMESE = 'vi'
+    ENGLISH = 'en'
+
+
+DEFAULT_LANGUAGE = Language.VIETNAMESE
+
+
 @dataclass(frozen=True, slots=True)
 class Model:
     id: str
@@ -18,6 +28,7 @@ class Model:
     # True when the worker reads a CTranslate2 folder converted from `source`
     # into the models directory, rather than the repository itself.
     converted: bool = False
+    languages: frozenset[Language] = frozenset(Language)
 
 
 MODELS = (
@@ -27,7 +38,13 @@ MODELS = (
         Family.WHISPER,
         'mobiuslabsgmbh/faster-whisper-large-v3-turbo',
     ),
-    Model('phowhisper-large', Family.WHISPER, 'vinai/PhoWhisper-large', converted=True),
+    Model(
+        'phowhisper-large',
+        Family.WHISPER,
+        'vinai/PhoWhisper-large',
+        converted=True,
+        languages=frozenset({Language.VIETNAMESE}),
+    ),
 )
 DEFAULT_MODEL = MODELS[0]
 

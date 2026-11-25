@@ -1,5 +1,10 @@
 import { z } from 'zod'
 
+export {
+  type Language as SpokenLanguage,
+  language as spokenLanguage,
+} from './auth.ts'
+
 // Read by the talk button and the admin page, so every field added here is
 // optional and none is renamed once it ships.
 
@@ -16,7 +21,7 @@ export type VoiceModel = z.infer<typeof voiceModel>
 
 export const DEFAULT_VOICE_MODEL: VoiceModel = 'qwen3-asr-1.7b'
 
-/** What the browser records, being webm on Chrome and mp4 on Safari. */
+/** What the browser records, being webm, or mp4 on an older Safari. */
 export const clipType = z.enum(['audio/webm', 'audio/mp4'])
 export type ClipType = z.infer<typeof clipType>
 
@@ -44,6 +49,17 @@ export const transcription = z.strictObject({
   ms: z.int().nonnegative(),
 })
 export type Transcription = z.infer<typeof transcription>
+
+/**
+ * The words heard so far in a clip still being spoken, a preview that is
+ * never sent. `heard` counts the bytes the voice server holds, so the next
+ * piece starts there, and 0 asks for the clip from its start.
+ */
+export const liveText = z.strictObject({
+  text: z.string(),
+  heard: z.int().nonnegative(),
+})
+export type LiveText = z.infer<typeof liveText>
 
 /** The speech model every clip runs on, which the admin sets. */
 export const voiceSettings = z.strictObject({ model: voiceModel })

@@ -38,6 +38,8 @@ interface ComposerProps {
   /** Resolves false when the send was turned away, putting the text back. */
   onSend: (text: string, voice?: VoiceSend) => Promise<boolean>
   onStop: () => void
+  /** Gets the words so far while the traveler speaks, and empty text after. */
+  onLive: (words: string) => void
 }
 
 const round =
@@ -63,6 +65,7 @@ export function Composer({
   contactName,
   onSend,
   onStop,
+  onLive,
 }: ComposerProps) {
   const { t } = useTranslation()
   const [text, setText] = useState('')
@@ -81,6 +84,10 @@ export function Composer({
   useEffect(() => {
     if (talk.state.phase === 'review') box.current?.focus()
   }, [talk.state])
+
+  useEffect(() => {
+    onLive(talk.words)
+  }, [onLive, talk.words])
 
   function tapMic() {
     // A second clip in review replaces the first, after the same typed text.
@@ -138,7 +145,8 @@ export function Composer({
     (voiceOnline === false ||
       (voiceOnline === null && talk.state.phase === 'off'))
   const guide = empty && !offline && !voiceOff
-  const showSamples = guide && text === '' && talk.state.phase !== 'review'
+  const showSamples =
+    guide && text === '' && talk.state.phase !== 'review' && talk.words === ''
 
   return (
     <div className="flex flex-col gap-3">

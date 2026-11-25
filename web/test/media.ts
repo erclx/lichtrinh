@@ -1,6 +1,6 @@
 /**
  * Stand-ins for the browser's recorder and microphone, which jsdom lacks.
- * The recorder hands back one slice on start and one more on stop.
+ * The recorder hands back one slice on start, one on stop, and any asked for.
  */
 export class FakeMediaRecorder {
   static supported = new Set(['audio/webm;codecs=opus', 'audio/mp4'])
@@ -29,6 +29,10 @@ export class FakeMediaRecorder {
       if (this.state !== 'recording') return
       this.ondataavailable?.({ data: new Blob([new Uint8Array([5])]) })
     })
+  }
+
+  slice(...bytes: number[]) {
+    this.ondataavailable?.({ data: new Blob([new Uint8Array(bytes)]) })
   }
 
   stop() {

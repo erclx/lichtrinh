@@ -1,16 +1,20 @@
-// Forwards clips to the voice server on this machine and watches its health.
-// A clip lives in memory for one request and is never written to disk, and
-// no log line here carries its bytes or its text.
+// Forwards clips and live pieces to the voice server on this machine and
+// watches its health. Audio lives in memory for one request and never reaches
+// disk, and no log line here carries its bytes or its text.
 import type {
   ClipFailReason,
   DownFrame,
   UpFrame,
 } from '@shared/bridge-frames.ts'
 import type { VoiceModel } from '@shared/voice.ts'
+import { liveText } from '@shared/voice.ts'
 import { z } from 'zod'
 
 // Matches the relay's wait, so a hung server frees the request with it.
 const CLIP_TIMEOUT_MS = 60_000
+
+// Past the relay's 5 second wait, so the relay is the side that gives up.
+const LIVE_TIMEOUT_MS = 6_000
 
 const HEALTH_TIMEOUT_MS = 5_000
 
@@ -19,6 +23,8 @@ export const HEALTH_EVERY_MS = 20_000
 
 type Transcribe = Extract<DownFrame, { type: 'transcribe' }>
 type ClipAnswer = Extract<UpFrame, { type: 'transcript' | 'transcribe_failed' }>
+type Live = Extract<DownFrame, { type: 'live' }>
+type LiveAnswer = Extract<UpFrame, { type: 'live_text' | 'live_failed' }>
 
 // The voice server's answer, `TranscriptionResponse` in `voice/src/voice/server.py`.
 const serverAnswer = z.strictObject({
@@ -50,6 +56,7 @@ export async function transcribe(
   })
   const form = new FormData()
   form.set('model', frame.model)
+  if (frame.language !== undefined) form.set('language', frame.language)
   form.set(
     'file',
     new Blob([Buffer.from(frame.audio, 'base64')], { type: frame.contentType }),
@@ -75,6 +82,39 @@ export async function transcribe(
     transcriptionId: frame.transcriptionId,
     text: parsed.data.text,
     audioMs: Math.round(parsed.data.duration_seconds * 1000),
+  }
+}
+
+/**
+ * Puts a live piece to the voice server and answers the words so far. Every
+ * kind of failure reads the same, since a lost piece costs the preview alone.
+ */
+export async function liveStep(
+  voiceUrl: string,
+  frame: Live,
+  timeoutMs = LIVE_TIMEOUT_MS,
+): Promise<LiveAnswer> {
+  const { liveId, model, language } = frame
+  const failed: LiveAnswer = { type: 'live_failed', liveId }
+  const url = new URL(`/v1/live/${encodeURIComponent(liveId)}`, voiceUrl)
+  url.search = new URLSearchParams({
+    from: String(frame.from),
+    model,
+    language,
+  }).toString()
+  try {
+    const res = await fetch(url, {
+      method: 'PUT',
+      headers: { 'content-type': frame.contentType },
+      body: Buffer.from(frame.audio, 'base64'),
+      signal: AbortSignal.timeout(timeoutMs),
+    })
+    const parsed = liveText.safeParse(await res.json())
+    return parsed.success
+      ? { type: 'live_text', liveId, ...parsed.data }
+      : failed
+  } catch {
+    return failed
   }
 }
 

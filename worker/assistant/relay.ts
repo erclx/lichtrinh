@@ -8,7 +8,7 @@ import {
   upFrame,
 } from '@shared/bridge-frames.ts'
 import type { ChatEvent, ChatMessage, MessageStatus } from '@shared/chats.ts'
-import type { ClipType, VoiceModel } from '@shared/voice.ts'
+import type { ClipType, SpokenLanguage, VoiceModel } from '@shared/voice.ts'
 import { DurableObject } from 'cloudflare:workers'
 
 import { createDb } from '../db/client.ts'
@@ -28,6 +28,9 @@ const TURN_TIMEOUT_MS = 120_000
 // Covers a cold model load after a reboot and a 60 second clip's inference.
 const CLIP_TIMEOUT_MS = 60_000
 
+// Past a live step at its slowest and short of a traveler noticing.
+const LIVE_TIMEOUT_MS = 5_000
+
 // Kept on the socket, so it survives the relay hibernating between clips.
 interface Attachment {
   // Set once the bridge said hello in this protocol.
@@ -35,15 +38,28 @@ interface Attachment {
   // The bridge forwards clips, and its voice server last answered.
   voice?: boolean
   voiceOnline?: boolean
+  // The bridge answers live pieces and reads a clip's language.
+  live?: boolean
 }
 
 /** A clip the voice route hands the relay, held in memory for one request. */
 export interface ClipInput {
   id: string
   model: VoiceModel
+  language: SpokenLanguage
   contentType: ClipType
   audio: ArrayBuffer
 }
+
+/** The bytes of a clip still being spoken, from byte `from`. */
+export interface PieceInput extends ClipInput {
+  from: number
+}
+
+export type PieceEnd =
+  | { kind: 'text'; text: string; heard: number }
+  | { kind: 'unavailable' }
+  | { kind: 'failed' }
 
 export type ClipEnd =
   | { kind: 'text'; text: string; audioMs: number }
@@ -54,6 +70,12 @@ interface PendingClip {
   socket: WebSocket
   done: Promise<ClipEnd>
   resolve: (end: ClipEnd) => void
+  timer: ReturnType<typeof setTimeout>
+}
+
+interface PendingPiece {
+  socket: WebSocket
+  resolve: (end: PieceEnd) => void
   timer: ReturnType<typeof setTimeout>
 }
 
@@ -108,8 +130,10 @@ export function relayOf(env: Env) {
 export class AssistantRelay extends DurableObject<Env> {
   private turn: OpenTurn | undefined
   private clips = new Map<string, PendingClip>()
-  // A field rather than the constant, so a spec can shorten the wait.
+  private pieces = new Map<string, PendingPiece>()
+  // Fields rather than the constants, so a spec can shorten a wait.
   clipTimeoutMs = CLIP_TIMEOUT_MS
+  liveTimeoutMs = LIVE_TIMEOUT_MS
 
   constructor(ctx: DurableObjectState, env: Env) {
     super(ctx, env)
@@ -178,6 +202,37 @@ export class AssistantRelay extends DurableObject<Env> {
       model: clip.model,
       contentType: clip.contentType,
       audio: toBase64(new Uint8Array(clip.audio)),
+      ...(readsLive(socket) ? { language: clip.language } : {}),
+    })
+    return done
+  }
+
+  /**
+   * Sends a live piece down and waits for the words so far, beside the turn
+   * and the clips. A retry replaces the piece it retries, since either answer
+   * says where the next one starts.
+   */
+  live(piece: PieceInput): Promise<PieceEnd> {
+    const socket = this.voiceSocket()
+    if (socket === undefined || !readsLive(socket)) {
+      return Promise.resolve({ kind: 'unavailable' })
+    }
+    this.endPiece(piece.id, { kind: 'failed' })
+    const done = new Promise<PieceEnd>((resolve) => {
+      const timer = setTimeout(
+        () => this.endPiece(piece.id, { kind: 'failed' }),
+        this.liveTimeoutMs,
+      )
+      this.pieces.set(piece.id, { socket, resolve, timer })
+    })
+    send(socket, {
+      type: 'live',
+      liveId: piece.id,
+      model: piece.model,
+      language: piece.language,
+      contentType: piece.contentType,
+      from: piece.from,
+      audio: toBase64(new Uint8Array(piece.audio)),
     })
     return done
   }
@@ -222,6 +277,21 @@ export class AssistantRelay extends DurableObject<Env> {
       )
       return
     }
+    if (frame.type === 'live_ready') {
+      const attachment = ws.deserializeAttachment() as Attachment
+      ws.serializeAttachment({ ...attachment, live: true } satisfies Attachment)
+      return
+    }
+    if (frame.type === 'live_text' || frame.type === 'live_failed') {
+      if (this.pieces.get(frame.liveId)?.socket !== ws) return
+      this.endPiece(
+        frame.liveId,
+        frame.type === 'live_text'
+          ? { kind: 'text', text: frame.text, heard: frame.heard }
+          : { kind: 'failed' },
+      )
+      return
+    }
     const turn = this.turn
     if (turn?.socket !== ws || frame.turnId !== turn.input.messageId) return
     this.enqueue(turn, () => this.receive(turn, frame))
@@ -229,7 +299,7 @@ export class AssistantRelay extends DurableObject<Env> {
 
   override webSocketClose(ws: WebSocket, code: number, reason: string) {
     logOutcome('bridge_closed')
-    this.failClipsOn(ws)
+    this.failAudioOn(ws)
     const turn = this.turn
     if (turn?.socket === ws) {
       this.enqueue(turn, () => this.finish(turn, { kind: 'closed' }))
@@ -242,7 +312,7 @@ export class AssistantRelay extends DurableObject<Env> {
 
   override webSocketError(ws: WebSocket) {
     logOutcome('bridge_errored')
-    this.failClipsOn(ws)
+    this.failAudioOn(ws)
     const turn = this.turn
     if (turn?.socket === ws) {
       this.enqueue(turn, () => this.finish(turn, { kind: 'closed' }))
@@ -286,10 +356,21 @@ export class AssistantRelay extends DurableObject<Env> {
     clip.resolve(end)
   }
 
-  // A clip on a socket that went away fails at once, never at the timeout.
-  private failClipsOn(ws: WebSocket) {
+  private endPiece(id: string, end: PieceEnd) {
+    const piece = this.pieces.get(id)
+    if (piece === undefined) return
+    clearTimeout(piece.timer)
+    this.pieces.delete(id)
+    piece.resolve(end)
+  }
+
+  // Audio on a socket that went away fails at once, never at the timeout.
+  private failAudioOn(ws: WebSocket) {
     for (const [id, clip] of this.clips) {
       if (clip.socket === ws) this.endClip(id, { kind: 'failed' })
+    }
+    for (const [id, piece] of this.pieces) {
+      if (piece.socket === ws) this.endPiece(id, { kind: 'failed' })
     }
   }
 
@@ -490,6 +571,10 @@ function closeWith(turn: OpenTurn, event: ChatEvent) {
 
 function send(ws: WebSocket, frame: DownFrame) {
   ws.send(JSON.stringify(frame))
+}
+
+function readsLive(ws: WebSocket): boolean {
+  return (ws.deserializeAttachment() as Attachment).live === true
 }
 
 function sendIfOpen(ws: WebSocket, frame: DownFrame) {

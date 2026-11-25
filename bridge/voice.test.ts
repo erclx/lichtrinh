@@ -2,7 +2,13 @@ import { http, HttpResponse } from 'msw'
 import { setupServer } from 'msw/node'
 import { afterAll, afterEach, beforeAll, describe, expect, it } from 'vitest'
 
-import { transcribe, voiceHealthy, warmVoice, watchVoice } from './voice.ts'
+import {
+  liveStep,
+  transcribe,
+  voiceHealthy,
+  warmVoice,
+  watchVoice,
+} from './voice.ts'
 
 const HOST = 'http://127.0.0.1:8770'
 const server = setupServer()
@@ -97,6 +103,107 @@ describe('transcribe', () => {
     expect(await transcribe(HOST, clipFrame())).toMatchObject({
       reason: 'unavailable',
     })
+  })
+})
+
+describe('the language of a clip', () => {
+  it('passes on the language the frame names', async () => {
+    const forms = answering(200, ANSWER)
+
+    await transcribe(HOST, { ...clipFrame(), language: 'en' })
+
+    expect(forms[0].get('language')).toBe('en')
+  })
+
+  it('names no language for a frame from an older relay', async () => {
+    const forms = answering(200, ANSWER)
+
+    await transcribe(HOST, clipFrame())
+
+    expect(forms[0].has('language')).toBe(false)
+  })
+})
+
+const LIVE_ID = `invented-user.${CLIP_ID}`
+
+function pieceFrame() {
+  return {
+    type: 'live' as const,
+    liveId: LIVE_ID,
+    model: 'qwen3-asr-1.7b' as const,
+    language: 'vi' as const,
+    contentType: 'audio/webm' as const,
+    from: 4096,
+    audio: Buffer.from('invented piece').toString('base64'),
+  }
+}
+
+const LIVE_URL = `${HOST}/v1/live/:id`
+const LIVE_FAILED = { type: 'live_failed', liveId: LIVE_ID }
+
+describe('liveStep', () => {
+  it('puts the piece raw and answers the words so far', async () => {
+    const sent: { url: URL; type: string | null; body: string }[] = []
+    server.use(
+      http.put(LIVE_URL, async ({ request }) => {
+        sent.push({
+          url: new URL(request.url),
+          type: request.headers.get('content-type'),
+          body: await request.text(),
+        })
+        return HttpResponse.json({ text: 'Invented words', heard: 4110 })
+      }),
+    )
+
+    const answer = await liveStep(HOST, pieceFrame())
+
+    expect(answer).toEqual({
+      type: 'live_text',
+      liveId: LIVE_ID,
+      text: 'Invented words',
+      heard: 4110,
+    })
+    expect(sent[0].url.pathname).toBe(`/v1/live/${LIVE_ID}`)
+    expect(Object.fromEntries(sent[0].url.searchParams)).toEqual({
+      from: '4096',
+      model: 'qwen3-asr-1.7b',
+      language: 'vi',
+    })
+    expect(sent[0]).toMatchObject({
+      type: 'audio/webm',
+      body: 'invented piece',
+    })
+  })
+
+  it('answers failed when the server refuses the piece', async () => {
+    server.use(
+      http.put(LIVE_URL, () =>
+        HttpResponse.json(
+          { error: { code: 'unknown_language', message: 'Not heard' } },
+          { status: 400 },
+        ),
+      ),
+    )
+
+    expect(await liveStep(HOST, pieceFrame())).toEqual(LIVE_FAILED)
+  })
+
+  it('answers failed when the server is down', async () => {
+    server.use(http.put(LIVE_URL, () => HttpResponse.error()))
+
+    expect(await liveStep(HOST, pieceFrame())).toEqual(LIVE_FAILED)
+  })
+
+  it('answers failed for an answer it cannot read', async () => {
+    server.use(http.put(LIVE_URL, () => HttpResponse.json({ text: 'Words' })))
+
+    expect(await liveStep(HOST, pieceFrame())).toEqual(LIVE_FAILED)
+  })
+
+  it('answers failed once a step outlasts its wait', async () => {
+    server.use(http.put(LIVE_URL, () => new Promise<never>(() => undefined)))
+
+    expect(await liveStep(HOST, pieceFrame(), 20)).toEqual(LIVE_FAILED)
   })
 })
 

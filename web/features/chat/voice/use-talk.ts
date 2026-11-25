@@ -4,6 +4,7 @@ import { useQueryClient } from '@tanstack/react-query'
 import { useEffect, useReducer, useRef, useState } from 'react'
 
 import { chatKeys, warm } from '@/features/chat/chat-api'
+import { runLive, sendPiece } from '@/features/chat/voice/live'
 import {
   MicDenied,
   openMic,
@@ -26,26 +27,31 @@ export function transcribe(id: string, clip: Blob) {
 }
 
 /**
- * Runs the mic: a tap warms voice and opens the microphone, Stop sends the
- * whole clip under a fresh id, and `onLanded` gets the words. Each tap opens
- * a session, so a late answer from a dropped one changes nothing.
+ * Runs the mic, each tap a session a late answer from another never reaches.
+ * `words` is the preview while it records and transcribes, and `onLanded`
+ * gets the whole clip's own words once it lands.
  */
 export function useTalk(onLanded: (text: string) => void) {
   const client = useQueryClient()
   const [state, dispatch] = useReducer(talkReducer, readyTalk)
   const [stream, setStream] = useState<MediaStream | null>(null)
+  const [words, setWords] = useState('')
   const session = useRef(0)
   const recording = useRef<Recording | null>(null)
+  const endLive = useRef<(() => void) | null>(null)
 
   useEffect(
     () => () => {
       session.current += 1
       recording.current?.cancel()
+      endLive.current?.()
     },
     [],
   )
 
   function letGo() {
+    endLive.current?.()
+    endLive.current = null
     recording.current = null
     setStream(null)
   }
@@ -55,6 +61,7 @@ export function useTalk(onLanded: (text: string) => void) {
     session.current += 1
     const id = session.current
     dispatch({ type: 'tap' })
+    setWords('')
     // Loads the speech model while the traveler speaks.
     warm().catch(() => undefined)
     const format = pickFormat()
@@ -75,7 +82,7 @@ export function useTalk(onLanded: (text: string) => void) {
       for (const track of opened.getTracks()) track.stop()
       return
     }
-    recording.current = record(opened, format, {
+    const recorded = record(opened, format, {
       onCap: (clip) => {
         letGo()
         dispatch({ type: 'capped' })
@@ -88,9 +95,17 @@ export function useTalk(onLanded: (text: string) => void) {
       },
       // Listening starts with the first audio, so a Stop always sends some.
       onAudio: () => {
-        if (session.current === id) dispatch({ type: 'opened' })
+        if (session.current !== id) return
+        dispatch({ type: 'opened' })
+        const turnId = crypto.randomUUID()
+        endLive.current = runLive({
+          since: recorded.since,
+          send: (from, piece, signal) => sendPiece(turnId, from, piece, signal),
+          onWords: setWords,
+        })
       },
     })
+    recording.current = recorded
     setStream(opened)
   }
 
@@ -148,5 +163,7 @@ export function useTalk(onLanded: (text: string) => void) {
     dispatch({ type: 'sent' })
   }
 
-  return { state, stream, tap, stop, sent }
+  const live = state.phase === 'listening' || state.phase === 'transcribing'
+
+  return { state, stream, words: live ? words : '', tap, stop, sent }
 }

@@ -91,6 +91,13 @@ Holds the Python project, synced from canon's python stack with `--skip base`, s
 | `lichtrinh voice serve`             | Serve on `127.0.0.1:8770`, one model at a time, unloaded after `VOICE_IDLE_SECONDS`       |
 | `lichtrinh voice transcribe <path>` | Send one clip to the running server and print its text and timings                        |
 
+The server also steps a clip still being spoken, through `PUT /v1/live/<id>`.
+
+- `live.py` holds at most four turns in memory, appends a piece only where the last one ended, and drops a turn 15 seconds untouched, so a worker stays stateless
+- A live step answers nothing while a clip or a load holds the worker, and a model not loaded starts loading behind it
+- `workers/steps.py` holds each family's step rule with its model calls passed in, so the rules run in CI. Qwen continues its own text, and the Whisper models cut at pauses.
+- Every transcription, live or whole, runs `workers/speech.py` first and answers empty text when nobody speaks
+
 ### `.husky/`
 
 Holds the git hooks that run the checks before a commit or a push leaves.
