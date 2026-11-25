@@ -70,7 +70,10 @@ export default defineConfig({
       workbox: {
         globPatterns: ['**/*.{js,css,html,svg,png,ico,woff2}'],
         // The social cards are for link previews, never read in the app.
-        globIgnores: ['**/og-image*'],
+        globIgnores: ['**/og-image*', '**/push-handler.js'],
+        // Shows an admin's push. Loaded beside the precache rather than from
+        // it, so the browser's own check of the worker finds a change to it.
+        importScripts: ['/push-handler.js'],
         navigateFallback: 'index.html',
         navigateFallbackDenylist: [/^\/api\//],
       },
