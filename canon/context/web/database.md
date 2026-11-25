@@ -17,6 +17,7 @@ Holds the Drizzle schema, the client a route gets its database from, the migrati
 
 - Edit the schema and run `bun run db:generate` for the next migration, since an applied migration is never edited
 - Each migration takes a rollback of the same file name under `rollbacks/`, and a spec fails when one is missing or leaves a table behind
+- `outage_notices` holds one row per kind, being the claim, and `push_devices` follows its session by cascade, so every way a session ends stops its push
 - `bun run db:migrate` and `bun run dev` read the same local database under `.wrangler/state/v3/d1`
 
 ### `worker/calendar/`

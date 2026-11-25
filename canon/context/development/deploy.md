@@ -34,6 +34,17 @@ Each run, and the copies it leaves, work in the ways below.
 - A release whose staging job ends red never reaches production. Rerun that job before the next merge, or cut a new release, since a late rerun puts older code on staging.
 - The staging bridge runs by hand beside production's, with its own settings file naming the staging host and that copy's secret
 
+### `wrangler.jsonc`
+
+Names each copy's bindings, `EMAIL` among them. Notices stay off until the operator takes these steps, once per copy, and either way can be left out. The page drops Email without `NOTICE_FROM`, and Push without both keys. A new key pair ends every device's push until its admin chooses Off, then On.
+
+| Step                                                                                                           | Turns on |
+| -------------------------------------------------------------------------------------------------------------- | -------- |
+| Onboard the copy's own host as a sending domain in Cloudflare Email Service                                    | Email    |
+| `wrangler secret put NOTICE_FROM --env <copy>`, an address on that host                                        | Email    |
+| Add each admin's address as a destination address, and confirm it from the email Cloudflare sends              | Email    |
+| `bunx web-push generate-vapid-keys`, then `wrangler secret put` for `VAPID_PUBLIC_KEY` and `VAPID_PRIVATE_KEY` | Push     |
+
 ## Gotchas
 
 - A Wrangler command from a logged-in machine reaches the live account, so add `--dry-run` or `--local` to any run meant to stay here
