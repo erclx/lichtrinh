@@ -27,10 +27,9 @@ export function transcribe(id: string, clip: Blob) {
 }
 
 /**
- * Runs the mic: a tap warms voice and opens the microphone, Stop sends the
- * whole clip under a fresh id, and `onLanded` gets the words. Each tap opens
- * a session, so a late answer from a dropped one changes nothing. `words` is
- * the preview so far, empty once the clip lands, fails, or drops.
+ * Runs the mic, each tap a session a late answer from another never reaches.
+ * `words` is the preview while it records and transcribes, and `onLanded`
+ * gets the whole clip's own words once it lands.
  */
 export function useTalk(onLanded: (text: string) => void) {
   const client = useQueryClient()
