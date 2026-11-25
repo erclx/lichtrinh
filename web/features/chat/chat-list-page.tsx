@@ -138,13 +138,20 @@ function ChatRow({ chat }: { chat: Chat }) {
     <li className="border-b-[1.5px] border-border last:border-b-0">
       <Link
         to={`/chats/${encodeURIComponent(chat.id)}`}
-        className="flex min-h-target items-center gap-4 rounded-md py-3 outline-none focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:ring-inset"
+        className="-mx-2 flex min-h-target items-center gap-4 rounded-md px-2 py-3 outline-none focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:ring-inset"
       >
         <span className="flex size-13 shrink-0 items-center justify-center rounded-lg bg-muted">
           <AssistantIcon aria-hidden="true" className="size-7" />
         </span>
-        <span className="min-w-0 flex-1 text-lg font-extrabold break-words">
-          {chat.title ?? t('chat.untitled')}
+        <span className="flex min-w-0 flex-1 flex-col">
+          <span className="text-lg font-extrabold break-words">
+            {chat.title ?? t('chat.untitled')}
+          </span>
+          {chat.lastMessage != null && (
+            <span className="truncate text-sm text-muted-foreground">
+              {chat.lastMessage}
+            </span>
+          )}
         </span>
         <span className="shrink-0 self-start pt-1 text-sm text-muted-foreground">
           {whenOf(chat.updatedAt, now, t, language)}

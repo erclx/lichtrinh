@@ -1,10 +1,10 @@
 import '@/i18n/setup'
 
-import { screen, within } from '@testing-library/react'
+import { act, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 
 import { applyLanguage } from '@/i18n/setup'
-import { aChat } from '@/test/chat'
+import { aChat, aReply } from '@/test/chat'
 import { aUser, fakeApi, json } from '@/test/fake-api'
 import { renderRoute } from '@/test/render-route'
 
@@ -41,6 +41,7 @@ beforeEach(async () => {
 
 afterEach(() => {
   vi.unstubAllGlobals()
+  vi.useRealTimers()
 })
 
 describe('ChatListPage', () => {
@@ -70,6 +71,80 @@ describe('ChatListPage', () => {
       '/chats/newer',
       '/chats/older',
     ])
+  })
+
+  it("shows each chat's last message under its title", async () => {
+    travelerApi({
+      'GET /chats': () =>
+        json({
+          chats: [
+            aChat({
+              title: 'Moving dinner',
+              lastMessage: 'Dinner is at 20:00.',
+            }),
+          ],
+        }),
+    })
+
+    renderRoute('/chats')
+
+    const row = await screen.findByRole('link', { name: /Moving dinner/ })
+    expect(within(row).getByText('Dinner is at 20:00.')).toBeInTheDocument()
+  })
+
+  it.each([
+    ['has no message yet', { lastMessage: null }],
+    ['comes from an answer without the field', {}],
+  ])('shows the title and the time alone when a chat %s', async (_, chat) => {
+    vi.setSystemTime(new Date('2031-06-20T05:00:00.000Z'))
+    travelerApi({
+      'GET /chats': () =>
+        json({
+          chats: [
+            aChat({
+              title: 'Moving dinner',
+              updatedAt: '2031-05-15T12:00:00.000Z',
+              ...chat,
+            }),
+          ],
+        }),
+    })
+
+    renderRoute('/chats')
+
+    const row = await screen.findByRole('link', { name: /Moving dinner/ })
+    expect(row).toHaveTextContent(/^Moving dinner5\/15$/)
+  })
+
+  it('shows the new last message on the way back from a send', async () => {
+    const user = userEvent.setup()
+    let lastMessage = 'Invented first reply'
+    travelerApi({
+      'GET /chats': () => json({ chats: [aChat({ lastMessage })] }),
+      'GET /chats/chat-today': () => json({ chat: aChat(), messages: [] }),
+      'POST /chats/chat-today/messages': () => {
+        lastMessage = 'Invented second reply'
+        return new Response(
+          `${JSON.stringify({ type: 'done', message: aReply({ text: lastMessage }) })}\n`,
+          { headers: { 'content-type': 'application/x-ndjson' } },
+        )
+      },
+    })
+    const { router } = renderRoute('/chats')
+    await user.click(await screen.findByRole('link', { name: /first reply/ }))
+    await user.type(
+      await screen.findByLabelText('Message the assistant'),
+      'pho sang mai{Enter}',
+    )
+    await screen.findByText('Invented second reply', {
+      ignore: '[aria-live], script, style',
+    })
+
+    await act(() => router.navigate('/chats'))
+
+    expect(
+      await screen.findByRole('link', { name: /second reply/ }),
+    ).toBeInTheDocument()
   })
 
   it('offers New chat when there are no chats yet', async () => {
