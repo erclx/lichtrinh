@@ -196,9 +196,10 @@ describe('lichtrinh panel open', () => {
 
     expect(exitCode).toBe(0)
     expect(run.commands()).toEqual([
+      'systemctl --user reset-failed lichtrinh-panel.service',
       'systemctl --user start lichtrinh-panel.service',
       `${HELD} systemctl --user start lichtrinh.target`,
-      `powershell.exe -NoProfile -ExecutionPolicy Bypass -File \\\\wsl.localhost\\Ubuntu-24.04${root.replaceAll('/', '\\')}\\cli\\panel\\open-window.ps1 -Url http://localhost:4180 -Title Lichtrinh owner panel`,
+      `flock /run/user/1000/lichtrinh-panel-window.lock powershell.exe -NoProfile -ExecutionPolicy Bypass -File \\\\wsl.localhost\\Ubuntu-24.04${root.replaceAll('/', '\\')}\\cli\\panel\\open-window.ps1 -Url http://localhost:4180 -Title Lichtrinh owner panel`,
       `${HELD} bash cli/panel/hold.sh lichtrinh-panel.service`,
     ])
   })
@@ -210,8 +211,20 @@ describe('lichtrinh panel open', () => {
 
     expect(exitCode).toBe(1)
     expect(run.commands()).toEqual([
+      'systemctl --user reset-failed lichtrinh-panel.service',
       'systemctl --user start lichtrinh-panel.service',
     ])
+  })
+
+  it('opens and exits as done where systemd has no limit to clear', async () => {
+    const run = fakeRunner({
+      exitCode: (command) => (command.includes('reset-failed') ? 1 : 0),
+    })
+
+    const exitCode = await runCli(['panel', 'open'], run.context)
+
+    expect(exitCode).toBe(0)
+    expect(run.commands()).toHaveLength(5)
   })
 
   it('still shows the panel and holds when the target fails, and exits with its code', async () => {
@@ -222,7 +235,7 @@ describe('lichtrinh panel open', () => {
     const exitCode = await runCli(['panel', 'open'], run.context)
 
     expect(exitCode).toBe(5)
-    expect(run.commands()).toHaveLength(4)
+    expect(run.commands()).toHaveLength(5)
   })
 
   it.skipIf(spawnSync('flock', ['--version']).status !== 0)(
@@ -230,7 +243,7 @@ describe('lichtrinh panel open', () => {
     async () => {
       const run = fakeRunner()
       await runCli(['panel', 'open'], run.context)
-      const [, held] = run.commands()
+      const [, , held] = run.commands()
       const flags = held.split(' ').slice(1, 4)
       const lock = join(home, 'held.lock')
 

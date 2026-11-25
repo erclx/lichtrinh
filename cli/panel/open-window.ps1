@@ -1,6 +1,7 @@
 # Shows the panel as one chromeless Edge window, bringing back the one already
 # open. It waits for the panel to answer first, since a window opened ahead of
-# it stays on the browser's own error page.
+# it stays on the browser's own error page, and for the window to carry its
+# title after, since the next run looks for it by that.
 param(
   [Parameter(Mandatory)] [string] $Url,
   [Parameter(Mandatory)] [string] $Title
@@ -20,7 +21,11 @@ public static extern bool ShowWindow(IntPtr window, int command);
 public static extern bool SetForegroundWindow(IntPtr window);
 '@
 
-$window = [Lichtrinh.Window]::FindWindow([NullString]::Value, $Title)
+function Find-Panel {
+  [Lichtrinh.Window]::FindWindow([NullString]::Value, $Title)
+}
+
+$window = Find-Panel
 if ($window -ne [IntPtr]::Zero) {
   if ([Lichtrinh.Window]::IsIconic($window)) {
     [void] [Lichtrinh.Window]::ShowWindow($window, $restore)
@@ -39,3 +44,8 @@ foreach ($try in 1..30) {
 }
 
 Start-Process msedge "--app=$Url"
+
+foreach ($try in 1..40) {
+  if ((Find-Panel) -ne [IntPtr]::Zero) { break }
+  Start-Sleep -Milliseconds 250
+}

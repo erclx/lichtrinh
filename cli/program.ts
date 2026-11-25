@@ -42,9 +42,13 @@ export interface ProgramContext {
 
 /**
  * Hands one command to the task runner in the checkout a verb acts on, and
- * resolves with its exit code so a verb can stop before its next step.
+ * resolves with its exit code so a verb can stop before its next step. A
+ * command that may fail leaves the exit the process ends with alone.
  */
-export type RunInCheckout = (command: readonly string[]) => Promise<number>
+export type RunInCheckout = (
+  command: readonly string[],
+  options?: { mayFail?: boolean },
+) => Promise<number>
 
 export function createProgram(
   io: CliIo,
@@ -75,7 +79,7 @@ export async function runCli(
   context: ProgramContext,
 ): Promise<number> {
   let exitCode = 0
-  const run: RunInCheckout = async (command) => {
+  const run: RunInCheckout = async (command, { mayFail = false } = {}) => {
     const checkout = context.findCheckout(context.io.cwd)
     if (checkout.fallback) {
       context.io.stderr(
@@ -84,7 +88,7 @@ export async function runCli(
     }
     const code = await context.runTask({ command, cwd: checkout.root })
     // The first failure decides the exit, so a later passing task cannot hide it.
-    if (exitCode === 0) exitCode = code
+    if (exitCode === 0 && !mayFail) exitCode = code
     return code
   }
   const program = createProgram(

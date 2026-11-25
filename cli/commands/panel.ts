@@ -78,6 +78,7 @@ export function registerPanel(
     .description('Start everything, show the panel, and keep this PC awake')
     .action(async () => {
       const lock = join(machine.runtimeDir, 'lichtrinh-panel.lock')
+      const windowLock = join(machine.runtimeDir, 'lichtrinh-panel-window.lock')
       // Runs while nothing holds the lock, and otherwise ends at once as done.
       const unlessHeld = (command: string[]) => [
         'flock',
@@ -87,10 +88,14 @@ export function registerPanel(
         lock,
         ...command,
       ]
+      // A panel past its restart limit refuses a start until this clears it,
+      // and systemd refuses this for a unit it has not loaded.
+      await run(systemctl('reset-failed', PANEL_UNIT), { mayFail: true })
       if ((await run(systemctl('start', PANEL_UNIT))) !== 0) return
       // A later open starts nothing the owner stopped.
       await run(unlessHeld(systemctl('start', TARGET)))
-      await run(windowCommand(machine, root()))
+      // One at a time, so a second double-click finds the first one's window.
+      await run(['flock', windowLock, ...windowCommand(machine, root())])
       await run(unlessHeld(['bash', 'cli/panel/hold.sh', PANEL_UNIT]))
     })
 
