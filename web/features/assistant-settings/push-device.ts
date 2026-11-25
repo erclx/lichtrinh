@@ -11,9 +11,9 @@ export type PushAnswer = 'on' | 'off' | 'blocked' | 'install' | 'unsupported'
 export async function readPushAnswer(deviceOn: boolean): Promise<PushAnswer> {
   const cannot = whyNot()
   if (cannot !== null) return cannot
-  if (Notification.permission === 'denied') return 'blocked'
   const registration = await navigator.serviceWorker.getRegistration()
   if (registration === undefined) return 'unsupported'
+  if (Notification.permission === 'denied') return 'blocked'
   const subscription = await registration.pushManager.getSubscription()
   return deviceOn &&
     Notification.permission === 'granted' &&

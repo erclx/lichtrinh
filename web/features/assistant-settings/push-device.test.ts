@@ -49,11 +49,14 @@ describe('readPushAnswer', () => {
     expect(await readPushAnswer(false)).toBe('unsupported')
   })
 
-  it('reads unsupported with no service worker, as on the dev server', async () => {
-    fakePush({ permission: 'granted', registered: false })
+  it.each(['granted', 'denied'] as const)(
+    'reads unsupported with no service worker, the permission %s',
+    async (permission) => {
+      fakePush({ permission, registered: false })
 
-    expect(await readPushAnswer(true)).toBe('unsupported')
-  })
+      expect(await readPushAnswer(true)).toBe('unsupported')
+    },
+  )
 })
 
 describe('subscribeDevice', () => {
