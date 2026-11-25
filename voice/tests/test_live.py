@@ -127,7 +127,7 @@ def test_a_turn_changing_model_starts_its_steps_again(turns: LiveTurns) -> None:
     turn, _ = turns.hear('one', 0, b'abc')
     assert turn is not None
     turn.speak(QWEN, VI)
-    turn.state = {'steps': 3}
+    turn.write(QWEN, VI, 'invented', {'steps': 3})
 
     turn.speak(QWEN, VI)
     kept = turn.state
@@ -135,3 +135,17 @@ def test_a_turn_changing_model_starts_its_steps_again(turns: LiveTurns) -> None:
 
     assert kept == {'steps': 3}
     assert turn.state is None
+    assert turn.text == 'invented'
+
+
+def test_a_step_ending_after_the_model_changed_writes_nothing(
+    turns: LiveTurns,
+) -> None:
+    turn, _ = turns.hear('one', 0, b'abc')
+    assert turn is not None
+    turn.speak(QWEN, VI)
+    turn.speak(TURBO, VI)
+
+    turn.write(QWEN, VI, 'late words', {'steps': 1})
+
+    assert (turn.text, turn.state) == ('', None)

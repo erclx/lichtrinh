@@ -1,6 +1,6 @@
-"""The HTTP front the bridge calls, in the OpenAI transcription shape. Every
-failure answers `{"error": {"code", "message"}}`, branched on by code alone,
-and no clip or transcript reaches a log line or an error body."""
+"""The HTTP front the bridge calls, in the OpenAI transcription shape beside a
+live route of its own. Every failure answers `{"error": {"code", "message"}}`,
+branched on by code alone, and no clip or text reaches a log line or an error."""
 
 import asyncio
 import contextlib
@@ -12,12 +12,13 @@ from typing import Literal
 import uvicorn
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
-from pydantic import BaseModel, ConfigDict, ValidationError
+from pydantic import BaseModel, ConfigDict, Field, ValidationError
 from starlette.exceptions import HTTPException
 
 from voice.config import HOST, Settings
 from voice.decode import MAX_SECONDS, SAMPLE_RATE, ClipError, decode
 from voice.form import FormError, parse_form
+from voice.live import UNTOUCHED_SECONDS, LiveTurns
 from voice.models import (
     DEFAULT_LANGUAGE,
     DEFAULT_MODEL,
@@ -68,6 +69,20 @@ class WarmResponse(BaseModel):
     load_seconds: float
 
 
+class LiveQuery(BaseModel):
+    model_config = ConfigDict(extra='forbid')
+
+    start: int = Field(alias='from', ge=0)
+    model: str | None = None
+    language: str | None = None
+
+
+class LiveResponse(BaseModel):
+    text: str
+    # The bytes held, where the next piece starts.
+    heard: int
+
+
 class HealthResponse(BaseModel):
     status: Literal['ok']
     loaded_model: str | None
@@ -89,13 +104,19 @@ def create_app(
     max_bytes: int = MAX_UPLOAD_BYTES,
     check_seconds: float = 30.0,
 ) -> FastAPI:
+    turns = LiveTurns()
+
     @contextlib.asynccontextmanager
     async def lifespan(_: FastAPI) -> AsyncIterator[None]:
-        watch = asyncio.create_task(_unload_when_idle(runner, check_seconds))
+        watches = (
+            asyncio.create_task(_unload_when_idle(runner, check_seconds)),
+            asyncio.create_task(_drop_untouched(turns)),
+        )
         try:
             yield
         finally:
-            watch.cancel()
+            for watch in watches:
+                watch.cancel()
             await runner.close()
 
     app = FastAPI(lifespan=lifespan, docs_url=None, redoc_url=None, openapi_url=None)
@@ -166,6 +187,41 @@ def create_app(
             ),
         )
 
+    @app.put('/v1/live/{turn_id}')
+    async def live(turn_id: str, request: Request) -> LiveResponse:
+        try:
+            query = LiveQuery.model_validate(dict(request.query_params))
+        except ValidationError as error:
+            raise _invalid('Name the byte the piece starts at in `from`.') from error
+        model = _model(query.model)
+        language = _language(model, query.language)
+        if query.start > max_bytes:
+            raise _too_large(max_bytes)
+        piece = await _read_body(request, max_bytes - query.start)
+
+        turn, grew = turns.hear(turn_id, query.start, piece)
+        if turn is None:
+            return LiveResponse(text='', heard=0)
+        heard = len(turn.audio)
+        if not grew:
+            return LiveResponse(text=turn.text, heard=heard)
+        turn.speak(model, language)
+        try:
+            samples = await asyncio.to_thread(decode, bytes(turn.audio))
+            step = await runner.live(model, samples, language, turn.state)
+        except ClipError:
+            # A piece can end inside a container's fragment, so the next one reads.
+            step = None
+        except WorkerUnavailableError as error:
+            log.warning('live model=%s outcome=%s', model.id, error.reason)
+            if error.reason is Failure.TRANSCRIBE_FAILED:
+                message = f'The model {model.id} could not read this turn.'
+                raise ApiError(502, 'transcribe_failed', message) from None
+            raise _unavailable(model) from None
+        if step is not None:
+            turn.write(model, language, step.text, step.state)
+        return LiveResponse(text=turn.text, heard=heard)
+
     @app.post('/v1/warm')
     async def warm(request: Request) -> WarmResponse:
         body = await _read_body(request, MAX_WARM_BYTES)
@@ -222,6 +278,12 @@ async def _unload_when_idle(runner: Runner, check_seconds: float) -> None:
     while True:
         await asyncio.sleep(check_seconds)
         await runner.unload_if_idle()
+
+
+async def _drop_untouched(turns: LiveTurns) -> None:
+    while True:
+        await asyncio.sleep(UNTOUCHED_SECONDS)
+        turns.drop_untouched()
 
 
 async def _read_body(request: Request, limit: int) -> bytes:

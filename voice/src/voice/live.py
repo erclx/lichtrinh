@@ -27,6 +27,12 @@ class Turn:
             self._spoken = (model, language)
             self.state = None
 
+    def write(self, model: Model, language: Language, text: str, state: object) -> None:
+        """Takes a step's words, unless the turn has moved to another model or
+        language since the step began."""
+        if self._spoken == (model, language):
+            self.text, self.state = text, state
+
 
 class LiveTurns:
     def __init__(

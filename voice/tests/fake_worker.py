@@ -1,6 +1,6 @@
-"""A worker on the real loop: fake_worker.py <model-id> <lock-path> [fail]. It holds
-the lock as a model holds the card and answers '<model-id>:<sample count>', with
-the language named when it is not Vietnamese, or fails every clip under `fail`.
+"""A worker on the real loop: fake_worker.py <model-id> <lock-path> [fail|die]. It
+holds the lock as a model holds the card and answers '<model-id>:<sample count>',
+naming a language other than Vietnamese. It fails every clip, or dies on one.
 A live step counts in its state. A first sample of CRASH or STALL exits or stalls."""
 
 import fcntl
@@ -17,16 +17,16 @@ STALL = -2.0
 
 
 class FakeRecognizer:
-    def __init__(self, model_id: str, fail: bool) -> None:
+    def __init__(self, model_id: str, fate: str) -> None:
         self.model_id = model_id
-        self.fail = fail
+        self.fate = fate
 
     def transcribe(self, samples: Samples, language: Language) -> str:
-        if samples[0] == CRASH:
+        if samples[0] == CRASH or self.fate == 'die':
             os._exit(3)
         if samples[0] == STALL:
             time.sleep(3600)
-        if self.fail:
+        if self.fate == 'fail':
             raise RuntimeError('the model refused this clip')
         spoken = '' if language is Language.VIETNAMESE else f'{language}:'
         return f'{self.model_id}:{spoken}{len(samples)}'
@@ -38,12 +38,12 @@ class FakeRecognizer:
         return f'step{step}:{self.transcribe(samples, language)}', step
 
 
-def load(model_id: str, lock_path: str, fail: bool) -> FakeRecognizer:
+def load(model_id: str, lock_path: str, fate: str) -> FakeRecognizer:
     card = os.open(lock_path, os.O_CREAT | os.O_RDWR)
     fcntl.flock(card, fcntl.LOCK_EX | fcntl.LOCK_NB)
-    return FakeRecognizer(model_id, fail)
+    return FakeRecognizer(model_id, fate)
 
 
 if __name__ == '__main__':
-    fail = sys.argv[3:] == ['fail']
-    sys.exit(serve(lambda: load(sys.argv[1], sys.argv[2], fail)))
+    fate = sys.argv[3] if len(sys.argv) > 3 else ''
+    sys.exit(serve(lambda: load(sys.argv[1], sys.argv[2], fate)))
