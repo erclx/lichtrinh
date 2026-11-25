@@ -1,5 +1,7 @@
 import { z } from 'zod'
 
+import type { Language } from './auth.ts'
+
 export {
   type Language as SpokenLanguage,
   language as spokenLanguage,
@@ -20,6 +22,13 @@ export const voiceModel = z.enum([
 export type VoiceModel = z.infer<typeof voiceModel>
 
 export const DEFAULT_VOICE_MODEL: VoiceModel = 'qwen3-asr-1.7b'
+
+/** The languages each model hears, matching the server's own list. */
+export const VOICE_MODEL_LANGUAGES: Record<VoiceModel, readonly Language[]> = {
+  'qwen3-asr-1.7b': ['vi', 'en'],
+  'whisper-large-v3-turbo': ['vi', 'en'],
+  'phowhisper-large': ['vi'],
+}
 
 /** What the browser records, being webm, or mp4 on an older Safari. */
 export const clipType = z.enum(['audio/webm', 'audio/mp4'])
@@ -61,7 +70,7 @@ export const liveText = z.strictObject({
 })
 export type LiveText = z.infer<typeof liveText>
 
-/** The speech model every clip runs on, which the admin sets. */
+/** The speech model the admin set, for every language it hears. */
 export const voiceSettings = z.strictObject({ model: voiceModel })
 export type VoiceSettings = z.infer<typeof voiceSettings>
 

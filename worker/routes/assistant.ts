@@ -11,7 +11,8 @@ import { createDb } from '../db/client.ts'
 import { settings } from '../db/schema.ts'
 import { fail, parseBody, refuse } from '../envelope.ts'
 import { logOutcome } from '../log.ts'
-import { readVoiceModel } from '../voice/model.ts'
+import { spokenLanguage } from '../voice/language.ts'
+import { readVoiceModel, voiceModelFor } from '../voice/model.ts'
 
 export const assistantRoutes = new Hono<AuthEnv>()
   .get('/assistant/status', async (c) => {
@@ -38,14 +39,14 @@ export const assistantRoutes = new Hono<AuthEnv>()
   .post('/assistant/warm', requireChat, async (c) => {
     const db = createDb(c.env.DB)
     const relay = relayOf(c.env)
-    const [model, voiceModel] = await Promise.all([
+    const [model, picked] = await Promise.all([
       readModel(db),
       readVoiceModel(db),
     ])
     if (!(await relay.warm(model))) {
       return refuse(c, 'assistant_unavailable')
     }
-    await relay.warmVoice(voiceModel)
+    await relay.warmVoice(voiceModelFor(spokenLanguage(c.var.user), picked))
     return c.body(null, 202)
   })
   // The contact route owns its own key in the same table, so each upsert
