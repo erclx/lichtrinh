@@ -1,4 +1,4 @@
-import { zoneLabel } from './zone-options'
+import { zoneLabel } from '@/lib/zone-label'
 
 const at = new Date('2031-05-15T02:45:00Z')
 

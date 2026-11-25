@@ -1,20 +1,16 @@
 import type { Change, EntryKind } from '@shared/changes.ts'
 import { useQueryClient } from '@tanstack/react-query'
 import type { TFunction } from 'i18next'
-import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
-import { useUndo } from '@/calendar-data/mutations'
+import { useChangeUndo } from '@/components/change-undo'
 import { KindGlyph } from '@/components/kind-icons'
 import { kindTone } from '@/components/kinds'
 import { chatKeys } from '@/features/chat/chat-api'
 import { formatCardDate, formatTime } from '@/i18n/format'
 import type { Language } from '@/i18n/resources'
 import { useLanguage } from '@/i18n/use-language'
-import { ApiFailure } from '@/lib/api'
 import { cn } from '@/lib/utils'
-
-type Outcome = 'ready' | 'undone' | 'conflict' | 'network' | 'failed'
 
 interface Shown {
   title: string
@@ -64,51 +60,25 @@ function shownOf(change: Change, t: TFunction, language: Language): Shown {
   }
 }
 
-function outcomeOf(error: unknown): Outcome {
-  if (!(error instanceof ApiFailure)) return 'failed'
-  if (error.code === 'already_undone') return 'undone'
-  if (error.code === 'undo_conflict') return 'conflict'
-  if (error.code === 'network') return 'network'
-  return 'failed'
-}
-
 const messageKey = {
   conflict: 'chat.undoConflict',
+  outsideDates: 'undo.outsideDates',
+  otherCurrency: 'undo.otherCurrency',
   network: 'errors.network',
   failed: 'errors.generic',
 } as const
 
-/**
- * One change a reply made, tinted by the entry's kind, with Undo. The undo
- * id is made once per card, so a press retried after a lost answer reaches
- * the undo the first press stored rather than undoing twice.
- */
+/** One change a reply made, tinted by the entry's kind, with Undo. */
 export function ChangeCard({ change }: { change: Change }) {
   const { t } = useTranslation()
   const language = useLanguage()
   const client = useQueryClient()
-  const undo = useUndo()
-  const [undoId] = useState(() => crypto.randomUUID())
-  const [outcome, setOutcome] = useState<Outcome>(
-    change.undoneBy === null ? 'ready' : 'undone',
-  )
+  const { outcome, isPending, run } = useChangeUndo(change, {
+    onUndone: () => void client.invalidateQueries({ queryKey: chatKeys.all }),
+  })
   const shown = shownOf(change, t, language)
-  const canUndo =
-    outcome === 'ready' || outcome === 'network' || outcome === 'failed'
-
-  function runUndo() {
-    if (undo.isPending || !canUndo) return
-    undo.mutate(
-      { changeId: change.id, undoId },
-      {
-        onSuccess: () => {
-          setOutcome('undone')
-          void client.invalidateQueries({ queryKey: chatKeys.all })
-        },
-        onError: (error) => setOutcome(outcomeOf(error)),
-      },
-    )
-  }
+  const isUndone = outcome === 'undone' || outcome === 'alreadyUndone'
+  const canUndo = !isUndone && outcome !== 'conflict'
 
   return (
     <div
@@ -134,23 +104,25 @@ export function ChangeCard({ change }: { change: Change }) {
         {canUndo ? (
           <button
             type="button"
-            onClick={runUndo}
-            aria-disabled={undo.isPending}
+            onClick={run}
+            aria-disabled={isPending}
             aria-label={t('chat.undoLabel', { title: shown.title })}
             className="inline-flex min-h-target shrink-0 items-center rounded-lg bg-primary px-4 text-sm font-extrabold text-primary-foreground outline-none focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:ring-offset-2 aria-disabled:opacity-70"
           >
-            {undo.isPending ? t('chat.undoing') : t('chat.undo')}
+            {isPending ? t('chat.undoing') : t('chat.undo')}
           </button>
-        ) : outcome === 'undone' ? (
+        ) : isUndone ? (
           <span className="shrink-0 px-2 text-sm font-extrabold">
             {t('chat.undone')}
           </span>
         ) : null}
       </div>
       <p role="status" className="text-sm empty:hidden">
-        {outcome === 'conflict' || outcome === 'network' || outcome === 'failed'
-          ? t(messageKey[outcome])
-          : null}
+        {outcome === 'ready' ||
+        outcome === 'undone' ||
+        outcome === 'alreadyUndone'
+          ? null
+          : t(messageKey[outcome])}
       </p>
     </div>
   )
