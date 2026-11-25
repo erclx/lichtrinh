@@ -1,4 +1,4 @@
-import { render, screen, within } from '@testing-library/react'
+import { render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { vi } from 'vitest'
 
@@ -158,15 +158,19 @@ describe('the verdict', () => {
 })
 
 describe('Stop all', () => {
+  // The dialog takes focus a frame after it opens, and a key pressed before
+  // that frame still reaches the button behind it.
   const openDialog = async (shown = state()) => {
     const opened = page(shown)
     const trigger = screen.getByRole('button', { name: 'Stop all' })
     await opened.user.click(trigger)
-    return {
-      ...opened,
-      trigger,
-      dialog: await screen.findByRole('alertdialog'),
-    }
+    const dialog = await screen.findByRole('alertdialog')
+    await waitFor(() =>
+      expect(
+        within(dialog).getByRole('button', { name: 'Keep running' }),
+      ).toHaveFocus(),
+    )
+    return { ...opened, trigger, dialog }
   }
 
   it('opens on Keep running and stops nothing yet', async () => {
@@ -199,7 +203,7 @@ describe('Stop all', () => {
 
       expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument()
       expect(onPress).not.toHaveBeenCalled()
-      expect(trigger).toHaveFocus()
+      await waitFor(() => expect(trigger).toHaveFocus())
     },
   )
 
