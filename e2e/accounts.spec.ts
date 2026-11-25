@@ -21,14 +21,10 @@ async function signIn(page: Page, username: string, password: string) {
 
 test('the admin creates a member, who signs in and is refused the accounts page', async ({
   page,
-  browserName,
 }) => {
-  // Linux WebKit drops Secure cookies on http://localhost, unlike iPhone Safari.
-  test.skip(browserName === 'webkit', 'Linux WebKit drops the Secure cookie')
   if (fixtureAdmin === undefined) throw new Error('The seed holds no admin')
-  // Each browser runs the journey against one server, so each makes its own.
-  const username = `e2e-${browserName}-${Date.now().toString(36)}`
-  const displayName = `Thành viên ${browserName}`
+  const username = `e2e-${Date.now().toString(36)}`
+  const displayName = 'Thành viên e2e'
 
   await page.goto('/admin/accounts')
   await expect(page.getByRole('navigation')).toHaveCount(0)

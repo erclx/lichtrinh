@@ -27,6 +27,8 @@ export default defineConfig({
     // `contextOptions` is the spelling that works on every version.
     contextOptions: { reducedMotion: 'reduce' },
   },
+  // The one engine CI runs. A second would replace the chat specs' bridge on the
+  // shared relay, and Linux WebKit drops the Secure cookie on http://localhost.
   projects: [
     {
       name: 'chromium',
@@ -41,8 +43,6 @@ export default defineConfig({
         },
       },
     },
-    { name: 'firefox', use: { ...devices['Desktop Firefox'] } },
-    { name: 'webkit', use: { ...devices['Desktop Safari'] } },
   ],
   webServer: {
     // Seeded here rather than in a global setup, which Playwright runs only

@@ -14,13 +14,8 @@ const dayPath = `/trips/${DEMO_DAY.tripId}/days/${tomorrow}`
 
 test('the traveler reads the offline card, then chats with the assistant and undoes its add', async ({
   page,
-  browserName,
   baseURL,
 }) => {
-  test.skip(
-    browserName !== 'chromium',
-    "The relay holds one bridge per server, so a second engine's bridge would replace this one mid-turn, and Linux WebKit drops the Secure cookie",
-  )
   if (traveler === undefined) throw new Error('The seed holds no traveler')
   if (baseURL === undefined) throw new Error('The config names no base URL')
   await page.addInitScript(() =>
@@ -82,13 +77,8 @@ test('the traveler reads the offline card, then chats with the assistant and und
 // bridge per server and a second spec file would run beside it.
 test('the traveler speaks a request, fixes the transcript, sends it, and types while voice is off', async ({
   page,
-  browserName,
   baseURL,
 }) => {
-  test.skip(
-    browserName !== 'chromium',
-    'Chromium alone has a fake microphone, and the relay holds one bridge per server',
-  )
   if (traveler === undefined) throw new Error('The seed holds no traveler')
   if (baseURL === undefined) throw new Error('The config names no base URL')
   await page.addInitScript(() =>
