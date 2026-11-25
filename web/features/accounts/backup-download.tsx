@@ -60,15 +60,7 @@ export function BackupDownload() {
         {t('backup.title')}
       </h2>
       <p className="text-base text-muted-foreground">{t('backup.lead')}</p>
-      <Button
-        variant="ghost"
-        onClick={() => void onDownload()}
-        aria-busy={pending}
-        className="w-full bg-muted"
-      >
-        <DownloadIcon />
-        {t(pending ? 'backup.downloading' : 'backup.download')}
-      </Button>
+      {/* Above the button, since the phone tab bar covers what appears below. */}
       {outcome.kind === 'saved' && (
         <p
           role="status"
@@ -82,6 +74,15 @@ export function BackupDownload() {
           {t(outcome.message)}
         </p>
       )}
+      <Button
+        variant="ghost"
+        onClick={() => void onDownload()}
+        aria-busy={pending}
+        className="w-full bg-muted"
+      >
+        <DownloadIcon />
+        {t(pending ? 'backup.downloading' : 'backup.download')}
+      </Button>
     </section>
   )
 }
