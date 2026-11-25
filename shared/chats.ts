@@ -8,10 +8,13 @@ import { voiceSend } from './voice.ts'
 // Read by the chat screens, so every field added here is optional and none
 // is renamed once it ships.
 
+export const LAST_MESSAGE_LENGTH = 120
+
 /**
  * A conversation with the assistant, owned by one account and bound to one
  * trip when it is created. The title is the start of its first message, or
- * null before one is sent.
+ * null before one is sent. The list alone carries `lastMessage`, the start of
+ * the newest message with text on one line, or null before one has any.
  */
 export const chat = z.strictObject({
   id: z.string(),
@@ -19,6 +22,7 @@ export const chat = z.strictObject({
   title: z.string().nullable(),
   createdAt: z.iso.datetime(),
   updatedAt: z.iso.datetime(),
+  lastMessage: z.string().max(LAST_MESSAGE_LENGTH).nullable().optional(),
 })
 export type Chat = z.infer<typeof chat>
 

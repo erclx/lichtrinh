@@ -1,9 +1,10 @@
 import type { AssistantModel } from '@shared/assistant.ts'
 import { assistantModel } from '@shared/assistant.ts'
 import type { Chat, ChatMessage, MessageStatus } from '@shared/chats.ts'
+import { LAST_MESSAGE_LENGTH } from '@shared/chats.ts'
 import { nowInZone } from '@shared/trip-time.ts'
 import type { Trip } from '@shared/trips.ts'
-import { and, asc, desc, eq, sql } from 'drizzle-orm'
+import { and, asc, desc, eq, getTableColumns, sql } from 'drizzle-orm'
 import { z } from 'zod'
 
 import { changesByIds } from '../calendar/changes.ts'
@@ -80,13 +81,45 @@ export async function createChat(
   return toChat(row)
 }
 
-export function listChats(db: Db, ownerId: string): Promise<Chat[]> {
-  return db
-    .select()
+/** The start of a message on one line, or null when it reads as blank. */
+function toLastMessage(text: string | null): string | null {
+  const line = (text ?? '').replace(/\s+/g, ' ').trim()
+  // A cut through an emoji leaves half of it, which draws as a stray mark.
+  const cut = line.slice(0, LAST_MESSAGE_LENGTH).replace(/[\uD800-\uDBFF]$/, '')
+  return cut || null
+}
+
+/**
+ * The owner's chats, most recently active first, each with its last message.
+ * One statement reads them all, since a read per chat would spend the
+ * free plan's queries per request.
+ */
+export async function listChats(db: Db, ownerId: string): Promise<Chat[]> {
+  // SQLite's own trim takes spaces alone, so a reply of line breaks would pass.
+  const blank = sql`char(9, 10, 13, 32)`
+  const newestText = db
+    .select({ text: chatMessages.text })
+    .from(chatMessages)
+    .where(
+      and(
+        eq(chatMessages.chatId, chats.id),
+        sql`trim(${chatMessages.text}, ${blank}) <> ''`,
+      ),
+    )
+    .orderBy(desc(chatMessages.createdAt), sql`rowid desc`)
+    .limit(1)
+  const rows = await db
+    .select({
+      ...getTableColumns(chats),
+      newestText: sql<string | null>`${newestText}`,
+    })
     .from(chats)
     .where(eq(chats.ownerId, ownerId))
     .orderBy(desc(chats.updatedAt), sql`rowid desc`)
-    .then((rows) => rows.map(toChat))
+  return rows.map(({ newestText: text, ...row }) => ({
+    ...toChat(row),
+    lastMessage: toLastMessage(text),
+  }))
 }
 
 /** The owner's chat, or undefined for one that is missing or not theirs. */

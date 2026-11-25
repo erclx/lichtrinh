@@ -6,7 +6,7 @@ import { afterEach, describe, expect, it } from 'vitest'
 
 import { app } from '../app.ts'
 import { createDb } from '../db/client.ts'
-import { transcriptions, trips, users } from '../db/schema.ts'
+import { chatMessages, transcriptions, trips, users } from '../db/schema.ts'
 import type { FakeBridge } from '../test/bridge.ts'
 import { connectBridge } from '../test/bridge.ts'
 import { chatterWithChat, readEvents, sendMessage } from '../test/chats.ts'
@@ -34,6 +34,28 @@ function getChats(cookie: string) {
 
 function getThread(cookie: string, id: string) {
   return app.request(`/api/chats/${id}`, bare('GET', cookie), env)
+}
+
+/** Saves an invented message, the traveler's own unless told otherwise. */
+async function addMessage(
+  chatId: string,
+  message: Partial<typeof chatMessages.$inferInsert> & { text: string },
+) {
+  await createDb(env.DB)
+    .insert(chatMessages)
+    .values({
+      id: crypto.randomUUID(),
+      chatId,
+      role: 'user',
+      status: 'complete',
+      createdAt: new Date('2031-05-15T01:00:00Z'),
+      ...message,
+    })
+}
+
+async function lastMessages(cookie: string) {
+  const { chats } = chatList.parse(await (await getChats(cookie)).json())
+  return Object.fromEntries(chats.map((chat) => [chat.id, chat.lastMessage]))
 }
 
 /** A chatting account and a live trip for its chats to bind to. */
@@ -112,6 +134,96 @@ describe('GET /api/chats', () => {
     expect(res.status).toBe(200)
     const { chats } = chatList.parse(await res.json())
     expect(chats.map((chat) => chat.id)).toEqual([newer.id, older.id])
+  })
+
+  it("reads each chat's own newest message", async () => {
+    const { cookie } = await chatter()
+    const answered = await addChat(cookie)
+    const waiting = await addChat(cookie)
+    await addMessage(answered.id, {
+      role: 'assistant',
+      text: 'Invented reply',
+      createdAt: new Date('2031-05-15T01:01:00Z'),
+    })
+    await addMessage(answered.id, { text: 'Invented ask' })
+    await addMessage(waiting.id, { text: 'Another ask' })
+
+    expect(await lastMessages(cookie)).toEqual({
+      [answered.id]: 'Invented reply',
+      [waiting.id]: 'Another ask',
+    })
+  })
+
+  it('reads the reply over a message saved in the same millisecond', async () => {
+    const { cookie } = await chatter()
+    const chat = await addChat(cookie)
+    await addMessage(chat.id, { text: 'Invented ask' })
+    await addMessage(chat.id, { role: 'assistant', text: 'Invented reply' })
+
+    expect(await lastMessages(cookie)).toEqual({ [chat.id]: 'Invented reply' })
+  })
+
+  it('reads a stopped reply by the text it reached', async () => {
+    const { cookie } = await chatter()
+    const chat = await addChat(cookie)
+    await addMessage(chat.id, { text: 'Invented ask' })
+    await addMessage(chat.id, {
+      role: 'assistant',
+      status: 'stopped',
+      text: 'Invented rep',
+    })
+
+    expect(await lastMessages(cookie)).toEqual({ [chat.id]: 'Invented rep' })
+  })
+
+  it.each([
+    ['no text', ''],
+    ['line breaks alone', ' \n\r\n\t'],
+  ])(
+    'falls back to the message before a failed reply of %s',
+    async (_, text) => {
+      const { cookie } = await chatter()
+      const chat = await addChat(cookie)
+      await addMessage(chat.id, { text: 'Invented ask' })
+      await addMessage(chat.id, { role: 'assistant', status: 'failed', text })
+
+      expect(await lastMessages(cookie)).toEqual({ [chat.id]: 'Invented ask' })
+    },
+  )
+
+  it('puts a message of several lines on one line', async () => {
+    const { cookie } = await chatter()
+    const chat = await addChat(cookie)
+    await addMessage(chat.id, { text: '\nPhở lúc 7:00\r\n\n- Cà phê\t15:00\n' })
+
+    expect(await lastMessages(cookie)).toEqual({
+      [chat.id]: 'Phở lúc 7:00 - Cà phê 15:00',
+    })
+  })
+
+  it('cuts a long message to 120 characters', async () => {
+    const { cookie } = await chatter()
+    const chat = await addChat(cookie)
+    await addMessage(chat.id, { text: 'a'.repeat(121) })
+
+    expect(await lastMessages(cookie)).toEqual({ [chat.id]: 'a'.repeat(120) })
+  })
+
+  it('cuts before an emoji that would cross the limit', async () => {
+    const { cookie } = await chatter()
+    const chat = await addChat(cookie)
+    await addMessage(chat.id, { text: `${'a'.repeat(119)}🍜` })
+
+    expect(await lastMessages(cookie)).toEqual({ [chat.id]: 'a'.repeat(119) })
+  })
+
+  it('reads null for a chat with no message yet', async () => {
+    const { cookie } = await chatter()
+    const other = await chatterWithChat()
+    await addMessage(other.chat.id, { text: 'Another account ask' })
+    const chat = await addChat(cookie)
+
+    expect(await lastMessages(cookie)).toEqual({ [chat.id]: null })
   })
 
   it('refuses an account that cannot chat', async () => {
