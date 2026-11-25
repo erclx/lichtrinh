@@ -5,6 +5,7 @@ import { Link, useLocation, useNavigate } from 'react-router'
 
 import { Button, buttonVariants } from '@/components/ui/button'
 import { listAccounts, resetPassword } from '@/features/accounts/accounts-api'
+import { BackupDownload } from '@/features/accounts/backup-download'
 import { PasswordOnce } from '@/features/accounts/password-once'
 import { ResetConfirm } from '@/features/accounts/reset-confirm'
 import { ApiFailure } from '@/lib/api'
@@ -240,6 +241,8 @@ export function AccountsPage() {
           {newAccount}
         </div>
       )}
+
+      {load.state !== 'loading' && <BackupDownload />}
 
       <ResetConfirm
         name={target?.displayName ?? null}

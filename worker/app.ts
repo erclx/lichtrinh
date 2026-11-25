@@ -9,6 +9,7 @@ import { type AuthEnv, requireAdmin, requireSession } from './auth/guard.ts'
 import { fail } from './envelope.ts'
 import { assistantRoutes } from './routes/assistant.ts'
 import { authRoutes } from './routes/auth.ts'
+import { backupRoutes } from './routes/backup.ts'
 import { changeRoutes } from './routes/changes.ts'
 import { chatRoutes } from './routes/chats.ts'
 import { entryRoutes } from './routes/entries.ts'
@@ -70,6 +71,7 @@ app.use('/admin/*', requireAdmin)
 app.route('/', healthRoutes)
 app.route('/', authRoutes)
 app.route('/', userRoutes)
+app.route('/', backupRoutes)
 app.route('/', settingsRoutes)
 app.route('/', tripRoutes)
 app.route('/', entryRoutes)

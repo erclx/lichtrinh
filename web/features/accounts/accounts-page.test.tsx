@@ -79,6 +79,26 @@ describe('AccountsPage', () => {
     renderAccounts()
 
     expect(await screen.findByText('Loading accounts…')).toBeInTheDocument()
+    expect(
+      screen.queryByRole('button', { name: 'Download backup' }),
+    ).not.toBeInTheDocument()
+  })
+
+  it.each([
+    ['the list is ready', () => json({ users: [admin, traveler] })],
+    ['there are no accounts', () => json({ users: [] })],
+    ['the list failed', () => offline()],
+  ])('offers the backup when %s', async (_case, answer) => {
+    fakeApi({
+      'GET /auth/me': () => json(admin),
+      'GET /admin/users': answer,
+    })
+
+    renderAccounts()
+
+    expect(
+      await screen.findByRole('button', { name: 'Download backup' }),
+    ).toBeInTheDocument()
   })
 
   it('shows the empty state with a way to make the first account', async () => {

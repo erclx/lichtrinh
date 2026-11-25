@@ -18,6 +18,8 @@ export function logOutcome(
     /** A currency pair such as `USD:VND`, two codes the route already checked. */
     pair?: string
     changes?: number
+    trips?: number
+    entries?: number
     audioMs?: number
     ms?: number
   } = {},

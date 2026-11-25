@@ -33,7 +33,13 @@ docs = { color = "0075ca", paths = [
   "CONTRIBUTING.md",
   "SECURITY.md",
 ] }
-app = { paths = ["web/", "index.html", "components.json"], color = "1f6feb" }
+app = { paths = [
+  "web/",
+  "index.html",
+  "components.json",
+  "pwa-manifest.ts",
+  "pwa-manifest.test.ts",
+], color = "1f6feb" }
 api = { paths = [
   "worker/",
   "wrangler.jsonc",
