@@ -1,7 +1,6 @@
 // Scores an alias live on fixtures/requests.json, each Vietnamese ask with and
-// without diacritics and each English one once, through the real prompt and
-// loop over an in-memory trip. Run by hand on the workspace PC after an Ollama
-// upgrade or a model change.
+// without diacritics, through the real prompt and loop over an in-memory trip.
+// Run by hand on the workspace PC after an Ollama upgrade or a model change.
 import { parseArgs } from 'node:util'
 
 import type { AssistantModel } from '@shared/assistant.ts'
