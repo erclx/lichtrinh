@@ -267,10 +267,13 @@ def serve(settings: Settings) -> None:
 
 
 def strip_query(record: logging.LogRecord) -> bool:
-    """Drops the query string from an access log line, keeping the path."""
+    """Drops the query string from an access log line, keeping the path, and drops
+    a live request whole, since it names an account twice a second."""
     args = record.args
     if isinstance(args, tuple) and len(args) == 5 and isinstance(args[2], str):
-        record.args = (*args[:2], args[2].split('?', 1)[0], *args[3:])
+        path = args[2].split('?', 1)[0]
+        record.args = (*args[:2], path, *args[3:])
+        return not path.startswith('/v1/live/')
     return True
 
 

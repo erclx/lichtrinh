@@ -455,6 +455,20 @@ def test_the_access_log_drops_the_query_string(path: str, logged: str) -> None:
     assert record.getMessage() == f'127.0.0.1:5000 - "GET {logged} HTTP/1.1" 200'
 
 
+def test_the_access_log_drops_a_live_request_and_the_account_it_names() -> None:
+    record = logging.LogRecord(
+        'uvicorn.access',
+        logging.INFO,
+        __file__,
+        0,
+        '%s - "%s %s HTTP/%s" %d',
+        ('127.0.0.1:5000', 'PUT', '/v1/live/invented-user.turn-1?from=0', '1.1', 200),
+        None,
+    )
+
+    assert not strip_query(record)
+
+
 def error_code(body: object) -> object:
     assert isinstance(body, dict)
     error = body['error']
