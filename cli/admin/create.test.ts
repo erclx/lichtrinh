@@ -69,41 +69,64 @@ describe('lichtrinh admin create', () => {
     expect(run.sql[0]).toContain("'admin'")
   })
 
-  it('targets the remote database for --remote', async () => {
+  it.each([
+    ['--remote', 'production'],
+    ['--staging', 'staging'],
+  ])('%s writes to the %s database alone', async (flag, environment) => {
     const run = fakeRunner()
 
-    await runCli(
-      ['admin', 'create', 'someone-invented', '--remote'],
-      run.context,
-    )
+    await runCli(['admin', 'create', 'someone-invented', flag], run.context)
 
-    expect(run.tasks[0].command).toContain('--remote')
-    expect(run.tasks[0].command).not.toContain('--local')
+    expect(run.tasks).toHaveLength(1)
+    expect(run.tasks[0].command.slice(0, 8)).toEqual([
+      'bunx',
+      'wrangler',
+      'd1',
+      'execute',
+      'DB',
+      '--remote',
+      '--env',
+      environment,
+    ])
   })
 
-  it('asks before writing to the remote database', async () => {
+  it('names no environment for the local database', async () => {
     const run = fakeRunner()
 
     await runCli(
-      ['admin', 'create', 'someone-invented', '--remote'],
+      ['admin', 'create', 'someone-invented', '--local'],
       run.context,
     )
+
+    expect(run.tasks[0].command).not.toContain('--env')
+  })
+
+  it.each([
+    ['--remote', 'production'],
+    ['--staging', 'staging'],
+  ])('asks before %s writes, naming %s', async (flag, environment) => {
+    const run = fakeRunner()
+
+    await runCli(['admin', 'create', 'someone-invented', flag], run.context)
 
     expect(run.questions).toHaveLength(1)
-    expect(run.questions[0]).toContain('remote')
+    expect(run.questions[0]).toContain(environment)
   })
 
-  it('runs nothing remotely when the confirm is declined', async () => {
-    const run = fakeRunner(0, false)
+  it.each(['--remote', '--staging'])(
+    'runs nothing when the confirm for %s is declined',
+    async (flag) => {
+      const run = fakeRunner(0, false)
 
-    const exitCode = await runCli(
-      ['admin', 'create', 'someone-invented', '--remote'],
-      run.context,
-    )
+      const exitCode = await runCli(
+        ['admin', 'create', 'someone-invented', flag],
+        run.context,
+      )
 
-    expect(exitCode).not.toBe(0)
-    expect(run.tasks).toEqual([])
-  })
+      expect(exitCode).not.toBe(0)
+      expect(run.tasks).toEqual([])
+    },
+  )
 
   it('asks nothing for the local database', async () => {
     const run = fakeRunner()
@@ -151,8 +174,11 @@ describe('lichtrinh admin create', () => {
   })
 
   it.each([
-    ['neither database', ['--language', 'vi']],
-    ['both databases', ['--local', '--remote']],
+    ['no database', ['--language', 'vi']],
+    ['local beside production', ['--local', '--remote']],
+    ['staging beside production', ['--staging', '--remote']],
+    ['production beside staging', ['--remote', '--staging']],
+    ['staging beside local', ['--staging', '--local']],
   ])('refuses %s and runs nothing', async (_case, flags) => {
     const run = fakeRunner()
 
