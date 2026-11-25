@@ -8,7 +8,7 @@ import { voiceAdmin, type VoiceModel, voiceSettings } from '@shared/voice.ts'
 
 import { apiFetch } from '@/lib/api'
 
-/** The speech model every clip runs on, with how each model did in use. */
+/** The speech model the admin picked, with how each model did in use. */
 export function readVoice() {
   return apiFetch('/admin/voice', { schema: voiceAdmin })
 }

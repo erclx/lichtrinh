@@ -1,21 +1,25 @@
-// Scores an alias live on fixtures/requests.json, each ask with and without
-// diacritics, through the real prompt and loop over an in-memory trip. Run by
-// hand on the workspace PC after an Ollama upgrade or a model change.
+// Scores an alias live on fixtures/requests.json, each Vietnamese ask with and
+// without diacritics, through the real prompt and loop over an in-memory trip.
+// Run by hand on the workspace PC after an Ollama upgrade or a model change.
 import { parseArgs } from 'node:util'
 
 import type { AssistantModel } from '@shared/assistant.ts'
 import { assistantModel } from '@shared/assistant.ts'
 import { buildPrompt } from '@shared/assistant-prompt.ts'
+import type { Language } from '@shared/auth.ts'
+import { language } from '@shared/auth.ts'
 import type { Entry } from '@shared/entries.ts'
 import type { Trip } from '@shared/trips.ts'
 
 import { readOllamaUrl } from './config.ts'
 import fixtures from './fixtures/requests.json' with { type: 'json' }
 import { turnModel } from './ollama.ts'
+import { repliesInEnglish } from './reply-language.ts'
 import type { ToolCallFrame } from './turn.ts'
 import { runTurn } from './turn.ts'
 
-const PASS_AT = 26
+// Scored apart, so an English miss never hides a Vietnamese drop.
+const PASS_AT: Record<Language, number> = { vi: 26, en: 5 }
 
 interface Expect {
   action: string
@@ -121,7 +125,26 @@ function misses(expect: Expect, calls: Call[], reply: string): string[] {
   return [...wrong, ...keywords]
 }
 
-async function runOne(host: string, model: AssistantModel, text: string) {
+/** What an English ask got wrong in the languages it wrote. */
+function languageMisses(calls: Call[], reply: string): string[] {
+  const written = calls
+    .map((call) => call.args.title)
+    .filter((title) => typeof title === 'string')
+  const titles = [...entries.map((entry) => entry.title), ...written]
+  return [
+    ...written
+      .filter((title) => fold(title) === title.toLowerCase())
+      .map((title) => `title not Vietnamese:${title}`),
+    ...(repliesInEnglish(reply, titles) ? [] : ['reply not English']),
+  ]
+}
+
+async function runOne(
+  host: string,
+  model: AssistantModel,
+  spoken: Language,
+  text: string,
+) {
   const calls: Call[] = []
   let reply = ''
   let failed = ''
@@ -132,6 +155,7 @@ async function runOne(host: string, model: AssistantModel, text: string) {
       turnId: crypto.randomUUID(),
       model,
       messages: buildPrompt({
+        language: spoken,
         trip,
         entries,
         history: [],
@@ -158,25 +182,36 @@ async function runOne(host: string, model: AssistantModel, text: string) {
   return { calls, reply, failed, ms: Date.now() - started }
 }
 
+/** The spellings an ask runs in, since only Vietnamese drops its marks. */
+function spellings(spoken: Language, text: string) {
+  return spoken === 'vi'
+    ? ([
+        ['marks', text],
+        ['plain', fold(text)],
+      ] as const)
+    : ([['english', text]] as const)
+}
+
 async function main() {
   const { values } = parseArgs({ options: { model: { type: 'string' } } })
   const model = assistantModel.parse(values.model ?? 'lichtrinh-assistant')
   const host = readOllamaUrl(process.env)
-  let passed = 0
-  let total = 0
+  const passed: Record<Language, number> = { vi: 0, en: 0 }
+  const total: Record<Language, number> = { vi: 0, en: 0 }
   const times: number[] = []
   for (const request of fixtures.requests) {
-    for (const [variant, text] of [
-      ['marks', request.text],
-      ['plain', fold(request.text)],
-    ] as const) {
-      const run = await runOne(host, model, text)
+    const spoken = language.parse(request.language)
+    for (const [variant, text] of spellings(spoken, request.text)) {
+      const run = await runOne(host, model, spoken, text)
       const missed =
         run.failed === ''
-          ? misses(request.expect, run.calls, run.reply)
+          ? [
+              ...misses(request.expect, run.calls, run.reply),
+              ...(spoken === 'en' ? languageMisses(run.calls, run.reply) : []),
+            ]
           : [`failed:${run.failed}`]
-      total += 1
-      if (missed.length === 0) passed += 1
+      total[spoken] += 1
+      if (missed.length === 0) passed[spoken] += 1
       times.push(run.ms)
       console.log(
         `${request.id} ${variant}: ${missed.length === 0 ? 'ok' : missed.join(', ')} (${(run.ms / 1000).toFixed(1)}s)`,
@@ -184,10 +219,16 @@ async function main() {
     }
   }
   const median = [...times].sort((a, b) => a - b)[Math.floor(times.length / 2)]
-  console.log(
-    `${model}: ${passed}/${total}, median ${(median / 1000).toFixed(1)}s a turn, passing at ${PASS_AT}`,
+  for (const spoken of language.options) {
+    console.log(
+      `${model} ${spoken}: ${passed[spoken]}/${total[spoken]}, passing at ${PASS_AT[spoken]}`,
+    )
+  }
+  console.log(`${model}: median ${(median / 1000).toFixed(1)}s a turn`)
+  const ok = language.options.every(
+    (spoken) => passed[spoken] >= PASS_AT[spoken],
   )
-  process.exit(passed >= PASS_AT ? 0 : 1)
+  process.exit(ok ? 0 : 1)
 }
 
 await main()

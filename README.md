@@ -16,7 +16,7 @@ My mom is traveling to Vietnam. Calendar apps ask her to learn them first. This 
 - A web app that opens in the browser, in Vietnamese and English
 - A shared calendar with trips, entries, estimated costs, and a budget, editable by hand
 - A chat with an assistant that changes the calendar through four calendar tools alone, with Undo on every change
-- The assistant's local model and Vietnamese speech recognition run on my own computer, so the app costs nothing to run
+- The assistant's local model and its Vietnamese and English speech recognition run on my own computer, so the app costs nothing to run
 - The assistant defaults to `lichtrinh-assistant` on `qwen3.8:27b` and speech to `qwen3-asr-1.7b`, picked on the scores in `docs/benchmarks.md`
 
 ## Status

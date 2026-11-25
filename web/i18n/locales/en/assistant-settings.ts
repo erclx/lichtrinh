@@ -31,7 +31,7 @@ export const assistantSettings = {
     whisper: 'Whisper turbo',
     whisperHint: 'Fast',
     phowhisper: 'PhoWhisper',
-    phowhisperHint: 'Trained for Vietnamese',
+    phowhisperHint: 'Hears Vietnamese · English speech uses Qwen3-ASR',
     unused: 'Not used yet',
     unsent_one: '{{count}} clip · none sent yet',
     unsent_other: '{{count}} clips · none sent yet',

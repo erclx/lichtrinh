@@ -52,6 +52,7 @@
   "requests": [
     {
       "id": "r01",
+      "language": "vi",
       "text": "Thứ bảy đi chợ Bến Mây lúc chín giờ sáng",
       "expect": {
         "action": "add",
@@ -62,6 +63,7 @@
     },
     {
       "id": "r02",
+      "language": "vi",
       "text": "Thêm ăn trưa ở nhà hàng Cô Lụa lúc mười hai giờ trưa thứ hai, khoảng hai trăm nghìn đồng",
       "expect": {
         "action": "add",
@@ -73,6 +75,7 @@
     },
     {
       "id": "r03",
+      "language": "vi",
       "text": "Dời buổi tham quan chùa Đá Xanh sang ba giờ chiều",
       "expect": {
         "action": "move",
@@ -83,11 +86,13 @@
     },
     {
       "id": "r04",
+      "language": "vi",
       "text": "Xóa lịch đi thuyền tối thứ năm",
       "expect": { "action": "remove", "target": "e2" }
     },
     {
       "id": "r05",
+      "language": "vi",
       "text": "Chủ nhật bay về lúc sáu giờ bốn mươi lăm sáng",
       "expect": {
         "action": "add",
@@ -98,6 +103,7 @@
     },
     {
       "id": "r06",
+      "language": "vi",
       "text": "Thứ sáu từ hai giờ đến năm giờ chiều đi spa, giá năm trăm nghìn",
       "expect": {
         "action": "add",
@@ -110,11 +116,13 @@
     },
     {
       "id": "r07",
+      "language": "vi",
       "text": "Đổi giá vé bảo tàng Hải Đăng thành một trăm năm mươi nghìn",
       "expect": { "action": "update", "target": "e3", "cost": 150000 }
     },
     {
       "id": "r08",
+      "language": "vi",
       "text": "Thứ ba đi tắm biển ở bãi Cát Vàng",
       "expect": {
         "action": "add",
@@ -124,11 +132,13 @@
     },
     {
       "id": "r09",
+      "language": "vi",
       "text": "Đổi tên lịch ăn sáng thứ bảy thành ăn phở",
       "expect": { "action": "update", "target": "e4", "keywords": ["phở"] }
     },
     {
       "id": "r10",
+      "language": "vi",
       "text": "Tối thứ ba bảy giờ rưỡi ăn tối với cả nhà",
       "expect": {
         "action": "add",
@@ -139,27 +149,82 @@
     },
     {
       "id": "q01",
+      "language": "vi",
       "text": "Thứ năm có những lịch gì?",
       "expect": { "action": "answer", "mentions": ["thuyền", "hải đăng"] }
     },
     {
       "id": "q02",
+      "language": "vi",
       "text": "Tổng chi phí dự kiến của chuyến đi là bao nhiêu?",
       "expect": { "action": "answer", "mentions": ["420"] }
     },
     {
       "id": "q03",
+      "language": "vi",
       "text": "Thứ bảy tôi ăn sáng lúc mấy giờ?",
       "expect": { "action": "answer", "mentions": ["7"] }
     },
     {
       "id": "a01",
+      "language": "vi",
       "text": "Dời lịch đó sang chiều mai",
       "expect": { "action": "ask" }
     },
     {
       "id": "c01",
+      "language": "vi",
       "text": "Xóa hết lịch thứ bảy",
+      "expect": { "action": "ask" }
+    },
+    {
+      "id": "e01",
+      "language": "en",
+      "text": "Add coffee at three pm on Saturday",
+      "expect": {
+        "action": "add",
+        "date": "2031-04-12",
+        "start": "15:00",
+        "keywords": ["cà phê"]
+      }
+    },
+    {
+      "id": "e02",
+      "language": "en",
+      "text": "Move the Da Xanh temple visit to three in the afternoon",
+      "expect": {
+        "action": "move",
+        "target": "e1",
+        "date": "2031-04-09",
+        "start": "15:00"
+      }
+    },
+    {
+      "id": "e03",
+      "language": "en",
+      "text": "Rename the Saturday night walk to dinner at the night market",
+      "expect": {
+        "action": "update",
+        "target": "e5",
+        "keywords": ["tối", "chợ đêm"]
+      }
+    },
+    {
+      "id": "e04",
+      "language": "en",
+      "text": "Remove the boat trip on Thursday evening",
+      "expect": { "action": "remove", "target": "e2" }
+    },
+    {
+      "id": "e05",
+      "language": "en",
+      "text": "What is the estimated total cost of the trip?",
+      "expect": { "action": "answer", "mentions": ["420"] }
+    },
+    {
+      "id": "e06",
+      "language": "en",
+      "text": "Remove everything on Saturday",
       "expect": { "action": "ask" }
     }
   ]

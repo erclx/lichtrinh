@@ -1,4 +1,7 @@
+import type { User } from '@shared/auth.ts'
 import type { SpokenLanguage } from '@shared/voice.ts'
 
-/** The language every clip and live piece is heard in. */
-export const SPOKEN_LANGUAGE: SpokenLanguage = 'vi'
+/** The language an account speaks and is answered in. */
+export function spokenLanguage(user: User): SpokenLanguage {
+  return user.language ?? 'vi'
+}

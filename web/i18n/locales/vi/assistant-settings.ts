@@ -33,7 +33,7 @@ export const assistantSettings = {
     whisper: 'Whisper turbo',
     whisperHint: 'Nhanh',
     phowhisper: 'PhoWhisper',
-    phowhisperHint: 'Học riêng tiếng Việt',
+    phowhisperHint: 'Nghe tiếng Việt · nói tiếng Anh dùng Qwen3-ASR',
     unused: 'Chưa dùng',
     unsent_one: '{{count}} đoạn · chưa gửi đoạn nào',
     unsent_other: '{{count}} đoạn · chưa gửi đoạn nào',

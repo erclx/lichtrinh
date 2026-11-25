@@ -28,6 +28,7 @@ import { liveTrip, toTrip } from '../calendar/trips.ts'
 import { createDb } from '../db/client.ts'
 import { parseBody, refuse } from '../envelope.ts'
 import { logOutcome } from '../log.ts'
+import { spokenLanguage } from '../voice/language.ts'
 import { markSent } from '../voice/transcriptions.ts'
 
 // Each route reads chats of the signed-in account alone, so another
@@ -103,6 +104,7 @@ export const chatRoutes = new Hono<AuthEnv>()
       text: request.text,
       model,
       messages: buildPrompt({
+        language: spokenLanguage(c.var.user),
         trip: toTrip(trip),
         entries,
         history,

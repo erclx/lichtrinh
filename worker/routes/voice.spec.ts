@@ -1,5 +1,7 @@
 import { assistantStatus } from '@shared/assistant.ts'
+import type { Language } from '@shared/auth.ts'
 import { apiError } from '@shared/errors.ts'
+import type { VoiceModel } from '@shared/voice.ts'
 import {
   liveText,
   transcription,
@@ -51,6 +53,16 @@ function rowOf(id: string) {
 
 function chatter() {
   return signedIn({ canChat: true })
+}
+
+function speaker(language: Language | null) {
+  return signedIn({ canChat: true, language })
+}
+
+async function pickModel(model: VoiceModel) {
+  const admin = await signedIn({ role: 'admin' })
+  const res = await setModel(admin.cookie, { model })
+  expect(res.status).toBe(200)
 }
 
 describe('PUT /api/voice/transcriptions/:id', () => {
@@ -178,6 +190,86 @@ describe('PUT /api/voice/transcriptions/:id', () => {
     expect(res.status).toBe(409)
     expect(await errorCode(res)).toBe('id_conflict')
     expect((await rowOf(id))?.userId).toBe(owner.user.id)
+  })
+})
+
+describe('the language an account is heard in', () => {
+  it.each([
+    ['en', 'an English account', 'en'],
+    ['vi', 'a Vietnamese account', 'vi'],
+    ['vi', 'an account with no saved language', null],
+  ] as const)('sends a clip as %s for %s', async (heard, _, language) => {
+    const { cookie } = await speaker(language)
+    const bridge = await voiceOnline()
+
+    const pending = sendClip(cookie)
+    const frame = await answerClip(bridge, { text: 'Invented', audioMs: 800 })
+    await pending
+
+    expect(frame.language).toBe(heard)
+  })
+
+  it.each([
+    ['en', 'an English account', 'en'],
+    ['vi', 'a Vietnamese account', 'vi'],
+    ['vi', 'an account with no saved language', null],
+  ] as const)('sends a piece as %s for %s', async (heard, _, language) => {
+    const { cookie } = await speaker(language)
+    const bridge = await voiceOnline()
+
+    const pending = sendPiece(cookie)
+    const frame = await answerLive(bridge, { text: 'Invented', heard: 8 })
+    await pending
+
+    expect(frame.language).toBe(heard)
+  })
+})
+
+describe('a picked model that does not hear the account', () => {
+  it('runs and records an English clip on the default model', async () => {
+    await pickModel('phowhisper-large')
+    const { cookie } = await speaker('en')
+    const bridge = await voiceOnline()
+    const id = crypto.randomUUID()
+
+    const pending = sendClip(cookie, { id })
+    const frame = await answerClip(bridge, { text: 'Invented', audioMs: 800 })
+    const res = await pending
+
+    expect(frame.model).toBe('qwen3-asr-1.7b')
+    expect(transcription.parse(await res.json()).model).toBe('qwen3-asr-1.7b')
+    expect((await rowOf(id))?.model).toBe('qwen3-asr-1.7b')
+  })
+
+  it('hears an English piece on the default model', async () => {
+    await pickModel('phowhisper-large')
+    const { cookie } = await speaker('en')
+    const bridge = await voiceOnline()
+
+    const pending = sendPiece(cookie)
+    const frame = await answerLive(bridge, { text: 'Invented', heard: 8 })
+    await pending
+
+    expect(frame.model).toBe('qwen3-asr-1.7b')
+  })
+
+  it('keeps a picked model that hears English', async () => {
+    await pickModel('whisper-large-v3-turbo')
+    const { cookie } = await speaker('en')
+    const bridge = await voiceOnline()
+
+    const pending = sendClip(cookie)
+    const frame = await answerClip(bridge, { text: 'Invented', audioMs: 800 })
+    await pending
+
+    expect(frame.model).toBe('whisper-large-v3-turbo')
+  })
+
+  it('keeps showing the picked model on the status', async () => {
+    await pickModel('phowhisper-large')
+    const { cookie } = await speaker('en')
+
+    expect((await readVoiceStatus(cookie))?.model).toBe('phowhisper-large')
   })
 })
 
@@ -528,6 +620,21 @@ describe('warming voice', () => {
     expect(await bridge.next()).toEqual({
       type: 'voice_warm',
       model: 'phowhisper-large',
+    })
+  })
+
+  it('loads the model an English account will run on', async () => {
+    await pickModel('phowhisper-large')
+    const { cookie } = await speaker('en')
+    const bridge = await voiceOnline()
+
+    const res = await warm(cookie)
+
+    expect(res.status).toBe(202)
+    expect((await bridge.next()).type).toBe('warm')
+    expect(await bridge.next()).toEqual({
+      type: 'voice_warm',
+      model: 'qwen3-asr-1.7b',
     })
   })
 

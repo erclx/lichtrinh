@@ -16,8 +16,12 @@ import { requireChat } from '../auth/guard.ts'
 import { createDb } from '../db/client.ts'
 import { fail, parseBody, parseQuery, refuse } from '../envelope.ts'
 import { logOutcome } from '../log.ts'
-import { SPOKEN_LANGUAGE } from '../voice/language.ts'
-import { readVoiceModel, writeVoiceModel } from '../voice/model.ts'
+import { spokenLanguage } from '../voice/language.ts'
+import {
+  readVoiceModel,
+  voiceModelFor,
+  writeVoiceModel,
+} from '../voice/model.ts'
 import type { ClipOutcome } from '../voice/transcriptions.ts'
 import { mayRecord, recordClip, usageByModel } from '../voice/transcriptions.ts'
 
@@ -56,12 +60,13 @@ export const voiceRoutes = new Hono<AuthEnv>()
     if (!(await mayRecord(db, userId, id.data))) {
       return refuse(c, 'id_conflict')
     }
-    const model = await readVoiceModel(db)
+    const language = spokenLanguage(c.var.user)
+    const model = voiceModelFor(language, await readVoiceModel(db))
     const startedAt = Date.now()
     const end = await relayOf(c.env).transcribe({
       id: id.data,
       model,
-      language: SPOKEN_LANGUAGE,
+      language,
       contentType,
       audio,
     })
@@ -108,10 +113,12 @@ export const voiceRoutes = new Hono<AuthEnv>()
     if (contentType === undefined) return notAudio(c)
     const audio = await c.req.arrayBuffer()
     if (audio.byteLength === 0) return refuse(c, 'validation_failed')
+    const language = spokenLanguage(c.var.user)
+    const picked = await readVoiceModel(createDb(c.env.DB))
     const end = await relayOf(c.env).live({
       id: `${c.var.user.id}.${id.data}`,
-      model: await readVoiceModel(createDb(c.env.DB)),
-      language: SPOKEN_LANGUAGE,
+      model: voiceModelFor(language, picked),
+      language,
       contentType,
       from,
       audio,
