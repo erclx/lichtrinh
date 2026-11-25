@@ -54,7 +54,7 @@ Holds one folder per screen area, each importing the session and the shell and n
 - `assistant-settings/` is the admin's page for the workspace PC's status, the assistant and speech models with each speech model's usage, and the offline contact name
 - `trips/` holds the list, the form, and the overview, and `today/` picks the trip under way in its own zone
 - `day/` holds the day page, and `calendar/` the Calendar tab, its view, date, and trip held in the address, with `calendar-range.ts` laying each trip over the month and week
-- `entries/` holds the detail, the shared add and edit form, its prefill and cost parsing, and the start times and lengths
+- `entries/` holds the detail, the shared add and edit form, its prefill and cost parsing, and the start times and lengths, and `install/` the home-screen steps and the held browser prompt
 
 ### `web/components/`
 
