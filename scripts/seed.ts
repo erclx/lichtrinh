@@ -347,6 +347,83 @@ export const FIXTURE_ASSISTANT_ENTRY = onRiver(
   },
 )
 
+function riverEntry(id: string): FixtureEntry {
+  const entry = FIXTURE_ENTRIES.find((fixture) => fixture.id === id)
+  if (entry === undefined) throw new Error(`The seed holds no entry ${id}`)
+  return entry
+}
+
+const market = riverEntry('fixture-entry-market')
+const boat = riverEntry('fixture-entry-boat')
+const lunch = riverEntry('fixture-entry-lunch')
+
+/** Already removed by the assistant, so only its change still shows it. */
+export const FIXTURE_REMOVED_ENTRY = onRiver(
+  'fixture-entry-taxi',
+  '2031-05-15',
+  {
+    title: 'Taxi to the boat pier',
+    notes: null,
+    kind: 'transport',
+    startTime: '16:15',
+    endTime: '16:45',
+    costMinor: 80_000,
+    addedBy: 'fixture-traveler',
+  },
+)
+
+export interface FixtureChange {
+  id: string
+  by: string
+  source: 'person' | 'assistant'
+  op: 'create' | 'update' | 'delete'
+  before: FixtureEntry | null
+  after: FixtureEntry | null
+  /** Epoch milliseconds, before the demo instant on the demo day. */
+  at: number
+}
+
+// Oldest first, as the log numbers them. Each `after` is what the entry
+// holds now, so a drive can undo any of them.
+export const FIXTURE_CHANGES: readonly FixtureChange[] = [
+  {
+    id: 'fixture-change-market',
+    by: 'fixture-admin',
+    source: 'person',
+    op: 'create',
+    before: null,
+    after: market,
+    at: Date.UTC(2031, 4, 15, 1, 12),
+  },
+  {
+    id: 'fixture-change-boat',
+    by: 'fixture-traveler',
+    source: 'assistant',
+    op: 'update',
+    before: { ...boat, startTime: '16:30', endTime: '18:00' },
+    after: boat,
+    at: Date.UTC(2031, 4, 15, 1, 30),
+  },
+  {
+    id: 'fixture-change-lunch',
+    by: 'fixture-traveler',
+    source: 'person',
+    op: 'update',
+    before: { ...lunch, costMinor: 300_000 },
+    after: lunch,
+    at: Date.UTC(2031, 4, 15, 1, 41),
+  },
+  {
+    id: 'fixture-change-taxi',
+    by: 'fixture-traveler',
+    source: 'assistant',
+    op: 'delete',
+    before: FIXTURE_REMOVED_ENTRY,
+    after: null,
+    at: Date.UTC(2031, 4, 15, 1, 52),
+  },
+]
+
 export interface FixtureMessage {
   id: string
   role: 'user' | 'assistant'
@@ -496,6 +573,7 @@ async function insertAccounts(state: string, calendar: Calendar) {
     )
     await proxy.env.DB.batch(rows)
     await proxy.env.DB.batch(calendarRows(proxy.env.DB, calendar))
+    await proxy.env.DB.batch(historyRows(proxy.env.DB))
     await proxy.env.DB.batch(chatRows(proxy.env.DB))
     await proxy.env.DB.batch(rateRows(proxy.env.DB))
   } finally {
@@ -505,7 +583,7 @@ async function insertAccounts(state: string, calendar: Calendar) {
 
 // Written straight into the tables rather than through the calendar rules,
 // which need the Worker's types the e2e specs importing this file lack. The
-// rows carry no history, so a drive can undo its own changes but not these.
+// rows carry no history of their own, beyond what `historyRows` adds.
 function calendarRows(db: SeedDatabase, { trips, entries }: Calendar) {
   const at = Date.UTC(2031, 4, 1)
   const trip = db.prepare(
@@ -522,7 +600,7 @@ function calendarRows(db: SeedDatabase, { trips, entries }: Calendar) {
      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1, ?, 'person', ?, ?, 'person', ?)
      ON CONFLICT (id) DO NOTHING`,
   )
-  const zoneOf = new Map(trips.map(({ id, timeZone }) => [id, timeZone]))
+  const zones = new Map(trips.map(({ id, timeZone }) => [id, timeZone]))
   return [
     ...trips.map((fixture) =>
       trip.bind(
@@ -546,7 +624,7 @@ function calendarRows(db: SeedDatabase, { trips, entries }: Calendar) {
         fixture.startTime,
         fixture.endsOn,
         fixture.endTime,
-        zoneOf.get(fixture.tripId),
+        zones.get(fixture.tripId),
         fixture.costMinor,
         fixture.addedBy,
         at,
@@ -570,38 +648,96 @@ function rateRows(db: SeedDatabase) {
   )
 }
 
+// The shape `shared/changes.ts` reads back.
+function snapshotOf(fixture: FixtureEntry) {
+  return JSON.stringify({
+    tripId: fixture.tripId,
+    title: fixture.title,
+    notes: fixture.notes,
+    kind: fixture.kind,
+    startsOn: fixture.startsOn,
+    startTime: fixture.startTime,
+    endsOn: fixture.endsOn,
+    endTime: fixture.endTime,
+    timeZone: zoneOf(fixture),
+    costMinor: fixture.costMinor,
+  })
+}
+
+function zoneOf(fixture: FixtureEntry) {
+  return FIXTURE_TRIPS.find(({ id }) => id === fixture.tripId)?.timeZone
+}
+
+function changeRow(db: SeedDatabase, fixture: FixtureChange) {
+  const entry = fixture.after ?? fixture.before
+  if (entry === null) throw new Error(`${fixture.id} changes no entry`)
+  return db
+    .prepare(
+      `INSERT INTO changes
+         (id, seq, trip_id, user_id, source, op, entity, entity_id, before, after, created_at)
+       VALUES (?, (SELECT coalesce(max(seq), 0) + 1 FROM changes), ?, ?, ?, ?, 'entry', ?, ?, ?, ?)
+       ON CONFLICT (id) DO NOTHING`,
+    )
+    .bind(
+      fixture.id,
+      entry.tripId,
+      fixture.by,
+      fixture.source,
+      fixture.op,
+      entry.id,
+      fixture.before && snapshotOf(fixture.before),
+      fixture.after && snapshotOf(fixture.after),
+      fixture.at,
+    )
+}
+
+// The removed entry keeps its row, marked deleted, so its undo can restore it.
+function historyRows(db: SeedDatabase) {
+  const removed = FIXTURE_REMOVED_ENTRY
+  const at = Date.UTC(2031, 4, 1)
+  const removedAt = FIXTURE_CHANGES.at(-1)?.at ?? at
+  const entry = db
+    .prepare(
+      `INSERT INTO entries
+         (id, trip_id, title, notes, kind, starts_on, start_time, ends_on, end_time,
+          time_zone, cost_minor, version, created_by, created_source, created_at,
+          updated_by, updated_source, updated_at, deleted_at)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 2, ?, 'person', ?, ?, 'assistant', ?, ?)
+       ON CONFLICT (id) DO NOTHING`,
+    )
+    .bind(
+      removed.id,
+      removed.tripId,
+      removed.title,
+      removed.notes,
+      removed.kind,
+      removed.startsOn,
+      removed.startTime,
+      removed.endsOn,
+      removed.endTime,
+      zoneOf(removed),
+      removed.costMinor,
+      removed.addedBy,
+      at,
+      removed.addedBy,
+      removedAt,
+      removedAt,
+    )
+  return [entry, ...FIXTURE_CHANGES.map((change) => changeRow(db, change))]
+}
+
 // The assistant's entry carries its change, so the seeded chat's card can
-// undo it. Its snapshot is the shape `shared/changes.ts` reads back.
+// undo it.
 function chatRows(db: SeedDatabase) {
   const traveler = 'fixture-traveler'
   const added = FIXTURE_ASSISTANT_ENTRY
-  const timeZone = FIXTURE_TRIPS.find(({ id }) => id === added.tripId)?.timeZone
-  const firstChat = FIXTURE_CHATS[0]
-  const addedAt = (firstChat?.openedAt ?? 0) + 60_000
-  const snapshot = {
-    tripId: added.tripId,
-    title: added.title,
-    notes: added.notes,
-    kind: added.kind,
-    startsOn: added.startsOn,
-    startTime: added.startTime,
-    endsOn: added.endsOn,
-    endTime: added.endTime,
-    timeZone,
-    costMinor: added.costMinor,
-  }
+  const addedAt = (FIXTURE_CHATS[0]?.openedAt ?? 0) + 60_000
   const entry = db.prepare(
     `INSERT INTO entries
        (id, trip_id, title, notes, kind, starts_on, start_time, ends_on, end_time,
         time_zone, cost_minor, version, created_by, created_source, created_at,
         updated_by, updated_source, updated_at)
      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1, ?, 'assistant', ?, ?, 'assistant', ?)
-     ON CONFLICT (id) DO NOTHING`,
-  )
-  const change = db.prepare(
-    `INSERT INTO changes
-       (id, seq, trip_id, user_id, source, op, entity, entity_id, before, after, created_at)
-     VALUES (?, (SELECT coalesce(max(seq), 0) + 1 FROM changes), ?, ?, 'assistant', 'create', 'entry', ?, NULL, ?, ?)
      ON CONFLICT (id) DO NOTHING`,
   )
   const chat = db.prepare(
@@ -626,21 +762,22 @@ function chatRows(db: SeedDatabase) {
       added.startTime,
       added.endsOn,
       added.endTime,
-      timeZone,
+      zoneOf(added),
       added.costMinor,
       traveler,
       addedAt,
       traveler,
       addedAt,
     ),
-    change.bind(
-      assistantChange,
-      added.tripId,
-      traveler,
-      added.id,
-      JSON.stringify(snapshot),
-      addedAt,
-    ),
+    changeRow(db, {
+      id: assistantChange,
+      by: traveler,
+      source: 'assistant',
+      op: 'create',
+      before: null,
+      after: added,
+      at: addedAt,
+    }),
     ...FIXTURE_CHATS.flatMap((fixture) => {
       const at = (minute: number) => fixture.openedAt + minute * 60_000
       const last = fixture.messages.at(-1)?.minute ?? 0
