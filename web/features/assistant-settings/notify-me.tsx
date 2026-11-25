@@ -292,7 +292,12 @@ function EmailRow({ address, on, onTurn, onSetting }: EmailRowProps) {
         onTurn={(next) => void turn(next)}
       />
       {on && (
-        <form noValidate onSubmit={onSubmit} className="flex gap-2.5">
+        <form
+          noValidate
+          onSubmit={onSubmit}
+          // Save drops under the address where both would cut it short.
+          className="flex flex-wrap gap-2.5"
+        >
           <Input
             ref={fieldRef}
             type="email"
@@ -303,7 +308,7 @@ function EmailRow({ address, on, onTurn, onSetting }: EmailRowProps) {
             aria-label={t('assistantSettings.notify.address')}
             aria-invalid={problem !== null}
             aria-describedby={problem === null ? undefined : `${ids}-problem`}
-            className="flex-1"
+            className="min-w-56 flex-1"
           />
           <Button type="submit" aria-busy={pending}>
             {t(pending ? 'assistantSettings.saving' : 'assistantSettings.save')}

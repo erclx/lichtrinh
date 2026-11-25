@@ -46,8 +46,6 @@ async function cardScript(page: Page, script: CardScript) {
   )
   await page.route('**/api/notices', async (route) => {
     if (route.request().method() === 'POST') {
-      // Held for good, so the frame stays on the sending line.
-      if (press === 'waits') return
       await route.fulfill({
         status: 502,
         json: { error: { code: 'notice_failed', message: 'No notice' } },
@@ -67,6 +65,16 @@ async function cardScript(page: Page, script: CardScript) {
       const response = await route.fetch()
       const me = (await response.json()) as Record<string, unknown>
       await route.fulfill({ response, json: { ...me, role: 'admin' } })
+    })
+  }
+  // Held in the page, since a held request keeps the network from settling.
+  if (press === 'waits') {
+    await page.addInitScript(() => {
+      const realFetch = window.fetch.bind(window)
+      window.fetch = (input, init) =>
+        init?.method === 'POST' && String(input).endsWith('/api/notices')
+          ? new Promise<Response>(() => undefined)
+          : realFetch(input, init)
     })
   }
   if (press !== undefined) await pressOnce(page, 'Notify the admin')
@@ -203,6 +211,7 @@ async function settingScript(page: Page, script: SettingScript) {
 
 function settingCases(section: string, script: SettingScript): CaptureCase[] {
   return lightAndDark(section, '/admin/assistant', async (page) => {
+    await flowSticky(page)
     await assistantOnline(page)
     await settingScript(page, script)
     await asAdmin(page)
