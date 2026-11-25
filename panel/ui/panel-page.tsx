@@ -95,8 +95,8 @@ export function PanelPage({
             role="alert"
             className="rounded-xl border-2 border-foreground bg-card p-4"
           >
-            The panel is not answering, so this is from {clock(now)}.
-            Double-click the shortcut to start it again.
+            The panel cannot read this PC, so this is from {clock(now)}. If this
+            stays, double-click the shortcut.
           </p>
         )}
         <div data-verdict>

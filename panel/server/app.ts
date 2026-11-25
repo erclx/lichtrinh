@@ -9,7 +9,7 @@ import { serveStatic } from 'hono/serve-static'
 import type { PanelError, PanelErrorCode } from '../state.ts'
 import { allAction, serviceAction, serviceId } from '../state.ts'
 import type { Machine } from './machine.ts'
-import { ActionFailed } from './run.ts'
+import { ActionFailed, ReadFailed } from './run.ts'
 
 export interface AppOptions {
   machine: Machine
@@ -82,14 +82,14 @@ export function createApp({ machine, port, pageRoot, log }: AppOptions) {
   app.notFound(missing)
 
   app.onError((error, c) => {
-    const failed = error instanceof ActionFailed
-    log?.(failed ? 'action_failed' : 'internal_error', {
+    const code = codeOf(error)
+    const named = code !== 'internal_error'
+    log?.(code, {
       path: c.req.path,
-      error: failed ? error.message : error.name,
+      error: named ? error.message : error.name,
     })
-    return failed
-      ? fail(c, 'action_failed', error.message)
-      : fail(c, 'internal_error', 'The panel hit an unexpected fault')
+    const message = named ? error.message : 'The panel hit an unexpected fault'
+    return fail(c, code, message)
   })
 
   return app
@@ -99,8 +99,15 @@ const STATUS = {
   not_found: 404,
   forbidden: 403,
   action_failed: 502,
+  read_failed: 502,
   internal_error: 500,
 } as const satisfies Record<PanelErrorCode, number>
+
+function codeOf(error: Error): PanelErrorCode {
+  if (error instanceof ActionFailed) return 'action_failed'
+  if (error instanceof ReadFailed) return 'read_failed'
+  return 'internal_error'
+}
 
 function fail(c: Context, code: PanelErrorCode, message: string) {
   return c.json<PanelError>({ error: { code, message } }, STATUS[code])

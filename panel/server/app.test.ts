@@ -119,7 +119,7 @@ describe('GET /api/state', () => {
       status: 'failed',
       cause: 'exited',
       restarts: 3,
-      since: '2031-11-22T14:06:00.000Z',
+      since: '2031-11-22T14:06:46.000Z',
     })
     expect(service('voice')?.logs[0]).toMatchObject({
       event: 'failed',
@@ -137,6 +137,40 @@ describe('GET /api/state', () => {
     const response = await panel('up').get('/api/state')
 
     expect(response.headers.get('cache-control')).toBe('no-store')
+  })
+
+  it.each([
+    ['systemctl', 'show', 'systemctl show exited 127'],
+    ['journalctl', '--quiet', 'journalctl exited 127'],
+  ])(
+    'fails while %s is cut, rather than answering that services stopped',
+    async (file, _, error) => {
+      const fake = createFakeMachine(() => NOW)
+      fake.enter('up')
+      const { get, logged } = panel('up', {
+        run: async (command, options) =>
+          command[0] === file
+            ? { code: 127, stdout: '', stderr: '' }
+            : fake.tools.run(command, options),
+      })
+
+      const response = await get('/api/state')
+
+      expect(response.status).toBe(502)
+      expect(await errorCode(response)).toBe('read_failed')
+      expect(logged).toEqual([['read_failed', { path: '/api/state', error }]])
+    },
+  )
+
+  it('asks voice and Ollama once over several reads', async () => {
+    const { get, fake } = panel('up')
+
+    await get('/api/state')
+    await get('/api/state')
+
+    expect(
+      fake.commands.filter((command) => command.startsWith('GET ')),
+    ).toEqual(['GET /health', 'GET /api/ps'])
   })
 
   it('answers an unexpected fault in the envelope, with no detail', async () => {
@@ -194,6 +228,26 @@ describe('the actions', () => {
 
     expect(await response.json()).toEqual({ ok: true })
     expect(fake.commands).toEqual(commands)
+  })
+
+  it('says a voice that just stopped is stopped, on its earlier answer or not', async () => {
+    const { post, get } = panel('up')
+    await get('/api/state')
+
+    await post('/api/services/voice/stop')
+
+    const service = await readState(get('/api/state'))
+    expect(service('voice')).toMatchObject({ status: 'stopped', cause: null })
+  })
+
+  it('says a model that was just unloaded is gone', async () => {
+    const { post, get } = panel('up')
+    await get('/api/state')
+
+    await post('/api/services/model/unload')
+
+    const service = await readState(get('/api/state'))
+    expect(service('model')?.status).toBe('stopped')
   })
 
   it('starts a service past its restart limit', async () => {

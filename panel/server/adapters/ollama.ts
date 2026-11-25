@@ -22,6 +22,8 @@ const loadedList = z.object({
 })
 
 const READ_TIMEOUT_MS = 2_000
+// Ollama logs every read of its list.
+const READ_EVERY_MS = 10_000
 // A cold load reads the whole model off the disk.
 const LOAD_TIMEOUT_MS = 180_000
 
@@ -49,6 +51,35 @@ export async function loadedModels(
     })
   } catch {
     return null
+  }
+}
+
+/**
+ * Reads the aliases on the card at most every ten seconds, and at once after
+ * `changed`. An unanswered read never stands.
+ */
+export function createModelReader(
+  fetcher: typeof fetch,
+  ollamaUrl: string,
+  now: () => Date,
+) {
+  let last: { at: number; models: LoadedModel[] } | undefined
+  let changes = 0
+
+  return {
+    read: async (): Promise<LoadedModel[] | null> => {
+      const at = now().getTime()
+      if (last !== undefined && at - last.at < READ_EVERY_MS) return last.models
+      const asked = changes
+      const models = await loadedModels(fetcher, ollamaUrl)
+      // A read the change overtook may hold what was there before it.
+      if (models !== null && asked === changes) last = { at, models }
+      return models
+    },
+    changed: () => {
+      changes += 1
+      last = undefined
+    },
   }
 }
 

@@ -1,7 +1,12 @@
 import { describe, expect, it } from 'vitest'
 
 import { ActionFailed } from '../run.ts'
-import { loadedModels, loadModel, unloadModel } from './ollama.ts'
+import {
+  createModelReader,
+  loadedModels,
+  loadModel,
+  unloadModel,
+} from './ollama.ts'
 
 const OLLAMA = 'http://127.0.0.1:11434'
 
@@ -62,6 +67,68 @@ describe('loadedModels', () => {
     ['an answer in another shape', () => Response.json({ loaded: 1 })],
   ])('answers null on %s', async (_, respond) => {
     expect(await loadedModels(answering(respond).fetcher, OLLAMA)).toBeNull()
+  })
+})
+
+describe('createModelReader', () => {
+  const NOW = new Date('2031-11-22T14:24:00Z')
+
+  function reader(respond: () => Response | Promise<Response>) {
+    const ollama = answering(respond)
+    const clock = { now: NOW }
+    const models = createModelReader(ollama.fetcher, OLLAMA, () => clock.now)
+    return {
+      ...models,
+      asked: () => ollama.requests.length,
+      wait: (ms: number) => {
+        clock.now = new Date(clock.now.getTime() + ms)
+      },
+    }
+  }
+
+  it('asks Ollama once within ten seconds and again after', async () => {
+    const models = reader(() => Response.json(LOADED))
+
+    await models.read()
+    models.wait(9_999)
+    const within = await models.read()
+    const askedWithin = models.asked()
+    models.wait(1)
+    await models.read()
+
+    expect(within).toHaveLength(1)
+    expect(askedWithin).toBe(1)
+    expect(models.asked()).toBe(2)
+  })
+
+  it('asks at once after a change', async () => {
+    const models = reader(() => Response.json(LOADED))
+
+    await models.read()
+    models.changed()
+    await models.read()
+
+    expect(models.asked()).toBe(2)
+  })
+
+  it('never keeps a read a change overtook', async () => {
+    const models = reader(() => Response.json(LOADED))
+
+    const overtaken = models.read()
+    models.changed()
+    await overtaken
+    await models.read()
+
+    expect(models.asked()).toBe(2)
+  })
+
+  it('asks again at once while Ollama does not answer', async () => {
+    const models = reader(refusing)
+
+    await models.read()
+
+    expect(await models.read()).toBeNull()
+    expect(models.asked()).toBe(2)
   })
 })
 

@@ -24,7 +24,7 @@ function Panel() {
   }
   return stale ? (
     <p role="alert" className="p-4">
-      The panel is not answering. Double-click the shortcut to start it again.
+      The panel cannot read this PC. If this stays, double-click the shortcut.
     </p>
   ) : null
 }

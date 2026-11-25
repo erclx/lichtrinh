@@ -6,7 +6,7 @@ export interface CommandResult {
   stderr: string
 }
 
-/** Runs one command to its end. A command that cannot start answers 127. */
+/** Runs one command to its end. One that cannot start or is cut answers 127. */
 export type Run = (
   command: readonly string[],
   options?: { timeoutMs?: number },
@@ -15,9 +15,12 @@ export type Run = (
 /** An action that ran and failed, named without the tool's own output. */
 export class ActionFailed extends Error {}
 
+/** A read that did not end, so nothing is known of what it reads. */
+export class ReadFailed extends Error {}
+
 const READ_TIMEOUT_MS = 5_000
-// The shell convention for a command that could not be found or started.
-const NOT_STARTED = 127
+/** The shell convention for a command that could not be found or started. */
+export const NOT_STARTED = 127
 // Log lines need far less, and a runaway line cannot fill memory.
 const MAX_OUTPUT_BYTES = 4_000_000
 

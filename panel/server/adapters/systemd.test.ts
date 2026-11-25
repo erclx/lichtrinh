@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 
 import type { CommandResult } from '../run.ts'
-import { ActionFailed } from '../run.ts'
+import { ActionFailed, ReadFailed } from '../run.ts'
 import { restartUnits, showUnits, startUnits, stopUnits } from './systemd.ts'
 
 const SHOWN = `NRestarts=0
@@ -76,14 +76,23 @@ describe('showUnits', () => {
     })
   })
 
-  it.each([
-    ['empty output', { stdout: '' }],
-    ['a failed exit', { code: 1, stderr: 'Failed to connect to bus' }],
-  ])('reads every unit as inactive on %s', async (_, result) => {
-    const shown = await showUnits(scripted(() => result).run, [])
+  it('reads a unit the output leaves out as inactive', async () => {
+    const shown = await showUnits(scripted(() => ({ stdout: '' })).run, [])
 
     expect(shown('lichtrinh-voice.service').active).toBe('inactive')
   })
+
+  it.each([
+    ['a failed exit', { code: 1, stderr: 'Failed to connect to bus' }],
+    ['a read that was cut', { code: 127, stdout: SHOWN }],
+  ])(
+    'fails on %s rather than reading every unit as inactive',
+    async (_, result) => {
+      const reading = showUnits(scripted(() => result).run, [])
+
+      await expect(reading).rejects.toThrow(ReadFailed)
+    },
+  )
 })
 
 describe('the unit actions', () => {

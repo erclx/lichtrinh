@@ -87,6 +87,7 @@ export const panelErrorCode = z.enum([
   'not_found',
   'forbidden',
   'action_failed',
+  'read_failed',
   'internal_error',
 ])
 export type PanelErrorCode = z.infer<typeof panelErrorCode>

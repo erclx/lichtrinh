@@ -4,15 +4,20 @@ import type { ServiceId } from '../services.ts'
 import { serviceOf, SERVICES, TARGET } from '../services.ts'
 import type { AllAction, LogLine, PanelState, ServiceAction } from '../state.ts'
 import { createGpuReader } from './adapters/gpu.ts'
-import { connectionEvents, recentLines } from './adapters/journal.ts'
-import { loadedModels, loadModel, unloadModel } from './adapters/ollama.ts'
+import { createJournalReader } from './adapters/journal.ts'
+import {
+  createModelReader,
+  loadedModels,
+  loadModel,
+  unloadModel,
+} from './adapters/ollama.ts'
 import {
   restartUnits,
   showUnits,
   startUnits,
   stopUnits,
 } from './adapters/systemd.ts'
-import { voiceAnswers } from './adapters/voice.ts'
+import { createVoiceReader } from './adapters/voice.ts'
 import type { PanelConfig } from './config.ts'
 import type { Run } from './run.ts'
 import type { LoadProgress } from './state.ts'
@@ -46,6 +51,9 @@ const TARGET_UNITS = SERVICES.filter((service) => service.inTarget).map(
 export function createMachine(tools: Tools, config: PanelConfig): Machine {
   const { run, fetch: fetcher, now } = tools
   const readCard = createGpuReader(run, now)
+  const readVoice = createVoiceReader(fetcher, config.voiceUrl, now)
+  const loaded = createModelReader(fetcher, config.ollamaUrl, now)
+  const journal = createJournalReader(run, now)
   let load: LoadProgress = 'idle'
   let pending: AbortController | undefined
 
@@ -56,7 +64,9 @@ export function createMachine(tools: Tools, config: PanelConfig): Machine {
     pending = mine
     load = 'loading'
     const settle = (progress: LoadProgress) => {
-      if (pending === mine) load = progress
+      if (pending !== mine) return
+      load = progress
+      loaded.changed()
     }
     void loadModel(
       fetcher,
@@ -78,19 +88,23 @@ export function createMachine(tools: Tools, config: PanelConfig): Machine {
       models.map(({ alias }) => unloadModel(fetcher, config.ollamaUrl, alias)),
     )
     load = 'idle'
+    loaded.changed()
   }
 
   async function read() {
-    const [unit, answers, models, card, bridge, staging, logs] =
-      await Promise.all([
-        showUnits(run, UNITS),
-        voiceAnswers(fetcher, config.voiceUrl),
-        loadedModels(fetcher, config.ollamaUrl),
-        readCard(),
-        connectionEvents(run, serviceOf('bridge')),
-        connectionEvents(run, serviceOf('staging')),
-        readLogs(run),
-      ])
+    const unit = await showUnits(run, UNITS)
+    const voice = unit(serviceOf('voice').unit)
+    const runSince = (id: ServiceId) => unit(serviceOf(id).unit).activeSince
+    // A model on its way up may land at any read.
+    if (load === 'loading') loaded.changed()
+    const [answers, models, card, bridge, staging, logs] = await Promise.all([
+      readVoice(voice.active === 'active' ? voice.invocationId : null),
+      loaded.read(),
+      readCard(),
+      journal.connectionEvents('bridge', runSince('bridge')),
+      journal.connectionEvents('staging', runSince('staging')),
+      readLogs(journal.recentLines),
+    ])
     return buildState(
       {
         unit,
@@ -132,12 +146,14 @@ export function createMachine(tools: Tools, config: PanelConfig): Machine {
   return { read, actionOf, all }
 }
 
-async function readLogs(run: Run): Promise<Record<ServiceId, LogLine[]>> {
+async function readLogs(
+  recentLines: (id: ServiceId) => Promise<LogLine[]>,
+): Promise<Record<ServiceId, LogLine[]>> {
   const [voice, model, bridge, staging] = await Promise.all([
-    recentLines(run, serviceOf('voice')),
-    recentLines(run, serviceOf('model')),
-    recentLines(run, serviceOf('bridge')),
-    recentLines(run, serviceOf('staging')),
+    recentLines('voice'),
+    recentLines('model'),
+    recentLines('bridge'),
+    recentLines('staging'),
   ])
   return { voice, model, bridge, staging }
 }

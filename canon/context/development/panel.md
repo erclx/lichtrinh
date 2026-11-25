@@ -29,7 +29,7 @@ The units and the verbs hold to these:
 - `lichtrinh.target` holds voice and the bridge. The staging bridge and the panel sit outside it, and no unit carries an install section, so nothing starts at sign-in.
 - A bridge unit sources its settings file through `bash`, since systemd ignores the `export` lines there. Staging reads `bridge-staging.env` and the family's copy reads `bridge.env`.
 - `install` refuses a linked worktree, a missing tool, and one host in both settings files, where the relay would replace each bridge with the other without end
-- `open` keeps a session of its own until the panel unit stops, since WSL stops a distribution no session holds. A later `open` finds its lock held, starts nothing, and shows the window.
+- `open` keeps a session of its own until the panel unit stops, since WSL stops a distribution no session holds. A later `open` finds its lock held and shows the window alone.
 
 ### `panel/server/`
 
@@ -37,13 +37,13 @@ The Bun process the panel unit runs on `127.0.0.1:4180`. It refuses a foreign `H
 
 - `adapters/` holds one outside tool per file, so a changed output format opens one file
 - A bridge reads as connected on its last `ready` in the running invocation, and as dropped 30 seconds after it lost the app, so an earlier run's `ready` never counts
-- A start clears systemd's crash limit first, since a unit past three starts in five minutes refuses one
-- Log lines drop the panel's own health reads and systemd's repeats. Ollama's pass an allow list, since a debug level there logs prompts.
+- A start clears systemd's crash limit first, since a unit past three starts in five minutes refuses one. A failed or cut read fails the state, and never reads as stopped.
+- Logs are read three days back and then followed, since `journalctl` scans each health read it drops. Ollama's lines pass an allow list, since a debug level there logs prompts.
 - Load answers before the model is on the card, and Stop all or Unload drops a load still running
 
 ### `panel/ui/`
 
-The page, built by its own Vite config and drawn on the app's kit and stylesheet. It reads the state every 3 seconds while visible and after each press, and the server reads the card at most every 10.
+The page, built by its own Vite config and drawn on the app's kit and stylesheet. It reads the state every 3 seconds while visible and after each press, and the server reads the card and Ollama at most every 10 and a voice that answered every 20.
 
 - A failed service takes a row of its own with its log lines open, and staging never changes the verdict
 - `index.css` names the kit's folder as a class source, since a build rooted here scans nothing else

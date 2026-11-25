@@ -19,6 +19,7 @@ interface FakeUnit {
 }
 
 interface FakeLine {
+  cursor: string
   at: Date
   message: string
   fromSystemd: boolean
@@ -74,6 +75,7 @@ export function createFakeMachine(now: () => Date) {
   ) => {
     const list = lines.get(name) ?? []
     list.unshift({
+      cursor: randomUUID(),
       at,
       message,
       fromSystemd,
@@ -106,7 +108,7 @@ export function createFakeMachine(now: () => Date) {
 
   /** Crashes a unit the way systemd gives up on one, three starts in. */
   const crash = (name: string, reason: string) => {
-    const ended = minutesAgo(18)
+    const ended = new Date(minutesAgo(18).getTime() + 46_000)
     lines.delete(name)
     const before = (seconds: number) =>
       new Date(ended.getTime() - seconds * 1000)
@@ -117,16 +119,29 @@ export function createFakeMachine(now: () => Date) {
       since: ended,
     })
     const systemd = (message: string, seconds: number) =>
-      write(name, `${name}: ${message}`, {
-        at: before(seconds),
-        fromSystemd: true,
-      })
-    systemd('Scheduled restart job, restart counter is at 1.', 85)
-    systemd('Scheduled restart job, restart counter is at 2.', 57)
-    write(name, reason, { at: before(1) })
-    systemd('Main process exited, code=exited, status=1/FAILURE', 1)
-    systemd('Scheduled restart job, restart counter is at 3.', 0)
-    systemd('Start request repeated too quickly.', 0)
+      write(name, message, { at: before(seconds), fromSystemd: true })
+    const started = (seconds: number) => systemd(`Started ${name}.`, seconds)
+    const exited = (seconds: number) =>
+      systemd(
+        `${name}: Main process exited, code=exited, status=1/FAILURE`,
+        seconds,
+      )
+    const restarting = (counter: number, seconds: number) =>
+      systemd(
+        `${name}: Scheduled restart job, restart counter is at ${counter}.`,
+        seconds,
+      )
+    started(118)
+    exited(95)
+    restarting(1, 90)
+    started(90)
+    exited(67)
+    restarting(2, 62)
+    started(62)
+    write(name, reason, { at: before(6) })
+    exited(5)
+    restarting(3, 0)
+    systemd(`${name}: Start request repeated too quickly.`, 0)
   }
 
   const voiceUnit = serviceOf('voice').unit
@@ -217,8 +232,11 @@ export function createFakeMachine(now: () => Date) {
   const journalctl = (args: string[]): Partial<CommandResult> => {
     const name = args.find((arg) => arg.startsWith('--unit='))?.slice(7) ?? ''
     const grep = args.find((arg) => arg.startsWith('--grep='))?.slice(7) ?? ''
-    const shown = (lines.get(name) ?? []).filter((line) =>
-      new RegExp(grep).test(line.message),
+    const since = args.find((arg) => arg.startsWith('--since=@'))?.slice(9)
+    const shown = (lines.get(name) ?? []).filter(
+      (line) =>
+        new RegExp(grep).test(line.message) &&
+        toSeconds(line.at) >= Number(since ?? 0),
     )
     return {
       code: shown.length > 0 ? 0 : 1,
@@ -302,6 +320,7 @@ function toSeconds(at: Date) {
 
 function toJournal(line: FakeLine) {
   return JSON.stringify({
+    __CURSOR: line.cursor,
     __REALTIME_TIMESTAMP: String(line.at.getTime() * 1000),
     MESSAGE: line.message,
     ...(line.fromSystemd

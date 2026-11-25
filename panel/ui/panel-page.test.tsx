@@ -304,10 +304,10 @@ describe('the graphics card', () => {
   })
 })
 
-it('says the panel stopped answering, and when what shows was read', () => {
+it('says the panel has no fresh read, and when what shows was read', () => {
   page(state(), { stale: true })
 
   expect(screen.getByRole('alert')).toHaveTextContent(
-    'The panel is not answering, so this is from Sat 22 Nov 2031, 14:24.',
+    'The panel cannot read this PC, so this is from Sat 22 Nov 2031, 14:24.',
   )
 })

@@ -1,5 +1,5 @@
 import type { Run } from '../run.ts'
-import { ActionFailed } from '../run.ts'
+import { ActionFailed, ReadFailed } from '../run.ts'
 
 export interface UnitState {
   /** systemd's own word, such as `active`, `activating`, or `failed`. */
@@ -36,7 +36,7 @@ export async function showUnits(
   run: Run,
   units: readonly string[],
 ): Promise<(unit: string) => UnitState> {
-  const { stdout } = await run([
+  const { code, stdout } = await run([
     'systemctl',
     '--user',
     'show',
@@ -44,6 +44,8 @@ export async function showUnits(
     `--property=${PROPERTIES.join(',')}`,
     ...units,
   ])
+  // An unknown unit exits 0, so this read nothing rather than nothing running.
+  if (code !== 0) throw new ReadFailed(`systemctl show exited ${code}`)
   const states = new Map(stdout.split('\n\n').flatMap(readBlock))
   return (unit) => states.get(unit) ?? ABSENT
 }
