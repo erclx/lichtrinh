@@ -220,6 +220,10 @@ async function seed(run: DeployRun): Promise<boolean> {
   }
 }
 
+// The one failure that means nothing was ever deployed. Any other might hide a
+// version the run could then no longer restore.
+const NO_SUCH_WORKER = '[code: 10007]'
+
 async function readServing(run: DeployRun): Promise<Serving> {
   const result = await run.run({
     argv: wrangler(
@@ -233,9 +237,7 @@ async function readServing(run: DeployRun): Promise<Serving> {
     quiet: true,
   })
   if (result.code !== 0) {
-    // Only this code says the Worker was never deployed. Any other failure
-    // might hide a version the run would then be unable to restore.
-    return `${result.stdout}${result.stderr}`.includes('[code: 10007]')
+    return `${result.stdout}${result.stderr}`.includes(NO_SUCH_WORKER)
       ? { state: 'no-worker' }
       : { state: 'unreadable' }
   }

@@ -225,10 +225,9 @@ function addDays(date: string, days: number): string {
 }
 
 /**
- * An invented trip around `today`, for the owner's own runs and staging alone,
- * so the home screen has a now and a next. Every test and capture reads the
- * 2031 fixtures, which this leaves alone. `key` prefixes each id, so a trip
- * gone stale keeps its rows beside a fresh one.
+ * An invented trip around `today`, for the owner's own runs and staging alone.
+ * Every test and capture reads the 2031 fixtures, which this leaves alone.
+ * `key` prefixes each id, so a stale trip keeps its rows beside a fresh one.
  */
 export function todayFixtures(
   today: string,
