@@ -1,6 +1,6 @@
 import type { Language } from '@shared/auth.ts'
 import { apiError } from '@shared/errors.ts'
-import { noticeState, sentNotice } from '@shared/notices.ts'
+import { noticeSetting, noticeState, sentNotice } from '@shared/notices.ts'
 import { env } from 'cloudflare:workers'
 import { eq } from 'drizzle-orm'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
@@ -16,7 +16,7 @@ import {
 } from '../db/schema.ts'
 import type { FakeBridge } from '../test/bridge.ts'
 import { connectBridge, sayVoice } from '../test/bridge.ts'
-import { fakeDevice } from '../test/push.ts'
+import { fakeDevice, fakeEndpoint } from '../test/push.ts'
 import { bare, json } from '../test/requests.ts'
 import { signedIn } from '../test/users.ts'
 
@@ -489,5 +489,268 @@ describe('GET /api/notices', () => {
     const res = await request('/api/notices', bare('GET', cookie))
 
     expect(res.status).toBe(403)
+  })
+})
+
+function putDevice(cookie: string, device: unknown) {
+  return request('/api/admin/notices/device', json('PUT', device, cookie))
+}
+
+function putEmail(cookie: string, address: unknown, timeZone = 'Asia/Tokyo') {
+  return request(
+    '/api/admin/notices/email',
+    json('PUT', { address, timeZone }, cookie),
+  )
+}
+
+async function readSetting(cookie: string, withEnv: Env = testEnv) {
+  const res = await request('/api/admin/notices', bare('GET', cookie), withEnv)
+  expect(res.status).toBe(200)
+  return noticeSetting.parse(await res.json())
+}
+
+function admin() {
+  return signedIn({ role: 'admin' })
+}
+
+describe('GET /api/admin/notices', () => {
+  it('reads everything off for a new admin', async () => {
+    const { cookie } = await admin()
+
+    expect(await readSetting(cookie)).toEqual({
+      push: { publicKey: env.VAPID_PUBLIC_KEY, deviceOn: false },
+      email: { address: null },
+    })
+  })
+
+  it('reads no push row and no email row while this copy has neither', async () => {
+    const { cookie } = await admin()
+
+    const setting = await readSetting(cookie, {
+      ...testEnv,
+      VAPID_PUBLIC_KEY: undefined,
+      NOTICE_FROM: '',
+    })
+
+    expect(setting).toEqual({ push: null, email: null })
+  })
+
+  it('answers no endpoint and no key, not even its own', async () => {
+    const own = await adminWith({ push: true, email: true })
+
+    const res = await request('/api/admin/notices', bare('GET', own.cookie))
+
+    const body = await res.text()
+    expect(body).not.toContain(own.endpoint)
+    expect(body).not.toContain(own.keys.p256dh)
+    expect(body).not.toContain(own.keys.auth)
+  })
+
+  it("answers nothing of another admin's", async () => {
+    await adminWith({ push: true, email: true })
+    const { cookie } = await admin()
+
+    expect(await readSetting(cookie)).toMatchObject({
+      push: { deviceOn: false },
+      email: { address: null },
+    })
+  })
+
+  it('refuses a member', async () => {
+    const { cookie } = await chatter()
+
+    const res = await request('/api/admin/notices', bare('GET', cookie))
+
+    expect(res.status).toBe(403)
+  })
+})
+
+describe('PUT /api/admin/notices/device', () => {
+  it('turns this device on and sends it the next notice', async () => {
+    const { cookie } = await admin()
+    const device = await fakeDevice()
+
+    const res = await putDevice(cookie, device)
+
+    expect(res.status).toBe(204)
+    expect((await readSetting(cookie)).push?.deviceOn).toBe(true)
+    await notify((await chatter()).cookie)
+    expect(pushes).toEqual([device.endpoint])
+  })
+
+  it('moves a device to the session that signed in on it last', async () => {
+    const before = await admin()
+    const after = await admin()
+    const device = await fakeDevice()
+    await putDevice(before.cookie, device)
+
+    await putDevice(after.cookie, device)
+
+    expect((await readSetting(before.cookie)).push?.deviceOn).toBe(false)
+    expect((await readSetting(after.cookie)).push?.deviceOn).toBe(true)
+  })
+
+  it('replaces the subscription this session held', async () => {
+    const { cookie } = await admin()
+    await putDevice(cookie, await fakeDevice())
+    const again = await fakeDevice(fakeEndpoint('web.push.apple.com'))
+
+    await putDevice(cookie, again)
+
+    const rows = await createDb(env.DB).select().from(pushDevices)
+    expect(rows.map(({ endpoint }) => endpoint)).toEqual([again.endpoint])
+  })
+
+  it.each([
+    'https://127.0.0.1/push',
+    'http://fcm.googleapis.com/fcm/send/invented',
+    'https://fcm.googleapis.com.example.com/invented',
+  ])('refuses the endpoint %s', async (endpoint) => {
+    const { cookie } = await admin()
+
+    const res = await putDevice(cookie, await fakeDevice(endpoint))
+
+    expect(res.status).toBe(400)
+    expect(await createDb(env.DB).select().from(pushDevices)).toEqual([])
+  })
+
+  it('refuses keys of the wrong length', async () => {
+    const { cookie } = await admin()
+    const device = await fakeDevice()
+
+    const res = await putDevice(cookie, {
+      ...device,
+      keys: { ...device.keys, auth: 'short' },
+    })
+
+    expect(res.status).toBe(400)
+  })
+
+  it('refuses a member', async () => {
+    const { cookie } = await chatter()
+
+    expect((await putDevice(cookie, await fakeDevice())).status).toBe(403)
+  })
+})
+
+describe('DELETE /api/admin/notices/device', () => {
+  it('turns this device off and leaves the others on', async () => {
+    const other = await adminWith({ push: true })
+    const { cookie } = await admin()
+    await putDevice(cookie, await fakeDevice())
+
+    const res = await request(
+      '/api/admin/notices/device',
+      bare('DELETE', cookie),
+    )
+
+    expect(res.status).toBe(204)
+    expect((await readSetting(cookie)).push?.deviceOn).toBe(false)
+    expect((await readSetting(other.cookie)).push?.deviceOn).toBe(true)
+  })
+})
+
+describe('PUT /api/admin/notices/email', () => {
+  it('sends a test and keeps the address once it is taken', async () => {
+    const { cookie } = await signedIn({ role: 'admin', language: 'en' })
+
+    const res = await putEmail(cookie, ' admin@example.com ')
+
+    expect(res.status).toBe(200)
+    expect(emails).toHaveLength(1)
+    expect(emails[0]).toMatchObject({
+      to: 'admin@example.com',
+      subject: 'Lịch trình: test email',
+    })
+    expect((await readSetting(cookie)).email?.address).toBe('admin@example.com')
+  })
+
+  it('keeps the time zone for the notice', async () => {
+    const { cookie } = await admin()
+    await putEmail(cookie, 'admin@example.com', 'Asia/Tokyo')
+
+    const row = await createDb(env.DB).select().from(notifyEmails).get()
+
+    expect(row?.timeZone).toBe('Asia/Tokyo')
+  })
+
+  it.each(['E_RECIPIENT_PLAN_RESTRICTED', 'E_RECIPIENT_NOT_ALLOWED'])(
+    'answers email_unconfirmed on %s and keeps the saved address',
+    async (code) => {
+      const { cookie } = await admin()
+      await putEmail(cookie, 'first@example.com')
+      emailRefusal = { code }
+
+      const res = await putEmail(cookie, 'second@example.com')
+
+      expect(res.status).toBe(409)
+      expect(await errorCode(res)).toBe('email_unconfirmed')
+      expect((await readSetting(cookie)).email?.address).toBe(
+        'first@example.com',
+      )
+    },
+  )
+
+  it('answers notice_failed while the sending domain is not set up', async () => {
+    const { cookie } = await admin()
+    emailRefusal = { code: 'E_SENDER_DOMAIN_NOT_CONFIGURED' }
+
+    const res = await putEmail(cookie, 'admin@example.com')
+
+    expect(res.status).toBe(502)
+    expect(await errorCode(res)).toBe('notice_failed')
+    expect((await readSetting(cookie)).email?.address).toBeNull()
+  })
+
+  it.each(['admin@example', 'not an address', ''])(
+    'refuses %j and sends nothing',
+    async (address) => {
+      const { cookie } = await admin()
+
+      expect((await putEmail(cookie, address)).status).toBe(400)
+      expect(emails).toEqual([])
+    },
+  )
+
+  it('refuses a time zone no clock knows', async () => {
+    const { cookie } = await admin()
+
+    const res = await putEmail(cookie, 'admin@example.com', 'Mars/Olympus')
+
+    expect(res.status).toBe(400)
+  })
+
+  it('stops sending tests after ten in a window', async () => {
+    const { cookie } = await admin()
+    await Promise.all(
+      Array.from({ length: 10 }, () => putEmail(cookie, 'admin@example.com')),
+    )
+
+    const res = await putEmail(cookie, 'admin@example.com')
+
+    expect(res.status).toBe(429)
+    expect(emails).toHaveLength(10)
+  })
+
+  it('refuses a member', async () => {
+    const { cookie } = await chatter()
+
+    expect((await putEmail(cookie, 'admin@example.com')).status).toBe(403)
+  })
+})
+
+describe('DELETE /api/admin/notices/email', () => {
+  it('turns email off for this admin alone', async () => {
+    const other = await adminWith({ email: true })
+    const own = await adminWith({ email: true })
+
+    const res = await request(
+      '/api/admin/notices/email',
+      bare('DELETE', own.cookie),
+    )
+
+    expect(res.status).toBe(204)
+    expect((await readSetting(own.cookie)).email?.address).toBeNull()
+    expect((await readSetting(other.cookie)).email?.address).toBe(other.address)
   })
 })

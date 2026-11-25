@@ -1,18 +1,34 @@
 import type { User } from '@shared/auth.ts'
-import { emailWords, type Notice, pushWords } from '@shared/notice-text.ts'
 import {
+  emailWords,
+  type Notice,
+  pushWords,
+  testEmailWords,
+} from '@shared/notice-text.ts'
+import {
+  type NoticeEmail,
+  noticeEmailWrite,
   type NoticeKind,
   noticeSend,
+  type NoticeSetting,
   type NoticeState,
+  pushDevice,
   type SentNotice,
 } from '@shared/notices.ts'
+import { and, eq, ne } from 'drizzle-orm'
 import type { Context } from 'hono'
 import { Hono } from 'hono'
 
 import { relayOf, type ServiceState } from '../assistant/relay.ts'
+import {
+  type AttemptKey,
+  blockedForSeconds,
+  recordFailure,
+} from '../auth/attempts.ts'
 import type { AuthEnv } from '../auth/guard.ts'
 import { requireChat } from '../auth/guard.ts'
 import { createDb } from '../db/client.ts'
+import { notifyEmails, pushDevices } from '../db/schema.ts'
 import { fail, parseBody, refuse } from '../envelope.ts'
 import { logOutcome } from '../log.ts'
 import { canEmail, sendEmail } from '../notices/email.ts'
@@ -24,13 +40,17 @@ import {
   keepClaim,
   releaseClaim,
 } from '../notices/outage.ts'
-import { sendPush, vapidKeys } from '../notices/push.ts'
+import { isPushEndpoint, sendPush, vapidKeys } from '../notices/push.ts'
 import { readRecipients } from '../notices/recipients.ts'
 
 // A tap meeting another's send under way asks again until that send ends,
 // which its own timeouts bound at five seconds.
 const ASK_AGAIN_MS = 750
 const ASKS = 8
+
+// Every save sends a test, so a slip of the finger has room and a stuck
+// button cannot spend the day's mail.
+const TEST_LIMIT = 10
 
 type Db = ReturnType<typeof createDb>
 type Services = Record<NoticeKind, ServiceState>
@@ -81,6 +101,95 @@ export const noticeRoutes = new Hono<AuthEnv>()
       if (sent !== undefined) return c.json(toSent(sent, user))
     }
     return refuse(c, 'notice_failed')
+  })
+  .get('/admin/notices', async (c) => {
+    const db = createDb(c.env.DB)
+    const [device, email] = await Promise.all([
+      db
+        .select({ sessionId: pushDevices.sessionId })
+        .from(pushDevices)
+        .where(eq(pushDevices.sessionId, c.var.sessionId))
+        .get(),
+      db
+        .select({ address: notifyEmails.address })
+        .from(notifyEmails)
+        .where(eq(notifyEmails.userId, c.var.user.id))
+        .get(),
+    ])
+    const vapid = keysOf(c)
+    const body: NoticeSetting = {
+      push:
+        vapid === null
+          ? null
+          : { publicKey: vapid.publicKey, deviceOn: device !== undefined },
+      email: canEmail(c.env) ? { address: email?.address ?? null } : null,
+    }
+    return c.json(body)
+  })
+  // The device is the session's own, so signing out takes it along. A browser
+  // keeps its endpoint across sign-ins, so the newest session holds it.
+  .put('/admin/notices/device', async (c) => {
+    const { endpoint, keys } = await parseBody(c, pushDevice)
+    if (!isPushEndpoint(endpoint)) return refuse(c, 'validation_failed')
+    const db = createDb(c.env.DB)
+    const { sessionId } = c.var
+    const saved = { endpoint, ...keys, createdAt: new Date() }
+    await db.batch([
+      db
+        .delete(pushDevices)
+        .where(
+          and(
+            eq(pushDevices.endpoint, endpoint),
+            ne(pushDevices.sessionId, sessionId),
+          ),
+        ),
+      db
+        .insert(pushDevices)
+        .values({ sessionId, ...saved })
+        .onConflictDoUpdate({ target: pushDevices.sessionId, set: saved }),
+    ])
+    logOutcome('push_on', { userId: c.var.user.id })
+    return c.body(null, 204)
+  })
+  .delete('/admin/notices/device', async (c) => {
+    await createDb(c.env.DB)
+      .delete(pushDevices)
+      .where(eq(pushDevices.sessionId, c.var.sessionId))
+    logOutcome('push_off', { userId: c.var.user.id })
+    return c.body(null, 204)
+  })
+  // Kept only once a test was taken, so a saved address is one that works.
+  .put('/admin/notices/email', async (c) => {
+    const { address, timeZone } = await parseBody(c, noticeEmailWrite)
+    const db = createDb(c.env.DB)
+    const { user } = c.var
+    const key: AttemptKey = { key: `email:${user.id}`, limit: TEST_LIMIT }
+    const now = Date.now()
+    const waitSeconds = await blockedForSeconds(db, [key], now)
+    if (waitSeconds > 0) {
+      c.header('Retry-After', String(waitSeconds))
+      return c.json(fail('rate_limited', 'Too many test emails'), 429)
+    }
+    await recordFailure(db, [key], now)
+    const test = testEmailWords(user.language ?? 'vi')
+    const outcome = await sendEmail(c.env, address, test)
+    if (outcome === 'unconfirmed') return refuse(c, 'email_unconfirmed')
+    if (outcome === 'failed') return refuse(c, 'notice_failed')
+    const saved = { address, timeZone, updatedAt: new Date() }
+    await db
+      .insert(notifyEmails)
+      .values({ userId: user.id, ...saved })
+      .onConflictDoUpdate({ target: notifyEmails.userId, set: saved })
+    logOutcome('email_on', { userId: user.id })
+    const body: NoticeEmail = { address }
+    return c.json(body)
+  })
+  .delete('/admin/notices/email', async (c) => {
+    await createDb(c.env.DB)
+      .delete(notifyEmails)
+      .where(eq(notifyEmails.userId, c.var.user.id))
+    logOutcome('email_off', { userId: c.var.user.id })
+    return c.body(null, 204)
   })
 
 async function sendClaimed(c: Context<AuthEnv>, db: Db, claim: Claim) {
