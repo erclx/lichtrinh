@@ -518,6 +518,7 @@ describe('GET /api/admin/notices', () => {
     const { cookie } = await admin()
 
     expect(await readSetting(cookie)).toEqual({
+      reachable: false,
       push: { publicKey: env.VAPID_PUBLIC_KEY, deviceOn: false },
       email: { address: null },
     })
@@ -532,7 +533,7 @@ describe('GET /api/admin/notices', () => {
       NOTICE_FROM: '',
     })
 
-    expect(setting).toEqual({ push: null, email: null })
+    expect(setting).toEqual({ reachable: false, push: null, email: null })
   })
 
   it('answers no endpoint and no key, not even its own', async () => {
@@ -572,7 +573,10 @@ describe('PUT /api/admin/notices/device', () => {
 
     const res = await putDevice(cookie, device)
 
-    expect(res.status).toBe(204)
+    expect(noticeSetting.parse(await res.json())).toMatchObject({
+      reachable: true,
+      push: { deviceOn: true },
+    })
     expect((await readSetting(cookie)).push?.deviceOn).toBe(true)
     await notify((await chatter()).cookie)
     expect(pushes).toEqual([device.endpoint])
@@ -644,7 +648,7 @@ describe('DELETE /api/admin/notices/device', () => {
       bare('DELETE', cookie),
     )
 
-    expect(res.status).toBe(204)
+    expect(noticeSetting.parse(await res.json()).push?.deviceOn).toBe(false)
     expect((await readSetting(cookie)).push?.deviceOn).toBe(false)
     expect((await readSetting(other.cookie)).push?.deviceOn).toBe(true)
   })
@@ -749,7 +753,10 @@ describe('DELETE /api/admin/notices/email', () => {
       bare('DELETE', own.cookie),
     )
 
-    expect(res.status).toBe(204)
+    expect(noticeSetting.parse(await res.json())).toMatchObject({
+      reachable: true,
+      email: { address: null },
+    })
     expect((await readSetting(own.cookie)).email?.address).toBeNull()
     expect((await readSetting(other.cookie)).email?.address).toBe(other.address)
   })

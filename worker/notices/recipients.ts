@@ -14,6 +14,11 @@ export interface Recipients {
   emails: { address: string; timeZone: string; language: Language }[]
 }
 
+/** Whether a notice sent now would go to anyone. */
+export function isReachable({ devices, emails }: Recipients): boolean {
+  return devices.length + emails.length > 0
+}
+
 /**
  * Who a notice reaches now: each admin's devices whose session is still live,
  * and each admin's address. Role and session are read here on every send, so

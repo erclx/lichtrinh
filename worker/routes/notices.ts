@@ -6,7 +6,6 @@ import {
   testEmailWords,
 } from '@shared/notice-text.ts'
 import {
-  type NoticeEmail,
   noticeEmailWrite,
   type NoticeKind,
   noticeSend,
@@ -41,7 +40,7 @@ import {
   releaseClaim,
 } from '../notices/outage.ts'
 import { isPushEndpoint, sendPush, vapidKeys } from '../notices/push.ts'
-import { readRecipients } from '../notices/recipients.ts'
+import { isReachable, readRecipients } from '../notices/recipients.ts'
 
 // A tap meeting another's send under way asks again until that send ends,
 // which its own timeouts bound at five seconds.
@@ -68,7 +67,7 @@ export const noticeRoutes = new Hono<AuthEnv>()
       return notice === undefined ? null : toSent(notice, c.var.user)
     }
     const body: NoticeState = {
-      reachable: recipients.devices.length + recipients.emails.length > 0,
+      reachable: isReachable(recipients),
       assistant: of('assistant'),
       voice: of('voice'),
     }
@@ -103,28 +102,7 @@ export const noticeRoutes = new Hono<AuthEnv>()
     return refuse(c, 'notice_failed')
   })
   .get('/admin/notices', async (c) => {
-    const db = createDb(c.env.DB)
-    const [device, email] = await Promise.all([
-      db
-        .select({ sessionId: pushDevices.sessionId })
-        .from(pushDevices)
-        .where(eq(pushDevices.sessionId, c.var.sessionId))
-        .get(),
-      db
-        .select({ address: notifyEmails.address })
-        .from(notifyEmails)
-        .where(eq(notifyEmails.userId, c.var.user.id))
-        .get(),
-    ])
-    const vapid = keysOf(c)
-    const body: NoticeSetting = {
-      push:
-        vapid === null
-          ? null
-          : { publicKey: vapid.publicKey, deviceOn: device !== undefined },
-      email: canEmail(c.env) ? { address: email?.address ?? null } : null,
-    }
-    return c.json(body)
+    return c.json(await readSetting(c, createDb(c.env.DB)))
   })
   // The device is the session's own, so signing out takes it along. A browser
   // keeps its endpoint across sign-ins, so the newest session holds it.
@@ -149,14 +127,15 @@ export const noticeRoutes = new Hono<AuthEnv>()
         .onConflictDoUpdate({ target: pushDevices.sessionId, set: saved }),
     ])
     logOutcome('push_on', { userId: c.var.user.id })
-    return c.body(null, 204)
+    return c.json(await readSetting(c, db))
   })
   .delete('/admin/notices/device', async (c) => {
-    await createDb(c.env.DB)
+    const db = createDb(c.env.DB)
+    await db
       .delete(pushDevices)
       .where(eq(pushDevices.sessionId, c.var.sessionId))
     logOutcome('push_off', { userId: c.var.user.id })
-    return c.body(null, 204)
+    return c.json(await readSetting(c, db))
   })
   // Kept only once a test was taken, so a saved address is one that works.
   .put('/admin/notices/email', async (c) => {
@@ -181,16 +160,42 @@ export const noticeRoutes = new Hono<AuthEnv>()
       .values({ userId: user.id, ...saved })
       .onConflictDoUpdate({ target: notifyEmails.userId, set: saved })
     logOutcome('email_on', { userId: user.id })
-    const body: NoticeEmail = { address }
-    return c.json(body)
+    return c.json(await readSetting(c, db))
   })
   .delete('/admin/notices/email', async (c) => {
-    await createDb(c.env.DB)
-      .delete(notifyEmails)
-      .where(eq(notifyEmails.userId, c.var.user.id))
+    const db = createDb(c.env.DB)
+    await db.delete(notifyEmails).where(eq(notifyEmails.userId, c.var.user.id))
     logOutcome('email_off', { userId: c.var.user.id })
-    return c.body(null, 204)
+    return c.json(await readSetting(c, db))
   })
+
+async function readSetting(
+  c: Context<AuthEnv>,
+  db: Db,
+): Promise<NoticeSetting> {
+  const [recipients, device, email] = await Promise.all([
+    recipientsNow(c, db),
+    db
+      .select({ sessionId: pushDevices.sessionId })
+      .from(pushDevices)
+      .where(eq(pushDevices.sessionId, c.var.sessionId))
+      .get(),
+    db
+      .select({ address: notifyEmails.address })
+      .from(notifyEmails)
+      .where(eq(notifyEmails.userId, c.var.user.id))
+      .get(),
+  ])
+  const vapid = keysOf(c)
+  return {
+    reachable: isReachable(recipients),
+    push:
+      vapid === null
+        ? null
+        : { publicKey: vapid.publicKey, deviceOn: device !== undefined },
+    email: canEmail(c.env) ? { address: email?.address ?? null } : null,
+  }
+}
 
 async function sendClaimed(c: Context<AuthEnv>, db: Db, claim: Claim) {
   const { user } = c.var

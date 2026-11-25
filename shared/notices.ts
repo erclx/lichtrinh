@@ -52,20 +52,18 @@ export const noticeEmailWrite = z.strictObject({
 })
 export type NoticeEmailWrite = z.infer<typeof noticeEmailWrite>
 
-/** The saved address, or null with email off. */
-export const noticeEmail = z.strictObject({ address: z.string().nullable() })
-export type NoticeEmail = z.infer<typeof noticeEmail>
-
 /**
- * The signed-in admin's own setting. A null `push` or `email` means this copy
- * of the app has no key or no sender, so its row leaves the page. `deviceOn`
- * is this session's device alone.
+ * The signed-in admin's own setting, which every write to it answers. A null
+ * `push` or `email` means this copy of the app has no key or no sender, so its
+ * row leaves the page. `deviceOn` is this session's device alone, a null
+ * address is email switched off, and `reachable` counts every admin.
  */
 export const noticeSetting = z.strictObject({
+  reachable: z.boolean(),
   push: z
     .strictObject({ publicKey: z.string(), deviceOn: z.boolean() })
     .nullable(),
-  email: noticeEmail.nullable(),
+  email: z.strictObject({ address: z.string().nullable() }).nullable(),
 })
 export type NoticeSetting = z.infer<typeof noticeSetting>
 
