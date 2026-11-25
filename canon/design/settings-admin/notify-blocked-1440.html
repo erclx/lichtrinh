@@ -1,0 +1,1343 @@
+<!doctype html>
+<html lang="en" data-lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width" />
+    <link
+      rel="stylesheet"
+      href="../assets/pick-01-notify-admin/fonts/fonts-cute.css"
+    />
+    <style>
+      :root {
+        color-scheme: light;
+        --radius: 18px;
+        --background: #f8f8fc;
+        --foreground: #1f1d33;
+        --card: #ffffff;
+        --card-foreground: #1f1d33;
+        --popover: #ffffff;
+        --popover-foreground: #1f1d33;
+        --primary: #1f1d33;
+        --primary-foreground: #ffffff;
+        --secondary: #ffffff;
+        --secondary-foreground: #1f1d33;
+        --muted: #ececf6;
+        --muted-foreground: #4d4c62;
+        --accent: #ececf6;
+        --accent-foreground: #1f1d33;
+        --destructive: #1f1d33;
+        --border: #dcdcea;
+        --input: #dcdcea;
+        --ring: #1f1d33;
+        --now: #e9e4ff;
+        --food: #ffd9bf;
+        --food-ink: #7a3b12;
+        --sights: #ffcfe1;
+        --sights-ink: #8a1f4f;
+        --rest: #dcd8ff;
+        --rest-ink: #3e338f;
+        --transport: #cfe8ff;
+        --transport-ink: #134c7a;
+        --activity: #c9f1dd;
+        --activity-ink: #145a3a;
+      }
+      :root[data-theme='dark'] {
+        color-scheme: dark;
+        --background: #121220;
+        --foreground: #f1f0fb;
+        --card: #1b1b2c;
+        --card-foreground: #f1f0fb;
+        --popover: #1b1b2c;
+        --popover-foreground: #f1f0fb;
+        --primary: #f1f0fb;
+        --primary-foreground: #121220;
+        --secondary: #1f1f31;
+        --secondary-foreground: #f1f0fb;
+        --muted: #26263b;
+        --muted-foreground: #b0aecb;
+        --accent: #26263b;
+        --accent-foreground: #f1f0fb;
+        --destructive: #f1f0fb;
+        --border: #34344f;
+        --input: #34344f;
+        --ring: #f1f0fb;
+        --now: #302a58;
+        --food: #5b3a26;
+        --food-ink: #ffd2b3;
+        --sights: #5a2c40;
+        --sights-ink: #ffc4da;
+        --rest: #3a355e;
+        --rest-ink: #d6d1ff;
+        --transport: #23415a;
+        --transport-ink: #c4e2ff;
+        --activity: #22483a;
+        --activity-ink: #bff0d6;
+      }
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+      html[data-lang='en'] .vi,
+      html[data-lang='vi'] .en {
+        display: none;
+      }
+      html,
+      body {
+        height: 100%;
+      }
+      body {
+        background: var(--background);
+        color: var(--foreground);
+        font: 400 21px/1.4 Nunito;
+        font-variant-numeric: tabular-nums;
+        overflow: hidden;
+      }
+      button {
+        font: inherit;
+        color: inherit;
+        background: none;
+        border: 0;
+        cursor: pointer;
+        text-align: inherit;
+      }
+      :focus-visible {
+        outline: 3px solid var(--ring);
+        outline-offset: 2px;
+      }
+      .root {
+        height: 100vh;
+        display: flex;
+        flex-direction: column;
+      }
+      .lbl {
+        flex: none;
+        font: 400 13px/1.35 Nunito;
+        padding: 6px 12px;
+        border-bottom: 1px dashed var(--border);
+        color: var(--muted-foreground);
+      }
+      .lbl b {
+        font-weight: 800;
+        color: var(--foreground);
+      }
+      .app {
+        flex: 1;
+        min-height: 0;
+        display: flex;
+        position: relative;
+      }
+      .w390 .app {
+        flex-direction: column;
+      }
+      .sm {
+        font-size: 18px;
+        line-height: 1.4;
+      }
+      .mut {
+        color: var(--muted-foreground);
+      }
+      .b {
+        font-weight: 800;
+      }
+      .side {
+        width: 248px;
+        flex: none;
+        border-right: 1.5px solid var(--border);
+        padding: 12px;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+      }
+      .brand {
+        display: flex;
+        gap: 10px;
+        align-items: center;
+        font-weight: 800;
+        font-size: 22px;
+        white-space: nowrap;
+      }
+      .side .brand {
+        padding: 0 8px 12px;
+        min-height: 56px;
+      }
+      .ni {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        min-height: 64px;
+        padding: 0 18px;
+        border-radius: 22px;
+        font-weight: 800;
+        color: var(--muted-foreground);
+      }
+      .ni.on,
+      .tab.on,
+      .ri.on {
+        background: var(--primary);
+        color: var(--primary-foreground);
+      }
+      .hide {
+        margin-top: auto;
+        min-height: 64px;
+        border-radius: 18px;
+        background: var(--muted);
+        display: flex;
+        gap: 8px;
+        align-items: center;
+        justify-content: center;
+        font-size: 18px;
+        font-weight: 800;
+      }
+      .rail {
+        width: 112px;
+        flex: none;
+        border-right: 1.5px solid var(--border);
+        padding: 12px 8px;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+      }
+      .rail .brand {
+        justify-content: center;
+        min-height: 56px;
+        padding-bottom: 12px;
+      }
+      .ri {
+        min-height: 76px;
+        border-radius: 22px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 4px;
+        font-size: 18px;
+        font-weight: 800;
+        color: var(--muted-foreground);
+      }
+      .main {
+        flex: 1;
+        min-width: 0;
+        min-height: 0;
+        display: flex;
+        flex-direction: column;
+        position: relative;
+      }
+      .top {
+        flex: none;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 10px 40px;
+      }
+      .w834 .top {
+        padding: 10px 32px;
+      }
+      .w390 .top {
+        padding: 10px 16px;
+      }
+      .top .r {
+        margin-left: auto;
+        display: flex;
+        gap: 8px;
+      }
+      .seg {
+        display: flex;
+        border-radius: 999px;
+        padding: 4px;
+        background: var(--muted);
+      }
+      .seg button {
+        min-width: 64px;
+        height: 64px;
+        border-radius: 999px;
+        font-weight: 800;
+        font-size: 22px;
+        color: var(--muted-foreground);
+        text-align: center;
+      }
+      .seg button[aria-pressed='true'] {
+        background: var(--primary);
+        color: var(--primary-foreground);
+      }
+      .cir {
+        width: 64px;
+        height: 64px;
+        border-radius: 50%;
+        background: var(--muted);
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        flex: none;
+      }
+      .cir.pri {
+        background: var(--primary);
+        color: var(--primary-foreground);
+      }
+      .half {
+        opacity: 0.5;
+      }
+      .scroll {
+        flex: 1;
+        min-height: 0;
+        overflow-y: auto;
+        padding: 0 40px 24px;
+      }
+      .w834 .scroll {
+        padding: 0 32px 24px;
+      }
+      .w390 .scroll {
+        padding: 0 16px 24px;
+      }
+      .wrap {
+        max-width: 760px;
+        margin: 0 auto;
+      }
+      .back {
+        display: inline-flex;
+        min-height: 64px;
+        align-items: center;
+        gap: 10px;
+        font-weight: 800;
+      }
+      h1 {
+        font-size: 34px;
+        line-height: 1.15;
+        font-weight: 800;
+        padding-bottom: 12px;
+      }
+      .addr {
+        display: flex;
+        justify-content: flex-end;
+        padding-top: 8px;
+      }
+      .add {
+        height: 64px;
+        border-radius: 999px;
+        background: var(--primary);
+        color: var(--primary-foreground);
+        font-weight: 800;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 0 24px;
+      }
+      .w390 .add {
+        width: 64px;
+        padding: 0;
+        justify-content: center;
+      }
+      .w390 .add span {
+        display: none;
+      }
+      .wait {
+        background: var(--muted) !important;
+        color: var(--muted-foreground) !important;
+      }
+      .trip {
+        font-weight: 800;
+        display: inline-flex;
+        gap: 6px;
+        align-items: center;
+        text-decoration: underline;
+        text-underline-offset: 4px;
+        margin: 8px 0;
+      }
+      .e {
+        display: flex;
+        gap: 12px;
+        align-items: center;
+        padding: 12px 8px;
+      }
+      .e .ico {
+        width: 48px;
+        height: 48px;
+        border-radius: 16px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex: none;
+      }
+      .e .n {
+        flex: 1;
+        font-weight: 800;
+        font-size: 22px;
+        line-height: 1.25;
+      }
+      .e .n small {
+        display: block;
+        font-weight: 400;
+        font-size: 18px;
+        color: var(--muted-foreground);
+      }
+      .e .h {
+        font-weight: 800;
+      }
+      .food {
+        background: var(--food);
+        color: var(--food-ink);
+      }
+      .rest {
+        background: var(--rest);
+        color: var(--rest-ink);
+      }
+      .act {
+        background: var(--activity);
+        color: var(--activity-ink);
+      }
+      .now {
+        background: var(--sights);
+        border-radius: 28px;
+        padding: 20px;
+        margin: 8px 0;
+      }
+      .now .k {
+        color: var(--sights-ink);
+        font-size: 18px;
+        font-weight: 800;
+      }
+      .now .n {
+        font-size: 27px;
+        font-weight: 800;
+        line-height: 1.2;
+      }
+      .now .bar {
+        height: 10px;
+        border-radius: 5px;
+        background: var(--card);
+        margin-top: 10px;
+        overflow: hidden;
+      }
+      .now .bar i {
+        display: block;
+        height: 100%;
+        width: 38%;
+        background: var(--sights-ink);
+        border-radius: 5px;
+      }
+      .dock {
+        width: 420px;
+        flex: none;
+        border-left: 1.5px solid var(--border);
+        display: flex;
+        flex-direction: column;
+        min-height: 0;
+      }
+      .sheet {
+        position: absolute;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        height: 760px;
+        max-height: 72%;
+        border-radius: 28px 28px 0 0;
+        border-top: 1.5px solid var(--border);
+        background: var(--background);
+        box-shadow: 0 -12px 32px rgb(0 0 0/0.14);
+        display: flex;
+        flex-direction: column;
+      }
+      .grab {
+        width: 48px;
+        height: 6px;
+        border-radius: 3px;
+        background: var(--border);
+        margin: 8px auto 0;
+      }
+      .dh {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 8px 8px 8px 16px;
+      }
+      .dh h2 {
+        flex: 1;
+        font-size: 22px;
+        font-weight: 800;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+      .dh span.l {
+        font-size: 18px;
+        font-weight: 800;
+        color: var(--muted-foreground);
+        padding: 0 12px;
+        white-space: nowrap;
+      }
+      .th {
+        flex: 1;
+        min-height: 0;
+        overflow-y: auto;
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        padding: 12px 16px;
+      }
+      .w390 .th {
+        padding: 0 16px 12px;
+      }
+      .foot {
+        flex: none;
+        border-top: 1.5px solid var(--border);
+        padding: 16px;
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+      }
+      .w390 .foot {
+        border: 0;
+        padding: 8px 16px 16px;
+      }
+      .comp {
+        display: flex;
+        gap: 10px;
+      }
+      .box {
+        flex: 1;
+        min-width: 0;
+        height: 64px;
+        border: 2px solid var(--input);
+        border-radius: 18px;
+        background: var(--card);
+        padding: 0 16px;
+        display: flex;
+        align-items: center;
+        color: var(--muted-foreground);
+        white-space: nowrap;
+        overflow: hidden;
+      }
+      .me {
+        margin-left: auto;
+        max-width: 88%;
+        background: var(--primary);
+        color: var(--primary-foreground);
+        border-radius: 18px 18px 10px 18px;
+        padding: 12px 16px;
+      }
+      .ai {
+        max-width: 88%;
+        border: 1.5px solid var(--border);
+        background: var(--card);
+        border-radius: 18px 18px 18px 10px;
+        padding: 12px 16px;
+      }
+      .chg {
+        display: flex;
+        gap: 12px;
+        align-items: center;
+        border-radius: 14px;
+        padding: 12px;
+        margin-top: 12px;
+        font-size: 18px;
+      }
+      .chg .q {
+        width: 48px;
+        height: 48px;
+        border-radius: 14px;
+        background: var(--card);
+        color: var(--foreground);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex: none;
+      }
+      .chg p {
+        flex: 1;
+      }
+      .chg b {
+        display: block;
+        font-weight: 800;
+      }
+      .undo {
+        min-height: 64px;
+        display: inline-flex;
+        align-items: center;
+        flex: none;
+        padding: 0 16px;
+        border-radius: 18px;
+        background: var(--primary);
+        color: var(--primary-foreground);
+        font-weight: 800;
+        font-size: 18px;
+      }
+      .card {
+        border: 1.5px solid var(--border);
+        background: var(--muted);
+        border-radius: 24px;
+        padding: 20px;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+      }
+      .card h3 {
+        font-size: 22px;
+        line-height: 1.25;
+        font-weight: 800;
+      }
+      .btn {
+        min-height: 64px;
+        border-radius: 999px;
+        background: var(--primary);
+        color: var(--primary-foreground);
+        font-weight: 800;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+        padding: 8px 24px;
+        width: 100%;
+        text-align: center;
+        margin-top: 8px;
+      }
+      .btn.out {
+        background: var(--card);
+        color: var(--foreground);
+        border: 2px solid var(--muted-foreground);
+      }
+      .btn.auto {
+        width: auto;
+        margin: 0;
+      }
+      .ring {
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        border: 2.5px solid var(--foreground);
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        flex: none;
+      }
+      .ring.full {
+        background: var(--primary);
+        color: var(--primary-foreground);
+      }
+      .ring.dash {
+        border-style: dashed;
+        border-color: var(--muted-foreground);
+      }
+      .row {
+        display: flex;
+        gap: 12px;
+        align-items: flex-start;
+      }
+      .row > div {
+        flex: 1;
+      }
+      .div {
+        border-top: 1.5px solid var(--border);
+        padding-top: 14px;
+        margin-top: 6px;
+      }
+      .spin {
+        width: 24px;
+        height: 24px;
+        border-radius: 50%;
+        border: 3px solid color-mix(in srgb, currentColor 35%, transparent);
+        border-top-color: currentColor;
+        flex: none;
+      }
+      .off {
+        margin: 8px 0 16px;
+        border: 2px dashed var(--border);
+        background: var(--muted);
+        border-radius: 24px;
+        padding: 14px 16px;
+        display: flex;
+        gap: 12px;
+        align-items: center;
+        font-size: 18px;
+      }
+      .off b {
+        display: block;
+        font-size: 21px;
+        font-weight: 800;
+      }
+      .talkw {
+        flex: none;
+        padding: 8px 40px 12px;
+      }
+      .w834 .talkw {
+        padding: 8px 32px 16px;
+      }
+      .w390 .talkw {
+        padding: 8px 16px 12px;
+      }
+      .talk {
+        max-width: 760px;
+        margin: 0 auto;
+        min-height: 64px;
+        border-radius: 999px;
+        background: var(--primary);
+        color: var(--primary-foreground);
+        font-size: 22px;
+        font-weight: 800;
+        display: flex;
+        gap: 12px;
+        align-items: center;
+        justify-content: center;
+      }
+      .tabs {
+        flex: none;
+        display: flex;
+        gap: 8px;
+        padding: 8px 12px 14px;
+      }
+      .tab {
+        flex: 1;
+        height: 76px;
+        border-radius: 22px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 4px;
+        font-size: 18px;
+        font-weight: 800;
+        color: var(--muted-foreground);
+      }
+      @media (max-width: 359px) {
+        .top .brand span {
+          display: none;
+        }
+      }
+      .seth {
+        font-size: 18px;
+        font-weight: 800;
+        color: var(--muted-foreground);
+      }
+      .stat {
+        border: 1.5px solid var(--border);
+        background: var(--card);
+        border-radius: 24px;
+        padding: 16px 18px;
+      }
+      .stat .r3 {
+        display: flex;
+        gap: 12px;
+        align-items: center;
+      }
+      .stat .r3 b {
+        flex: 1;
+        font-size: 22px;
+        font-weight: 800;
+      }
+      .okp {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 6px 12px;
+        border-radius: 999px;
+        background: var(--activity);
+        color: var(--activity-ink);
+        font-size: 18px;
+        font-weight: 800;
+      }
+      .okp:before {
+        content: '';
+        width: 10px;
+        height: 10px;
+        border-radius: 5px;
+        background: currentColor;
+      }
+      .opt {
+        display: flex;
+        gap: 14px;
+        align-items: center;
+        min-height: 72px;
+        border-bottom: 1.5px solid var(--border);
+        padding: 12px 0;
+      }
+      .opt .rd {
+        width: 28px;
+        height: 28px;
+        border-radius: 50%;
+        border: 3px solid var(--border);
+        flex: none;
+      }
+      .opt.on .rd {
+        border-color: var(--foreground);
+        background: var(--foreground);
+        box-shadow: inset 0 0 0 6px var(--background);
+      }
+      .opt b {
+        display: block;
+        font-size: 22px;
+        font-weight: 800;
+        line-height: 1.25;
+      }
+      .opt small {
+        display: block;
+        font-size: 18px;
+        color: var(--muted-foreground);
+      }
+      .stack {
+        display: flex;
+        flex-direction: column;
+        gap: 24px;
+      }
+      .fld {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+      }
+      .fld > label,
+      .lb {
+        font-size: 18px;
+        font-weight: 800;
+      }
+      .inr {
+        display: flex;
+        gap: 10px;
+      }
+      .in {
+        flex: 1;
+        min-width: 0;
+        height: 64px;
+        border: 2px solid var(--input);
+        border-radius: 18px;
+        background: var(--card);
+        padding: 0 16px;
+        display: flex;
+        align-items: center;
+        white-space: nowrap;
+        overflow: hidden;
+      }
+      .in.bad {
+        border-color: var(--foreground);
+        box-shadow: 0 0 0 3px
+          color-mix(in srgb, var(--foreground) 25%, transparent);
+      }
+      .note {
+        border-radius: 28px;
+        background: var(--muted);
+        padding: 12px 14px;
+        font-size: 18px;
+        color: var(--muted-foreground);
+      }
+      .tg {
+        display: flex;
+        border-radius: 999px;
+        background: var(--muted);
+        padding: 4px;
+      }
+      .tg > span {
+        flex: 1;
+        height: 64px;
+        border-radius: 999px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 800;
+        color: var(--muted-foreground);
+      }
+      .tg > .on {
+        background: var(--primary);
+        color: var(--primary-foreground);
+      }
+      .pills {
+        display: flex;
+        gap: 10px;
+      }
+      .pills > span {
+        flex: 1;
+        min-height: 64px;
+        border-radius: 999px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        font-weight: 800;
+        border: 2px solid var(--muted-foreground);
+      }
+      .pills > .on {
+        background: var(--primary);
+        color: var(--primary-foreground);
+        border-color: var(--primary);
+      }
+      .sw {
+        width: 76px;
+        height: 40px;
+        border-radius: 999px;
+        background: var(--border);
+        position: relative;
+        flex: none;
+        border: 2px solid var(--muted-foreground);
+      }
+      .sw:after {
+        content: '';
+        position: absolute;
+        left: 4px;
+        top: 4px;
+        box-sizing: border-box;
+        width: 28px;
+        height: 28px;
+        border-radius: 50%;
+        background: var(--card);
+        border: 2px solid var(--muted-foreground);
+      }
+      .sw.on {
+        background: var(--primary);
+        border-color: var(--primary);
+      }
+      .sw.on:after {
+        left: 36px;
+        background: var(--primary-foreground);
+        border-color: var(--primary-foreground);
+      }
+      .srow {
+        display: flex;
+        gap: 14px;
+        align-items: center;
+        min-height: 72px;
+        border-bottom: 1.5px solid var(--border);
+        padding: 12px 0;
+      }
+      .srow > div {
+        flex: 1;
+      }
+      .srow b {
+        display: block;
+        font-size: 22px;
+        font-weight: 800;
+        line-height: 1.25;
+      }
+      .ok2 {
+        border-radius: 24px;
+        background: var(--muted);
+        padding: 12px 16px;
+      }
+      .off svg {
+        flex: none;
+      }
+      .nonet .undo {
+        background: var(--muted);
+        color: var(--muted-foreground);
+      }
+    </style>
+  </head>
+  <body class="w1440">
+    <div class="root">
+      <div class="lbl" lang="en"><b>Push blocked on this device</b></div>
+      <div class="app">
+        <nav class="side">
+          <div class="brand">
+            <svg
+              viewBox="0 0 64 64"
+              width="34"
+              height="34"
+              fill="none"
+              aria-hidden="true"
+              style="flex: none"
+            >
+              <rect
+                x="8"
+                y="12"
+                width="48"
+                height="46"
+                rx="14"
+                fill="#fff"
+                stroke="currentColor"
+                stroke-width="4"
+              />
+              <path
+                d="M10 27h44v-3a10 10 0 0 0-10-10H20a10 10 0 0 0-10 10z"
+                fill="#dcd8ff"
+              />
+              <path d="M8 27h48" stroke="currentColor" stroke-width="4" />
+              <rect
+                x="19.5"
+                y="5"
+                width="6"
+                height="14"
+                rx="3"
+                fill="currentColor"
+              />
+              <rect
+                x="38.5"
+                y="5"
+                width="6"
+                height="14"
+                rx="3"
+                fill="currentColor"
+              />
+              <rect
+                x="15"
+                y="32"
+                width="34"
+                height="5.4"
+                rx="2.7"
+                fill="#ffd9bf"
+                stroke="currentColor"
+                stroke-width="2"
+              />
+              <rect
+                x="15"
+                y="40"
+                width="26"
+                height="5.4"
+                rx="2.7"
+                fill="#ffcfe1"
+                stroke="currentColor"
+                stroke-width="2"
+              />
+              <rect
+                x="15"
+                y="48"
+                width="30"
+                height="5.4"
+                rx="2.7"
+                fill="#c9f1dd"
+                stroke="currentColor"
+                stroke-width="2"
+              /></svg
+            ><span>Lịch trình</span>
+          </div>
+          <div class="ni">
+            <svg
+              viewBox="0 0 24 24"
+              width="26"
+              height="26"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2.2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              aria-hidden="true"
+            >
+              <circle cx="12" cy="12" r="4.5" />
+              <path
+                d="M12 2.5v2M12 19.5v2M2.5 12h2M19.5 12h2M5.3 5.3l1.4 1.4M17.3 17.3l1.4 1.4M5.3 18.7l1.4-1.4M17.3 6.7l1.4-1.4"
+              /></svg
+            ><span class="en">Today</span><span class="vi">Hôm nay</span>
+          </div>
+          <div class="ni">
+            <svg
+              viewBox="0 0 24 24"
+              width="26"
+              height="26"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2.2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              aria-hidden="true"
+            >
+              <rect x="4" y="7" width="16" height="13" rx="3" />
+              <path
+                d="M9 7V5.5A1.5 1.5 0 0 1 10.5 4h3A1.5 1.5 0 0 1 15 5.5V7M4 12h16"
+              /></svg
+            ><span class="en">Trips</span><span class="vi">Chuyến đi</span>
+          </div>
+          <div class="ni">
+            <svg
+              viewBox="0 0 24 24"
+              width="26"
+              height="26"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2.2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              aria-hidden="true"
+            >
+              <rect x="3.5" y="5" width="17" height="15" rx="3.5" />
+              <path d="M3.5 10h17M8 3v4M16 3v4" /></svg
+            ><span class="en">Calendar</span><span class="vi">Lịch</span>
+          </div>
+          <div class="ni">
+            <svg
+              viewBox="0 0 24 24"
+              width="26"
+              height="26"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2.2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              aria-hidden="true"
+            >
+              <circle cx="9" cy="8" r="3.5" />
+              <path d="M3 20a6 6 0 0 1 12 0" />
+              <circle cx="18" cy="10" r="2.2" />
+              <path d="M18 12.2V19M18 16.5h2" /></svg
+            ><span class="en">Accounts</span><span class="vi">Tài khoản</span>
+          </div>
+          <div class="hide">
+            <svg
+              viewBox="0 0 24 24"
+              width="24"
+              height="24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2.2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              aria-hidden="true"
+            >
+              <rect x="3" y="4" width="18" height="16" rx="3" />
+              <path d="M9.5 4v16" /></svg
+            ><span class="en">Hide sidebar</span
+            ><span class="vi">Ẩn thanh bên</span>
+          </div>
+        </nav>
+        <div class="main">
+          <div class="top">
+            <div class="r">
+              <div class="seg" role="group" aria-label="Language">
+                <button data-l="vi">VI</button><button data-l="en">EN</button>
+              </div>
+              <span class="cir"
+                ><svg
+                  viewBox="0 0 24 24"
+                  width="26"
+                  height="26"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2.2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  aria-hidden="true"
+                >
+                  <circle cx="12" cy="12" r="3" />
+                  <path
+                    d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"
+                  /></svg
+              ></span>
+            </div>
+          </div>
+          <div class="scroll">
+            <div class="wrap stack">
+              <div>
+                <div class="back">
+                  <svg
+                    viewBox="0 0 10 18"
+                    width="10"
+                    height="18"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2.4"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  >
+                    <path d="M8.5 1.5 1.5 9l7 7.5" /></svg
+                  ><span class="en">Back</span><span class="vi">Quay lại</span>
+                </div>
+                <h1>
+                  <span class="en">Assistant</span
+                  ><span class="vi">Trợ lý</span>
+                </h1>
+                <div class="stat">
+                  <div class="r3">
+                    <b
+                      ><span class="en">Home computer</span
+                      ><span class="vi">Máy ở nhà</span></b
+                    ><span class="okp"
+                      ><span class="en">Online</span
+                      ><span class="vi">Đang bật</span></span
+                    >
+                  </div>
+                  <p class="sm mut" style="margin-top: 6px">
+                    <span class="en"
+                      >The assistant last answered at 10:14 AM today.</span
+                    ><span class="vi"
+                      >Trợ lý trả lời lần cuối lúc 10:14 hôm nay.</span
+                    >
+                  </p>
+                </div>
+              </div>
+              <div>
+                <p class="seth">
+                  <span class="en">Assistant model</span
+                  ><span class="vi">Mô hình trợ lý</span>
+                </p>
+                <div class="opt on">
+                  <div class="rd"></div>
+                  <div>
+                    <b>Qwen</b
+                    ><small
+                      ><span class="en">Default · understands most</span
+                      ><span class="vi">Mặc định · hiểu kỹ nhất</span></small
+                    >
+                  </div>
+                </div>
+                <div class="opt">
+                  <div class="rd"></div>
+                  <div>
+                    <b>Gemma</b
+                    ><small
+                      ><span class="en">Answers faster</span
+                      ><span class="vi">Trả lời nhanh hơn</span></small
+                    >
+                  </div>
+                </div>
+              </div>
+              <div>
+                <p class="seth">
+                  <span class="en">Speech recognition</span
+                  ><span class="vi">Nhận giọng nói</span>
+                </p>
+                <div class="opt on">
+                  <div class="rd"></div>
+                  <div>
+                    <b>Qwen3-ASR</b
+                    ><small
+                      ><span class="en">Default</span
+                      ><span class="vi">Mặc định</span><br /><span class="en"
+                        >Not used yet</span
+                      ><span class="vi">Chưa dùng</span></small
+                    >
+                  </div>
+                </div>
+                <div class="opt">
+                  <div class="rd"></div>
+                  <div>
+                    <b>Whisper turbo</b
+                    ><small
+                      ><span class="en">Fast</span><span class="vi">Nhanh</span
+                      ><br /><span class="en">Not used yet</span
+                      ><span class="vi">Chưa dùng</span></small
+                    >
+                  </div>
+                </div>
+                <div class="opt">
+                  <div class="rd"></div>
+                  <div>
+                    <b>PhoWhisper</b
+                    ><small
+                      ><span class="en"
+                        >Hears Vietnamese · English speech uses Qwen3-ASR</span
+                      ><span class="vi"
+                        >Nghe tiếng Việt · nói tiếng Anh dùng Qwen3-ASR</span
+                      ><br /><span class="en">Not used yet</span
+                      ><span class="vi">Chưa dùng</span></small
+                    >
+                  </div>
+                </div>
+              </div>
+              <div class="fld">
+                <label
+                  ><span class="en"
+                    >Name shown when the assistant is offline</span
+                  ><span class="vi">Tên hiện khi trợ lý nghỉ</span></label
+                >
+                <div class="inr">
+                  <div class="in">
+                    <span class="en">the admin</span
+                    ><span class="vi">quản trị viên</span>
+                  </div>
+                  <span class="btn auto"
+                    ><span class="en">Save</span
+                    ><span class="vi">Lưu</span></span
+                  >
+                </div>
+                <p class="sm mut">
+                  <span class="en"
+                    >The traveler sees this name as whom to contact when the
+                    assistant is offline. Leave it empty to show Admin.</span
+                  ><span class="vi"
+                    >Người đi thấy tên này để biết nhờ ai khi trợ lý nghỉ. Để
+                    trống thì hiện Quản trị viên.</span
+                  >
+                </p>
+              </div>
+              <section class="fld" id="nm">
+                <p class="seth">
+                  <span class="en">Notify me by</span
+                  ><span class="vi">Báo cho tôi qua</span>
+                </p>
+                <p class="sm mut">
+                  <span class="en"
+                    >When the assistant or voice is off and someone taps
+                    Notify.</span
+                  ><span class="vi"
+                    >Khi trợ lý hoặc giọng nói tắt và có người bấm Báo.</span
+                  >
+                </p>
+                <p class="lb" style="margin-top: 8px">
+                  <span class="en">Push</span
+                  ><span class="vi">Thông báo đẩy</span>
+                </p>
+                <div class="tg">
+                  <span class=""
+                    ><span class="en">On</span><span class="vi">Bật</span></span
+                  ><span class="on"
+                    ><span class="en">Off</span
+                    ><span class="vi">Tắt</span></span
+                  >
+                </div>
+                <div class="sm mut">
+                  <p class="ok2" role="alert" style="color: var(--foreground)">
+                    <span class="en"
+                      >Notifications are blocked for this app on this device.
+                      Allow them in the device settings, then choose On
+                      again.</span
+                    ><span class="vi"
+                      >Máy đang chặn thông báo của ứng dụng này. Cho phép trong
+                      cài đặt của máy rồi chọn Bật lại.</span
+                    >
+                  </p>
+                </div>
+                <p class="lb" style="margin-top: 8px">Email</p>
+                <div class="tg">
+                  <span class=""
+                    ><span class="en">On</span><span class="vi">Bật</span></span
+                  ><span class="on"
+                    ><span class="en">Off</span
+                    ><span class="vi">Tắt</span></span
+                  >
+                </div>
+              </section>
+              <p class="note">
+                <span class="en"
+                  >Only admins see this page. A model change applies from the
+                  next message.</span
+                ><span class="vi"
+                  >Chỉ quản trị viên thấy trang này. Đổi mô hình có hiệu lực từ
+                  tin nhắn sau.</span
+                >
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <script>
+      ;(function () {
+        var K = 'lt-lang',
+          d = document.documentElement
+        function g() {
+          try {
+            return localStorage.getItem(K)
+          } catch (e) {
+            return null
+          }
+        }
+        function a(l) {
+          l = l === 'vi' ? 'vi' : 'en'
+          d.setAttribute('data-lang', l)
+          d.lang = l
+          document.querySelectorAll('.seg button').forEach(function (b) {
+            b.setAttribute('aria-pressed', b.dataset.l === l)
+          })
+        }
+        a(g() || 'en')
+        addEventListener('storage', function (e) {
+          if (e.key === K) a(e.newValue)
+        })
+        document.addEventListener('click', function (e) {
+          var b = e.target.closest('.seg button')
+          if (!b) return
+          try {
+            localStorage.setItem(K, b.dataset.l)
+          } catch (x) {}
+          a(b.dataset.l)
+        })
+      })()
+    </script>
+    <script>
+      document.querySelector('.scroll').scrollTop = 1e5
+    </script>
+  </body>
+</html>
