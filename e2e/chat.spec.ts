@@ -100,6 +100,10 @@ test('the traveler speaks a request, fixes the transcript, sends it, and types w
       page.getByText('Listening…', { exact: true }).first(),
     ).toBeVisible()
 
+    const words = page.getByText('doi an toi', { exact: true })
+    await bridge.answerLive('doi an toi')
+    await expect(words).toBeVisible()
+
     const transcribed = bridge.answerClip('doi an toi sang 8 gio', 800)
     await stop.click()
     await expect(
@@ -109,6 +113,7 @@ test('the traveler speaks a request, fixes the transcript, sends it, and types w
 
     const box = page.getByLabel('Message the assistant')
     await expect(box).toHaveValue('doi an toi sang 8 gio')
+    await expect(words).toHaveCount(0)
     await expect(
       page.getByText('This is what you said. Fix it if needed, then send.'),
     ).toBeVisible()

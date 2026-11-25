@@ -13,6 +13,8 @@ interface TalkScript {
   words: string | null
   /** Refuses the microphone, as a traveler who tapped Don't Allow. */
   denied?: boolean
+  /** The words so far, answering each live piece. Left out, none answers. */
+  live?: string
 }
 
 const TALK_CHAT = '/chats/fixture-chat-today'
@@ -36,7 +38,7 @@ async function talkScript(page: Page, script: TalkScript) {
     const thread = (await response.json()) as Record<string, unknown>
     await route.fulfill({ response, json: { ...thread, messages: [] } })
   })
-  await page.addInitScript(({ presses, words, denied }) => {
+  await page.addInitScript(({ presses, words, denied, live }) => {
     navigator.mediaDevices.getUserMedia = async () => {
       if (denied === true) throw new DOMException('denied', 'NotAllowedError')
       const context = new AudioContext()
@@ -61,6 +63,11 @@ async function talkScript(page: Page, script: TalkScript) {
             ms: 900,
           }),
         )
+      }
+      if (url.includes('/api/voice/live/')) {
+        return live === undefined
+          ? new Promise<Response>(() => undefined)
+          : Promise.resolve(Response.json({ text: live, heard: 1 }))
       }
       if (url.endsWith('/api/assistant/warm')) {
         return Promise.resolve(new Response(null, { status: 202 }))
@@ -96,7 +103,13 @@ async function talkScript(page: Page, script: TalkScript) {
       const button = document.querySelector<HTMLButtonElement>(
         `button[aria-label="${label}"]`,
       )
-      if (button === null) return
+      if (button === null) {
+        // Beside a page, the tablet's mic waits in the sheet this bar opens.
+        for (const bar of document.querySelectorAll('button')) {
+          if (bar.innerText.trim() === 'Talk to the assistant') bar.click()
+        }
+        return
+      }
       // Stop shows while the mic opens too, where a press cancels the clip.
       const listening = document.body.innerText.includes('Listening…')
       if (label !== 'Talk' && !listening) return
@@ -106,9 +119,13 @@ async function talkScript(page: Page, script: TalkScript) {
   }, script)
 }
 
-/** One talk state on the chat page as the traveler. */
-function talkCases(section: string, script: TalkScript): CaptureCase[] {
-  return lightAndDark(section, TALK_CHAT, async (page) => {
+/** One talk state as the traveler, on the chat page unless told otherwise. */
+function talkCases(
+  section: string,
+  script: TalkScript,
+  route = TALK_CHAT,
+): CaptureCase[] {
+  return lightAndDark(section, route, async (page) => {
     await inTripZone(page)
     await page.clock.setFixedTime(new Date(DEMO_INSTANT))
     await flowSticky(page)
@@ -119,6 +136,17 @@ function talkCases(section: string, script: TalkScript): CaptureCase[] {
 
 const STOP = 'Stop and write it down'
 
+// Sixty words, so the older ones fill the thread and fade at its top.
+const LONG_TURN =
+  'Thứ bảy đi chợ hoa Sông Mây lúc chín giờ sáng, rồi ăn trưa với cả nhà ở quán gần bến thuyền, khoảng ba trăm nghìn đồng. Buổi chiều về khách sạn nghỉ, đến năm giờ rưỡi thì đi thuyền ngắm hoàng hôn. Tối hôm đó không có việc gì nữa, nhưng nhớ ghi là mang theo áo khoác và nước uống, vì trên thuyền gió lạnh lắm'
+
+const LIVE: TalkScript = {
+  voice: true,
+  presses: ['Talk'],
+  words: null,
+  live: LONG_TURN,
+}
+
 // Each state is reached by the page pressing the mic itself.
 export const CASES: CaptureCase[] = [
   ...talkCases('talk-ready', { voice: true, presses: [], words: null }),
@@ -127,6 +155,12 @@ export const CASES: CaptureCase[] = [
     presses: ['Talk'],
     words: null,
   }),
+  ...talkCases('talk-live', LIVE),
+  // The sheet and the dock, which a phone has neither of.
+  ...talkCases('talk-live-beside', LIVE, '/trips').map((one) => ({
+    ...one,
+    excludeViewports: ['320', '390'],
+  })),
   ...talkCases('talk-transcribing', {
     voice: true,
     presses: ['Talk', STOP],

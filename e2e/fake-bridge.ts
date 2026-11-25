@@ -20,13 +20,15 @@ export interface FakeBridge {
    * server would, so the transcribing line has time to show.
    */
   answerClip: (text: string, delayMs: number) => Promise<void>
+  /** Answers the next live piece with the words so far. */
+  answerLive: (text: string) => Promise<void>
   /** Reports the voice server's health, as the bridge does when it changes. */
   setVoice: (online: boolean) => void
   close: () => Promise<void>
 }
 
 interface FakeBridgeOptions {
-  /** Says hello as a bridge forwarding clips, with its voice server up. */
+  /** Says hello as a bridge forwarding clips and live pieces, its voice server up. */
   voice?: boolean
 }
 
@@ -86,7 +88,10 @@ export async function connectFakeBridge(
       : { type: 'hello', protocol: BRIDGE_PROTOCOL },
   )
   await nextOf('ready')
-  if (voice) send({ type: 'voice_status', online: true })
+  if (voice) {
+    send({ type: 'live_ready' })
+    send({ type: 'voice_status', online: true })
+  }
 
   return {
     answerWithAdd: async (args, reply) => {
@@ -114,6 +119,11 @@ export async function connectFakeBridge(
       const { transcriptionId } = await nextOf('transcribe')
       await new Promise((resolve) => setTimeout(resolve, delayMs))
       send({ type: 'transcript', transcriptionId, text, audioMs: 2100 })
+    },
+    answerLive: async (text) => {
+      const { liveId, from, audio } = await nextOf('live')
+      const heard = from + Buffer.from(audio, 'base64').length
+      send({ type: 'live_text', liveId, text, heard })
     },
     setVoice: (online) => send({ type: 'voice_status', online }),
     close: () => {
