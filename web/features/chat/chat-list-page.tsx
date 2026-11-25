@@ -143,8 +143,15 @@ function ChatRow({ chat }: { chat: Chat }) {
         <span className="flex size-13 shrink-0 items-center justify-center rounded-lg bg-muted">
           <AssistantIcon aria-hidden="true" className="size-7" />
         </span>
-        <span className="min-w-0 flex-1 text-lg font-extrabold break-words">
-          {chat.title ?? t('chat.untitled')}
+        <span className="flex min-w-0 flex-1 flex-col">
+          <span className="text-lg font-extrabold break-words">
+            {chat.title ?? t('chat.untitled')}
+          </span>
+          {chat.lastMessage != null && (
+            <span className="truncate text-sm text-muted-foreground">
+              {chat.lastMessage}
+            </span>
+          )}
         </span>
         <span className="shrink-0 self-start pt-1 text-sm text-muted-foreground">
           {whenOf(chat.updatedAt, now, t, language)}
