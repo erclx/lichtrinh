@@ -270,6 +270,19 @@ describe('NotifyMe', () => {
     expect(screen.queryByText(/No one gets a notice/)).toBeNull()
   })
 
+  it('asks no permission with no service worker to push to', async () => {
+    const user = userEvent.setup()
+    const { asked } = fakePush({ registered: false })
+    renderSection(aSetting())
+
+    await user.click(choice('Push', 'On'))
+
+    expect(await screen.findByRole('alert')).toHaveTextContent(
+      'This browser cannot show notices.',
+    )
+    expect(asked).toEqual([])
+  })
+
   it('saves the device once the question is allowed', async () => {
     const user = userEvent.setup()
     fakePush()

@@ -31,7 +31,7 @@ export function NotifyMe({ saved }: { saved: NoticeSetting }) {
   const { t } = useTranslation()
   const headingId = useId()
   const [setting, setSetting] = useState(saved)
-  const [push, setPush] = usePushShown(saved.push?.deviceOn ?? false)
+  const push = usePushShown(saved.push?.deviceOn ?? false)
   const [emailOn, setEmailOn] = useState(
     saved.email !== null && saved.email.address !== null,
   )
@@ -51,8 +51,9 @@ export function NotifyMe({ saved }: { saved: NoticeSetting }) {
       {setting.push !== null && (
         <PushRow
           publicKey={setting.push.publicKey}
-          shown={push}
-          onShown={setPush}
+          shown={push.shown}
+          cannot={push.cannot}
+          onShown={push.setShown}
           onSetting={setSetting}
         />
       )}
@@ -64,7 +65,7 @@ export function NotifyMe({ saved }: { saved: NoticeSetting }) {
           onSetting={setSetting}
         />
       )}
-      {!setting.reachable && push === 'off' && !emailOn && (
+      {!setting.reachable && push.shown === 'off' && !emailOn && (
         <p role="status" className={cn(box, 'mt-1 text-base')}>
           {t('assistantSettings.notify.none')}
         </p>
@@ -79,13 +80,16 @@ type PushShown = PushAnswer | 'asking'
 /** The device's own side, read on mount since a browser can change it alone. */
 function usePushShown(deviceOn: boolean) {
   const [shown, setShown] = useState<PushShown>('off')
+  const [cannot, setCannot] = useState(false)
   const [onAtLoad] = useState(deviceOn)
 
   useEffect(() => {
     let live = true
     readPushAnswer(onAtLoad).then(
       (answer) => {
-        if (live && answer === 'on') setShown('on')
+        if (!live) return
+        if (answer === 'on') setShown('on')
+        setCannot(answer === 'unsupported')
       },
       () => undefined,
     )
@@ -94,17 +98,25 @@ function usePushShown(deviceOn: boolean) {
     }
   }, [onAtLoad])
 
-  return [shown, setShown] as const
+  return { shown, setShown, cannot }
 }
 
 interface PushRowProps {
   publicKey: string
   shown: PushShown
+  /** The browser read as unable to push, so On asks no permission for it. */
+  cannot: boolean
   onShown: (shown: PushShown) => void
   onSetting: (setting: NoticeSetting) => void
 }
 
-function PushRow({ publicKey, shown, onShown, onSetting }: PushRowProps) {
+function PushRow({
+  publicKey,
+  shown,
+  cannot,
+  onShown,
+  onSetting,
+}: PushRowProps) {
   const { t } = useTranslation()
   const hintId = useId()
   const [error, setError] = useState<unknown>(null)
@@ -136,6 +148,10 @@ function PushRow({ publicKey, shown, onShown, onSetting }: PushRowProps) {
   }
 
   async function turnOn(): Promise<PushAnswer> {
+    // Read again, since the service worker may have arrived since the load.
+    if (cannot && (await readPushAnswer(false)) === 'unsupported') {
+      return 'unsupported'
+    }
     const device = await subscribeDevice(publicKey)
     if (typeof device === 'string') return device
     onSetting(await savePushDevice(device))
