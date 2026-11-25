@@ -1,19 +1,34 @@
 import type { Page } from '@playwright/test'
 
 import type { CaptureCase } from '../../capture-types'
-import { asAdmin, atDemoInstant, lightAndDark } from '../page-setup'
+import {
+  asAdmin,
+  atDemoInstant,
+  atDemoInstantInTripZone,
+  lightAndDark,
+} from '../page-setup'
 
 // The section stacks the same at every width, so one shows each state.
 const PHONE_ONLY = { excludeViewports: ['768', '1280', '1536'] }
 
-type BackupAnswer = 'saved' | 'failed' | 'held'
+const SHOWN = {
+  saved: 'Backup ready',
+  failed: "Can't connect",
+  held: 'Downloading…',
+}
+type BackupAnswer = keyof typeof SHOWN
 
-// The harness has no hook after the load, so the page answers its own
-// download and presses the button itself. The file's date is pinned, since
-// the saved line shows it.
+// The page answers its own download and presses the button, since the harness
+// has no hook after the load. The held request keeps the shot until the state
+// shows, and the moment and zone are pinned for the date in the saved line.
 async function downloaded(page: Page, answer: BackupAnswer) {
+  await page.route('**/capture-settled', async (route) => {
+    await page.getByText(SHOWN[answer]).waitFor()
+    await route.fulfill({ status: 204 })
+  })
   await page.addInitScript((answer) => {
     const realFetch = window.fetch.bind(window)
+    void realFetch('/capture-settled')
     window.fetch = (input, init) => {
       const url = input instanceof Request ? input.url : String(input)
       if (!url.endsWith('/api/admin/backup')) return realFetch(input, init)
@@ -39,7 +54,7 @@ async function downloaded(page: Page, answer: BackupAnswer) {
       button.click()
     }, 50)
   }, answer)
-  await atDemoInstant(page)
+  await atDemoInstantInTripZone(page)
 }
 
 async function inVietnamese(page: Page) {
