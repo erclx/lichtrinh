@@ -64,7 +64,7 @@ Holds the `lichtrinh` command for the product's own services, which the owner in
 - `program.ts` builds the commander program from an injected output, task runner, and checkout lookup, so tests drive it with no process
 - `checkout.ts` picks the git top level of the working folder when it is a lichtrinh checkout, a linked worktree included, else the command's own checkout
 - `task.ts` prints `› <command>`, runs it with inherited output, and returns its exit code
-- `commands/` holds one file per verb group, being `db` over the local database, `admin`, whose remote flags ask before writing, `voice` over `uv run --group gpu`, and `bridge`, below
+- `commands/` holds one file per verb group, being `db`, `admin`, whose remote flags ask before writing, `voice`, `bridge`, below, and `panel`, at `canon/context/development/panel.md`
 - `admin/` makes the first admin, as `lichtrinh admin create <username> --local` after `bun run db:migrate`. It prints the password once, and the operator's own account passes `--language en`.
 
 ### `bridge/`
@@ -112,7 +112,7 @@ Holds the git hooks that run the checks before a commit or a push leaves.
 Holds the toolkit settings. `config.json` marks the files below customized, so a sync leaves each alone and reports when the toolkit copy moves.
 
 - `vite.config.ts` adds the Worker, the offline build, the state root, and staging's names, and `vitest.config.ts` adds a project per runtime
-- `playwright.config.ts` adds the seeded state root, the test bridge secret, and the fake microphone
+- `playwright.config.ts` adds the seeded state root, the test bridge secret, the fake microphone, and the owner panel's project
 - `tsconfig.json` adds the `@shared/*` alias, and `.oxfmtrc.json` ignores the generated migration files and the design assets
 - The `typecheck` script generates the Worker types first, and `screenshot` seeds a temp database
 - In `voice/`, `mypy.ini` and `pytest.ini` keep the project's own settings, and the placeholder smoke test is declined
