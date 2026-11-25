@@ -33,7 +33,9 @@
     "lint:fix": "oxlint --fix --max-warnings 0",
     "screenshot": "PREVIEW_PORT=$(bash scripts/worktree-port.sh 4173) && export PREVIEW_PORT && LICHTRINH_STATE_ROOT=$(mktemp -d) && export LICHTRINH_STATE_ROOT && bun scripts/seed.ts && bash scripts/screenshot.sh",
     "design:sync": "bash scripts/design-sync.sh",
-    "readme-screenshot": "PREVIEW_PORT=$(bash scripts/worktree-port.sh 4173) && export PREVIEW_PORT && bash scripts/readme-screenshot.sh"
+    "readme-screenshot": "PREVIEW_PORT=$(bash scripts/worktree-port.sh 4173) && export PREVIEW_PORT && bash scripts/readme-screenshot.sh",
+    "test:changed": "vitest run --reporter=verbose",
+    "check:changed": "bun scripts/verify.ts --changed"
   },
   "dependencies": {
     "@base-ui/react": "^1.9.0",
