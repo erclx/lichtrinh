@@ -12,7 +12,21 @@ const traveler = FIXTURE_ACCOUNTS.find(({ canChat }) => canChat)
 const tomorrow = FIXTURE_ASSISTANT_ENTRY.startsOn
 const dayPath = `/trips/${DEMO_DAY.tripId}/days/${tomorrow}`
 
-test('the traveler reads the offline card, then chats with the assistant and undoes its add', async ({
+/** Opens a new outage, so a retried run finds no notice from the one before. */
+async function openOutage(page: Page, baseURL: string) {
+  await (await connectFakeBridge(baseURL)).close()
+  await expect
+    .poll(
+      async () => {
+        const status = await page.request.get('/api/assistant/status')
+        return ((await status.json()) as { online: boolean }).online
+      },
+      { timeout: 5_000 },
+    )
+    .toBe(false)
+}
+
+test('the traveler tells the admin the assistant is off, then chats with it and undoes its add', async ({
   page,
   baseURL,
 }) => {
@@ -27,13 +41,19 @@ test('the traveler reads the offline card, then chats with the assistant and und
   })
   expect(signIn.ok()).toBe(true)
 
+  await openOutage(page, baseURL)
   await page.goto('/chats/fixture-chat-today')
   await expect(
     page.getByRole('heading', { name: 'The assistant is offline' }),
   ).toBeVisible()
+  await page.getByRole('button', { name: 'Notify the admin' }).click()
+  const sent = page.getByText(/^Notice sent to the admin/)
+  await expect(sent).toBeVisible()
+  await page.reload()
+  await expect(sent).toBeVisible()
   await expect(
-    page.getByText('Ask the admin to turn it back on.'),
-  ).toBeVisible()
+    page.getByRole('button', { name: 'Notify the admin' }),
+  ).toHaveCount(0)
   await page.goto(dayPath)
   await expect(
     page.getByRole('link', { name: new RegExp(FIXTURE_ASSISTANT_ENTRY.title) }),
