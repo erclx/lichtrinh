@@ -2,7 +2,7 @@ import type { Change } from '@shared/changes.ts'
 import { nowInZone, shiftClock } from '@shared/trip-time.ts'
 import type { Trip } from '@shared/trips.ts'
 import { SparkleIcon } from 'lucide-react'
-import { useCallback, useId, useRef } from 'react'
+import { useCallback, useId, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link, useParams } from 'react-router'
 
@@ -13,6 +13,7 @@ import { RefreshFailed } from '@/components/refresh-failed'
 import { Button, buttonVariants } from '@/components/ui/button'
 import { useOfferUndo } from '@/components/undo-context'
 import { describeChange } from '@/features/changes/describe-change'
+import { RemoveTripSheet } from '@/features/changes/remove-trip-sheet'
 import { useNow } from '@/hooks/use-now'
 import { formatLongDate, formatTime } from '@/i18n/format'
 import { useLanguage } from '@/i18n/use-language'
@@ -221,6 +222,8 @@ function ChangeRow({ change, time, currency, restoredBy }: Row) {
   const person = change.actor.displayName
   const gone = outcome === 'undone' || outcome === 'alreadyUndone'
   const message = messageOf(outcome)
+  const removesTrip = change.entity === 'trip' && change.before === null
+  const [asking, setAsking] = useState(false)
 
   // Stable, since a new callback would run its cleanup on every render.
   const keepFocus = useCallback((button: HTMLButtonElement) => {
@@ -278,7 +281,7 @@ function ChangeRow({ change, time, currency, restoredBy }: Row) {
           <button
             ref={keepFocus}
             type="button"
-            onClick={run}
+            onClick={removesTrip ? () => setAsking(true) : run}
             aria-disabled={isPending}
             aria-label={t('history.undoLabel', { change: sentence })}
             className="inline-flex min-h-target shrink-0 items-center rounded-lg bg-muted px-4 text-sm font-extrabold outline-none focus-visible:ring-3 focus-visible:ring-ring/50 aria-disabled:opacity-70"
@@ -290,6 +293,17 @@ function ChangeRow({ change, time, currency, restoredBy }: Row) {
       <p role="status" className="pl-16 text-sm empty:hidden">
         {isPending ? t('undo.undoing') : message === null ? null : t(message)}
       </p>
+      {change.entity === 'trip' && removesTrip && (
+        <RemoveTripSheet
+          name={change.after?.name ?? ''}
+          open={asking}
+          onClose={() => setAsking(false)}
+          onConfirm={() => {
+            setAsking(false)
+            run()
+          }}
+        />
+      )}
     </li>
   )
 }

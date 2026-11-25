@@ -12,6 +12,10 @@ export const history = {
   openTrip: 'Open the trip',
   loadFailed: "Couldn't load the changes.",
   olderFailed: "Couldn't load older changes.",
+  removeTripTitle: 'Remove “{{title}}”?',
+  removeTripBody:
+    'This removes the whole trip and everything on it for the family. You can undo right after, but not later.',
+  removeTrip: 'Remove the trip',
   added: 'Added “{{title}}”',
   removed: 'Removed “{{title}}”',
   edited: 'Edited “{{title}}”',

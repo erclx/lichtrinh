@@ -14,6 +14,10 @@ export const history = {
   openTrip: 'Mở chuyến đi',
   loadFailed: 'Chưa tải được các thay đổi.',
   olderFailed: 'Chưa tải được các thay đổi cũ hơn.',
+  removeTripTitle: 'Xoá “{{title}}”?',
+  removeTripBody:
+    'Cả chuyến đi và mọi thứ trong đó sẽ bị xoá với cả nhà. Bạn hoàn tác được ngay sau đó, nhưng về sau thì không.',
+  removeTrip: 'Xoá chuyến đi',
   added: 'Thêm “{{title}}”',
   removed: 'Xoá “{{title}}”',
   edited: 'Sửa “{{title}}”',

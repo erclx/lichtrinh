@@ -470,6 +470,37 @@ describe('HistoryPage undo', () => {
     expect(await within(row).findByText(text)).toBeVisible()
   })
 
+  it('asks before an undo that removes the trip, and keeping it sends nothing', async () => {
+    const user = userEvent.setup()
+    const { requests } = serve([aTripChange(null, tripFields)])
+    renderRoute(historyPath)
+    const row = await rowOf(/^Created the trip/)
+
+    await user.click(within(row).getByRole('button'))
+    const sheet = await screen.findByRole('alertdialog', {
+      name: 'Remove “Trip to Sông Mây”?',
+    })
+    await user.click(within(sheet).getByRole('button', { name: 'Keep it' }))
+
+    await waitFor(() => expect(screen.queryByRole('alertdialog')).toBeNull())
+    expect(requests.filter(({ method }) => method === 'POST')).toEqual([])
+    expect(within(row).getByRole('button')).toBeVisible()
+  })
+
+  it('asks nothing before undoing a change of the trip that keeps it', async () => {
+    const user = userEvent.setup()
+    const rename = aTripChange(tripFields, { ...tripFields, name: 'Again' })
+    serve([rename], {
+      'POST /changes/change-trip/undo': () => json({ change: rename }),
+    })
+    renderRoute(historyPath)
+    const row = await rowOf(/^Renamed the trip/)
+
+    await user.click(within(row).getByRole('button'))
+
+    expect(await within(row).findByText('Undone')).toBeVisible()
+  })
+
   it('offers the way back when an undo removes the trip itself', async () => {
     const user = userEvent.setup()
     const removal = { ...aTripChange(tripFields, null), id: 'change-undo' }
@@ -499,6 +530,9 @@ describe('HistoryPage undo', () => {
     const row = await rowOf(/^Created the trip/)
 
     await user.click(within(row).getByRole('button'))
+    await user.click(
+      await screen.findByRole('button', { name: 'Remove the trip' }),
+    )
     await screen.findByText(/This trip isn't here/)
     await user.click(screen.getByRole('button', { name: 'Undo' }))
 
