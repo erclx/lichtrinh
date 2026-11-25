@@ -54,6 +54,19 @@ describe('SettingsPage', () => {
     ).toBeInTheDocument()
   })
 
+  it.each(['member', 'admin'] as const)(
+    'gives the %s the Add to home screen row',
+    async (role) => {
+      fakeApi({ 'GET /auth/me': () => json(aUser({ role })) })
+
+      renderSettings()
+
+      expect(
+        await screen.findByRole('link', { name: 'Add to home screen' }),
+      ).toHaveAttribute('href', '/settings/install')
+    },
+  )
+
   it('shows a member no Manage accounts row', async () => {
     fakeApi({ 'GET /auth/me': () => json(aUser({ role: 'member' })) })
 

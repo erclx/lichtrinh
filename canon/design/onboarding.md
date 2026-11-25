@@ -10,7 +10,9 @@ Rows v01.8, v02.1, and v02.3 build these screens. These frames are a reference, 
 ## Code
 
 - `web/features/sign-in/sign-in-page.tsx`: sign in and the paused state, with the paused message on the muted fill
-- The v01.8 and v02.3 plans name the paths for install, the tutorial, practice, and the empty calendar
+- `web/features/install/home-screen-page.tsx`: install, whose first step follows Safari on iOS 26 and 27 rather than the frame
+- The install page adds a done line and an Install button that the frame does not draw
+- The v01.8 plan names the paths for the tutorial, practice, and the empty calendar
 
 ## States
 

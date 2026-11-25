@@ -7,6 +7,7 @@ export const settings = {
   appearanceAuto: 'Tự động',
   appearanceLight: 'Sáng',
   appearanceDark: 'Tối',
+  addToHomeScreen: 'Thêm vào màn hình chính',
   manageAccounts: 'Quản lý tài khoản',
   assistant: 'Trợ lý',
   signOut: 'Đăng xuất',

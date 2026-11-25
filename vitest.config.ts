@@ -42,7 +42,11 @@ export default mergeConfig(
             environment: 'jsdom',
             globals: true,
             setupFiles: ['web/test/setup.ts'],
-            include: ['web/**/*.test.{ts,tsx}', 'shared/**/*.test.ts'],
+            include: [
+              'web/**/*.test.{ts,tsx}',
+              'shared/**/*.test.ts',
+              'pwa-manifest.test.ts',
+            ],
           },
         },
         {

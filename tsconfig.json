@@ -34,6 +34,8 @@
     "bridge",
     "scripts",
     "vite.config.ts",
+    "pwa-manifest.ts",
+    "pwa-manifest.test.ts",
     "vitest.config.ts",
     "drizzle.config.ts",
     "e2e",

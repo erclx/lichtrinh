@@ -25,5 +25,5 @@ Holds the device-side cache and the offline state, one role every calendar scree
 Builds the service worker through `vite-plugin-pwa`, which `web/main.tsx` registers in production alone.
 
 - It precaches the built app and answers every navigation with `index.html`, leaving `/api/` to the network so no cached answer outlives a sign-out
-- `manifest: false` holds the place of the home-screen manifest, which a later row writes into the same plugin call
+- The same call takes the home-screen manifest from `pwa-manifest.ts`, which a build links and precaches and the dev server never serves
 - The dev server and Playwright's e2e run register no worker, so `e2e/offline.spec.ts` cuts the API and reloads, and the worker's own reload is checked on a build

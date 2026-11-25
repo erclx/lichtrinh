@@ -9,7 +9,7 @@ Rows v02.1 and v01.6 build these screens. These frames are a reference, and wher
 
 ## Code
 
-- `web/features/settings/settings-page.tsx`: settings, holding Language, Manage accounts, and Sign out
+- `web/features/settings/settings-page.tsx`: settings, holding Language, Add to home screen, Manage accounts, and Sign out
 - `web/features/accounts/accounts-page.tsx`: the accounts list, with the reset confirm in `reset-confirm.tsx`
 - `web/features/accounts/create-account-page.tsx`: creating an account
 - `web/features/accounts/edit-account-page.tsx`: editing an account, with no frame of its own, built from the create frame's fields
