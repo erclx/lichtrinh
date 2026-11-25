@@ -203,7 +203,11 @@
       "id": "e03",
       "language": "en",
       "text": "Rename the Saturday night walk to dinner at the night market",
-      "expect": { "action": "update", "target": "e5", "keywords": ["chợ đêm"] }
+      "expect": {
+        "action": "update",
+        "target": "e5",
+        "keywords": ["tối", "chợ đêm"]
+      }
     },
     {
       "id": "e04",
