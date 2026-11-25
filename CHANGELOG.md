@@ -1,5 +1,14 @@
 # Changelog
 
+## [0.0.6](https://github.com/erclx/lichtrinh/compare/v0.0.5...v0.0.6) (2026-11-25)
+
+
+### Features
+
+* **accounts:** download a backup of every trip as one file ([#38](https://github.com/erclx/lichtrinh/issues/38)) ([340c636](https://github.com/erclx/lichtrinh/commit/340c636da09528c8f96df874e100a7b15838e793))
+* **deploy:** deploy staging on a merge and production on a release ([#40](https://github.com/erclx/lichtrinh/issues/40)) ([8cb3794](https://github.com/erclx/lichtrinh/commit/8cb379486f4f97ea62dd0fa46b9167ddbd8cc0f5))
+* **voice:** show the words while the traveler still speaks ([#39](https://github.com/erclx/lichtrinh/issues/39)) ([34c9c83](https://github.com/erclx/lichtrinh/commit/34c9c836ea3dd0645a473cd49f49aa22d3217412))
+
 ## [0.0.5](https://github.com/erclx/lichtrinh/compare/v0.0.4...v0.0.5) (2026-11-25)
 
 
