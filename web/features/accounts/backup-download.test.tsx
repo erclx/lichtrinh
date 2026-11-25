@@ -75,20 +75,24 @@ afterEach(() => {
 })
 
 describe('BackupDownload', () => {
-  it('saves the backup as a file named for the day it was exported', async () => {
+  it.each([
+    ['Asia/Ho_Chi_Minh', 'lichtrinh-backup-2031-04-10.json'],
+    ['America/New_York', 'lichtrinh-backup-2031-04-09.json'],
+  ])('names the file for the day on the device in %s', async (zone, file) => {
     const user = userEvent.setup()
     fakeApi({ [ROUTE]: () => json(aBackup()) })
     const { saved } = fakeSaves()
+    const options = new Intl.DateTimeFormat().resolvedOptions()
+    vi.spyOn(Intl.DateTimeFormat.prototype, 'resolvedOptions').mockReturnValue({
+      ...options,
+      timeZone: zone,
+    })
     render(<BackupDownload />)
 
     await user.click(screen.getByRole('button', { name: 'Download backup' }))
 
-    expect(await screen.findByRole('status')).toHaveTextContent(
-      'lichtrinh-backup-2031-04-09.json',
-    )
-    expect(saved.map(({ name }) => name)).toEqual([
-      'lichtrinh-backup-2031-04-09.json',
-    ])
+    expect(await screen.findByRole('status')).toHaveTextContent(file)
+    expect(saved.map(({ name }) => name)).toEqual([file])
   })
 
   it('saves a file that reads back as the same backup', async () => {

@@ -7,6 +7,10 @@ import type { CreateTripRequest } from '@shared/trips.ts'
 
 import { FIXTURE_ACCOUNTS, type FixtureAccount } from '../scripts/seed'
 
+const ZONE = 'Asia/Ho_Chi_Minh'
+
+test.use({ timezoneId: ZONE })
+
 function fixture(role: FixtureAccount['role']) {
   const account = FIXTURE_ACCOUNTS.find((one) => one.role === role)
   if (account === undefined) throw new Error(`The seed holds no ${role}`)
@@ -56,9 +60,10 @@ test('the admin downloads a file holding the trip and entry just made', async ({
   const file = backup.parse(
     JSON.parse(await readFile(await download.path(), 'utf8')),
   )
-  expect(download.suggestedFilename()).toBe(
-    `lichtrinh-backup-${file.exportedAt.slice(0, 10)}.json`,
+  const day = new Intl.DateTimeFormat('en-CA', { timeZone: ZONE }).format(
+    new Date(file.exportedAt),
   )
+  expect(download.suggestedFilename()).toBe(`lichtrinh-backup-${day}.json`)
   expect(file.trips).toContainEqual({
     trip: expect.objectContaining(trip),
     entries: [expect.objectContaining(entry)],

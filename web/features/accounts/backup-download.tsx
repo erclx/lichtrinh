@@ -1,5 +1,6 @@
 import type { Backup } from '@shared/backup.ts'
 import { backup } from '@shared/backup.ts'
+import { nowInZone } from '@shared/trip-time.ts'
 import { useEffect, useId, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
@@ -19,6 +20,13 @@ function saveFile(name: string, saved: Backup) {
   link.download = name
   link.click()
   setTimeout(() => URL.revokeObjectURL(href), REVOKE_AFTER_MS)
+}
+
+/** Named for the day on this device, which can differ from the UTC one. */
+function fileNameOf({ exportedAt }: Backup) {
+  const { timeZone } = Intl.DateTimeFormat().resolvedOptions()
+  const { date } = nowInZone(new Date(exportedAt), timeZone)
+  return `lichtrinh-backup-${date}.json`
 }
 
 type Outcome =
@@ -46,7 +54,7 @@ export function BackupDownload() {
     setOutcome({ kind: 'pending' })
     try {
       const saved = await apiFetch('/admin/backup', { schema: backup })
-      const file = `lichtrinh-backup-${saved.exportedAt.slice(0, 10)}.json`
+      const file = fileNameOf(saved)
       saveFile(file, saved)
       setOutcome({ kind: 'saved', file })
     } catch (error) {
