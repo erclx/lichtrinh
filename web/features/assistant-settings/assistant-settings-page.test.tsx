@@ -251,7 +251,23 @@ describe('AssistantSettingsPage', () => {
       ).toBeChecked()
       expect(
         screen.getByRole('radio', { name: 'PhoWhisper' }),
-      ).toHaveAccessibleDescription('Trained for Vietnamese Not used yet')
+      ).toHaveAccessibleDescription(
+        'Hears Vietnamese · English speech uses Qwen3-ASR Not used yet',
+      )
+    })
+
+    it('says English speech runs elsewhere on PhoWhisper alone', async () => {
+      adminApi()
+
+      renderPage()
+
+      expect(
+        await screen.findByRole('radio', { name: 'Qwen3-ASR' }),
+      ).toHaveAccessibleDescription('Default Not used yet')
+      expect(
+        screen.getByRole('radio', { name: 'Whisper turbo' }),
+      ).toHaveAccessibleDescription('Fast Not used yet')
+      expect(screen.getAllByText(/English speech uses/)).toHaveLength(1)
     })
 
     it("reads each model's clips and the share of words changed", async () => {
