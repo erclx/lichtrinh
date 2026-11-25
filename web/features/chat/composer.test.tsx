@@ -432,6 +432,10 @@ describe('Composer with live words', () => {
   const stopButton = () =>
     screen.findByRole('button', { name: 'Stop and write it down' })
 
+  // The composer hands words up in an effect, which can run after the box shows.
+  const cleared = (live: () => string) =>
+    vi.waitFor(() => expect(live()).toBe(''))
+
   async function listen(user: ReturnType<typeof userEvent.setup>) {
     await user.click(screen.getByRole('button', { name: 'Talk' }))
     await screen.findByText('Listening…', { ignore: '[role=status]' })
@@ -477,7 +481,7 @@ describe('Composer with live words', () => {
       'doi an toi sang 8 gio',
     )
     expect(whileWriting).toBe('doi an toi')
-    expect(live()).toBe('')
+    await cleared(live)
   })
 
   it('clears the words when the clip fails', async () => {
@@ -494,7 +498,7 @@ describe('Composer with live words', () => {
     await user.click(await stopButton())
     await screen.findByLabelText('Message the assistant')
 
-    expect(live()).toBe('')
+    await cleared(live)
   })
 
   it('clears the words when the page hides and drops the clip', async () => {
@@ -511,7 +515,7 @@ describe('Composer with live words', () => {
     await screen.findByLabelText('Message the assistant')
     setVisibility('visible')
 
-    expect(live()).toBe('')
+    await cleared(live)
   })
 
   /** Keeps the signal of each live request, beside the fake API. */
