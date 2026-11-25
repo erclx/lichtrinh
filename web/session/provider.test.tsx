@@ -273,6 +273,30 @@ describe('offline', () => {
     expect(await screen.findByText('status: signed-in')).toBeInTheDocument()
   })
 
+  it('hears the connection return in the commit that goes offline', async () => {
+    rememberMember()
+    let online = false
+    fakeApi({ 'GET /auth/me': () => (online ? json(aUser()) : offline()) })
+    // Runs right after the commit, before any later task React schedules.
+    const observer = new MutationObserver(() => {
+      if (online || screen.queryByText('status: offline') === null) return
+      online = true
+      window.dispatchEvent(new Event('online'))
+    })
+    observer.observe(document.body, {
+      childList: true,
+      subtree: true,
+      characterData: true,
+    })
+    try {
+      renderSession()
+
+      expect(await screen.findByText('status: signed-in')).toBeInTheDocument()
+    } finally {
+      observer.disconnect()
+    }
+  })
+
   it('signs out and forgets the device when a session was revoked while away', async () => {
     rememberMember()
     const forget = vi.fn()

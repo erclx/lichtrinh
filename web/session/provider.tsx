@@ -8,6 +8,7 @@ import {
   type ReactNode,
   useCallback,
   useEffect,
+  useLayoutEffect,
   useMemo,
   useState,
 } from 'react'
@@ -135,9 +136,9 @@ export function SessionProvider({
     }
   }, [settle])
 
-  // Offline asks again on reconnect, leaving the saved plan only on an answer.
+  // A layout effect, so an `online` event right after the offline commit is heard.
   const offline = state.status === 'offline'
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (!offline) return
     let live = true
     const check = () =>
