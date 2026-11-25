@@ -4,6 +4,7 @@ import type { Change, EntryFields, TripFields } from '@shared/changes.ts'
 import { screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 
+import { calendarKeys } from '@/calendar-data/queries'
 import { applyLanguage } from '@/i18n/setup'
 import { aTrip } from '@/test/calendar'
 import { aMoveChange, anAddChange } from '@/test/chat'
@@ -218,6 +219,20 @@ describe('HistoryPage', () => {
 })
 
 describe('HistoryPage paging', () => {
+  it('asks for the newest page again after the saved plan is restored', async () => {
+    const { requests } = serve([aPersonAdd()])
+    const { client } = renderRoute(historyPath)
+    await screen.findByText(/^Added “Flower market”/)
+    const key = calendarKeys.changes('trip-river')
+    const saved: unknown = JSON.parse(JSON.stringify(client.getQueryData(key)))
+
+    client.setQueryData(key, saved)
+    await client.refetchQueries({ queryKey: key })
+
+    expect(requests.at(-1)?.path).toBe('/trips/trip-river/changes')
+    expect(screen.getByText(/^Added “Flower market”/)).toBeVisible()
+  })
+
   it('appends the next page and drops the button at the end', async () => {
     const user = userEvent.setup()
     serve([], {

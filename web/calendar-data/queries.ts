@@ -52,8 +52,9 @@ export function useChanges(tripId: string | undefined) {
   return useInfiniteQuery({
     queryKey: calendarKeys.changes(tripId ?? ''),
     queryFn: ({ pageParam }) => listChanges(tripId ?? '', pageParam),
-    initialPageParam: undefined as string | undefined,
-    getNextPageParam: (page) => page.nextBefore ?? undefined,
+    // Null rather than undefined, which the saved plan reads back as null.
+    initialPageParam: null as string | null,
+    getNextPageParam: (page) => page.nextBefore,
     enabled: tripId !== undefined,
   })
 }

@@ -86,9 +86,8 @@ export function undoChange(changeId: string, undoId: string) {
 }
 
 /** A page of a trip's history, newest first, older than `before` when given. */
-export function listChanges(tripId: string, before?: string) {
-  const query =
-    before === undefined ? '' : `?${new URLSearchParams({ before })}`
+export function listChanges(tripId: string, before: string | null) {
+  const query = before === null ? '' : `?${new URLSearchParams({ before })}`
   return apiFetch(`/trips/${segment(tripId)}/changes${query}`, {
     schema: changePage,
   })
