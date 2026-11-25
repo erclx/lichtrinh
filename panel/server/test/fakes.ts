@@ -33,7 +33,15 @@ const KEEP_MS = 12 * 60_000
 
 const MODEL_ALIAS = 'lichtrinh-assistant'
 
-export type Scenario = 'failed' | 'up' | 'stopped'
+export const SCENARIOS = [
+  'failed',
+  'up',
+  'stopped',
+  'staging',
+  'dropped',
+  'refusing',
+] as const
+export type Scenario = (typeof SCENARIOS)[number]
 
 /**
  * A workspace PC in memory. Its `run` and `fetch` answer as systemd, the
@@ -98,7 +106,8 @@ export function createFakeMachine(now: () => Date) {
 
   /** Crashes a unit the way systemd gives up on one, three starts in. */
   const crash = (name: string, reason: string) => {
-    const ended = new Date(now().getTime() - 18 * 60_000)
+    const ended = minutesAgo(18)
+    lines.delete(name)
     const before = (seconds: number) =>
       new Date(ended.getTime() - seconds * 1000)
     units.set(name, {
@@ -122,19 +131,45 @@ export function createFakeMachine(now: () => Date) {
 
   const voiceUnit = serviceOf('voice').unit
   const bridgeUnit = serviceOf('bridge').unit
+  const modelUnit = serviceOf('model').unit
+  const minutesAgo = (minutes: number) =>
+    new Date(now().getTime() - minutes * 60_000)
+
+  /** Voice, the bridge, and a loaded model, some turns into the day. */
+  const bringUp = () => {
+    start(bridgeUnit, minutesAgo(193))
+    start(voiceUnit, minutesAgo(193))
+    modelUntil = new Date(now().getTime() + KEEP_MS)
+    const at = minutesAgo(3)
+    write(bridgeUnit, '{"event":"turn_started","turnId":"7f2e"}', { at })
+    write(bridgeUnit, '{"event":"turn_ended","turnId":"7f2e","ms":2400}', {
+      at,
+    })
+    write(modelUnit, '[GIN] | 200 |  2.4s | 127.0.0.1 | POST     "/api/chat"', {
+      at,
+    })
+  }
 
   const scenarios: Record<Scenario, () => void> = {
     failed: () => {
-      start(bridgeUnit, new Date(now().getTime() - 193 * 60_000))
+      bringUp()
       crash(voiceUnit, 'worker out of memory on load')
-      modelUntil = new Date(now().getTime() + KEEP_MS)
     },
-    up: () => {
-      start(bridgeUnit, new Date(now().getTime() - 193 * 60_000))
-      start(voiceUnit, new Date(now().getTime() - 193 * 60_000))
-      modelUntil = new Date(now().getTime() + KEEP_MS)
-    },
+    up: bringUp,
     stopped: () => {},
+    staging: () => {
+      bringUp()
+      start(serviceOf('staging').unit)
+    },
+    dropped: () => {
+      bringUp()
+      write(bridgeUnit, '{"event":"closed","code":1006}', { at: minutesAgo(2) })
+      write(bridgeUnit, '{"event":"connecting"}')
+    },
+    refusing: () => {
+      bringUp()
+      refused.add(voiceUnit)
+    },
   }
 
   const enter = (scenario: Scenario) => {

@@ -8,6 +8,10 @@ import { E2E_BRIDGE_SECRET } from './e2e/fake-bridge'
 const isCI = !!process.env.CI
 const portOffset = Number(process.env.WORKTREE_PORT_OFFSET) || 0
 const baseURL = `http://localhost:${5173 + portOffset}`
+// The owner panel's own server, over a fake machine, so no run reads or
+// drives the workspace PC.
+const panelPort = 4280 + portOffset
+const panelURL = `http://localhost:${panelPort}`
 // One folder per worktree, wiped and seeded before the server starts, so a
 // run never reads the developer's database or the last run's accounts.
 const stateRoot = join(tmpdir(), `lichtrinh-e2e-${portOffset}`)
@@ -31,7 +35,15 @@ export default defineConfig({
   // shared relay, and Linux WebKit drops the Secure cookie on http://localhost.
   projects: [
     {
+      name: 'panel',
+      testMatch: '**/e2e/panel/*.spec.ts',
+      use: { ...devices['Desktop Chrome'], baseURL: panelURL },
+    },
+    {
       name: 'chromium',
+      testIgnore: '**/e2e/panel/**',
+      // CI runs this project by name, so the panel rides along there alone.
+      dependencies: isCI ? ['panel'] : [],
       use: {
         ...devices['Desktop Chrome'],
         // A tone in place of a microphone, granted without a prompt.
@@ -44,18 +56,26 @@ export default defineConfig({
       },
     },
   ],
-  webServer: {
-    // Seeded here rather than in a global setup, which Playwright runs only
-    // after the server is already up and holding the database.
-    command: `rm -rf "${stateRoot}" && bun scripts/seed.ts && bun run dev`,
-    // The bridge secret is the invented one `e2e/fake-bridge.ts` presents,
-    // read from the environment since a worktree and CI hold no `.dev.vars`.
-    env: {
-      LICHTRINH_STATE_ROOT: stateRoot,
-      BRIDGE_SECRET: E2E_BRIDGE_SECRET,
-      CLOUDFLARE_INCLUDE_PROCESS_ENV: 'true',
+  webServer: [
+    {
+      // Seeded here rather than in a global setup, which Playwright runs only
+      // after the server is already up and holding the database.
+      command: `rm -rf "${stateRoot}" && bun scripts/seed.ts && bun run dev`,
+      // The bridge secret is the invented one `e2e/fake-bridge.ts` presents,
+      // read from the environment since a worktree and CI hold no `.dev.vars`.
+      env: {
+        LICHTRINH_STATE_ROOT: stateRoot,
+        BRIDGE_SECRET: E2E_BRIDGE_SECRET,
+        CLOUDFLARE_INCLUDE_PROCESS_ENV: 'true',
+      },
+      url: baseURL,
+      reuseExistingServer: false,
     },
-    url: baseURL,
-    reuseExistingServer: false,
-  },
+    {
+      command: 'bun run panel:build && bun e2e/panel/fake-server.ts',
+      env: { PANEL_PORT: String(panelPort) },
+      url: panelURL,
+      reuseExistingServer: false,
+    },
+  ],
 })
