@@ -138,7 +138,7 @@ function ChatRow({ chat }: { chat: Chat }) {
     <li className="border-b-[1.5px] border-border last:border-b-0">
       <Link
         to={`/chats/${encodeURIComponent(chat.id)}`}
-        className="flex min-h-target items-center gap-4 rounded-md py-3 outline-none focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:ring-inset"
+        className="-mx-2 flex min-h-target items-center gap-4 rounded-md px-2 py-3 outline-none focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:ring-inset"
       >
         <span className="flex size-13 shrink-0 items-center justify-center rounded-lg bg-muted">
           <AssistantIcon aria-hidden="true" className="size-7" />
