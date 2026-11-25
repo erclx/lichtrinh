@@ -30,8 +30,7 @@ export function HistoryPage() {
   const tripPath = `/trips/${encodeURIComponent(tripId ?? '')}`
   const error = trip.error ?? changes.error
 
-  // Read off the refusal rather than a missing cache, since an undo here can
-  // remove the trip this page has already loaded.
+  // An undo can remove the loaded trip, so the refusal decides, not the cache.
   if (error instanceof ApiFailure && error.code === 'not_found') {
     return (
       <>
