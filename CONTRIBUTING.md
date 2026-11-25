@@ -48,6 +48,8 @@ CI runs on every pull request, and a pull request merges once it passes. Keep ea
 
 release-please cuts every release from the conventional commits on `main`. Each push to `main` keeps one release pull request open, holding the next version and its `CHANGELOG.md` entry. Merging that pull request tags the release.
 
+Every merge to `main` also updates the staging copy, which holds invented data. Merging the release pull request updates staging first and then production.
+
 ## AI-assisted contributions
 
 Contributions written with a coding agent are welcome. You are the author of what you submit, so read every line before you open the pull request and be ready to explain it.

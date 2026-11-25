@@ -21,9 +21,9 @@ My mom is traveling to Vietnam. Calendar apps ask her to learn them first. This 
 
 ## Status
 
-Early development, run locally and not deployed yet. You can sign in, plan trips by hand or by chat, talk to the assistant through the mic, see every trip by month, week, and day, check a trip's budget, read its change history, undo any change, and read the last loaded plan offline.
+Early development. Every merge updates a staging copy on Cloudflare, and every release updates the family's. You can sign in, plan trips by hand or by chat, talk to the assistant through the mic, see every trip by month, week, and day, check a trip's budget, read its change history, undo any change, and read the last loaded plan offline.
 
-Still to come are the guided tutorial, the practice trip, and the deploy, which the home-screen install waits on. `canon/REQUIREMENTS.md` holds the full scope.
+Still to come are the guided tutorial and the practice trip. `canon/REQUIREMENTS.md` holds the full scope.
 
 ## Development
 

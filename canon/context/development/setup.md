@@ -37,7 +37,7 @@ These run and test the app, its local database, and the generated Worker types.
 
 ### `scripts/dev/`
 
-Holds `bun run dev:full`, the owner's way to try the whole app at any time on invented data. It runs the app, voice, and the bridge as children of one process and stops all three on one Ctrl-C. The table sets it beside every other run, and only production leaves this machine.
+Holds `bun run dev:full`, the owner's way to try the whole app at any time on invented data. It runs the app, voice, and the bridge as children of one process and stops all three on one Ctrl-C. The table sets it beside every other run, and only staging and production leave this machine.
 
 | Run                  | Runs on                                   | Its data                                               |
 | -------------------- | ----------------------------------------- | ------------------------------------------------------ |
@@ -46,7 +46,8 @@ Holds `bun run dev:full`, the owner's way to try the whole app at any time on in
 | `bun run test:run`   | Vitest, with the API inside workerd       | A fresh in-memory D1 per test file                     |
 | `bun run test:e2e`   | Playwright against `bun run dev`          | `lichtrinh-e2e-<offset>/` under the temp folder, wiped |
 | `bun run screenshot` | A built preview on port 4173              | A fresh `mktemp -d` folder for each run                |
-| Production           | Not deployed yet, a later row's CI deploy | The remote D1 database that deploy will bind           |
+| Staging              | Cloudflare, on each merge to `main`       | Its own remote D1 database, invented rows alone        |
+| Production           | Cloudflare, on each release               | Its own remote D1 database, the family's trips         |
 
 The run seeds, checks, and stops in the ways below.
 
@@ -63,7 +64,7 @@ Holds the `lichtrinh` command for the product's own services, which the owner in
 - `program.ts` builds the commander program from an injected output, task runner, and checkout lookup, so tests drive it with no process
 - `checkout.ts` picks the git top level of the working folder when it is a lichtrinh checkout, a linked worktree included, else the command's own checkout
 - `task.ts` prints `› <command>`, runs it with inherited output, and returns its exit code
-- `commands/` holds one file per verb group, being `db` over the local database, `admin`, whose `create --remote` asks before it writes, `voice` over `uv run --group gpu`, and `bridge`, below
+- `commands/` holds one file per verb group, being `db` over the local database, `admin`, whose `create --remote` and `--staging` ask before they write, `voice` over `uv run --group gpu`, and `bridge`, below
 - `admin/` makes the first admin, as `lichtrinh admin create <username> --local` after `bun run db:migrate`. It prints the password once, and the operator's own account passes `--language en`.
 
 ### `bridge/`
