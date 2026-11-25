@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.0.7](https://github.com/erclx/lichtrinh/compare/v0.0.6...v0.0.7) (2026-11-25)
+
+
+### Bug Fixes
+
+* **auth:** lower the password rounds to fit the free CPU limit ([#42](https://github.com/erclx/lichtrinh/issues/42)) ([f564540](https://github.com/erclx/lichtrinh/commit/f564540df3b376947ffeb6748b5aaf6535143c4f))
+
 ## [0.0.6](https://github.com/erclx/lichtrinh/compare/v0.0.5...v0.0.6) (2026-11-25)
 
 
