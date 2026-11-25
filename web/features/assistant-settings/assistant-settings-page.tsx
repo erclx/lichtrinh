@@ -4,6 +4,7 @@ import {
   assistantModel,
   type AssistantStatus,
 } from '@shared/assistant.ts'
+import type { NoticeSetting } from '@shared/notices.ts'
 import {
   type VoiceAdmin,
   type VoiceModel,
@@ -18,14 +19,16 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { RadioGroup } from '@/components/ui/radio-group'
 import {
+  failureKey,
   readAssistantStatus,
   readContact,
+  readNoticeSetting,
   readVoice,
   saveContact,
   saveModel,
   saveVoiceModel,
 } from '@/features/assistant-settings/assistant-settings-api'
-import { ApiFailure } from '@/lib/api'
+import { NotifyMe } from '@/features/assistant-settings/notify-me'
 import { cn } from '@/lib/utils'
 import { PageHeader } from '@/shell/page-header'
 
@@ -80,6 +83,7 @@ type Load =
       status: AssistantStatus
       contactName: string | null
       voice: VoiceAdmin
+      notices: NoticeSetting
     }
 
 type Outcome =
@@ -92,9 +96,16 @@ function useAssistantSettings() {
 
   useEffect(() => {
     let live = true
-    Promise.all([readAssistantStatus(), readContact(), readVoice()]).then(
-      ([status, contactName, voice]) => {
-        if (live) setLoad({ state: 'ready', status, contactName, voice })
+    Promise.all([
+      readAssistantStatus(),
+      readContact(),
+      readVoice(),
+      readNoticeSetting(),
+    ]).then(
+      ([status, contactName, voice, notices]) => {
+        if (live) {
+          setLoad({ state: 'ready', status, contactName, voice, notices })
+        }
       },
       () => {
         if (live) setLoad({ state: 'failed' })
@@ -113,13 +124,10 @@ function useAssistantSettings() {
   return { load, retry }
 }
 
-function failureKey(error: unknown) {
-  return error instanceof ApiFailure && error.code === 'network'
-    ? 'errors.network'
-    : 'errors.generic'
-}
-
-/** The admin's assistant page: the home computer, both models, and the contact. */
+/**
+ * The admin's assistant page: the home computer, both models, the contact, and
+ * how to hear that either is off.
+ */
 export function AssistantSettingsPage() {
   const { t } = useTranslation()
   const { load, retry } = useAssistantSettings()
@@ -150,6 +158,7 @@ export function AssistantSettingsPage() {
           <ModelPicker saved={load.status.model} />
           <SpeechPicker voice={load.voice} />
           <ContactForm saved={load.contactName} />
+          <NotifyMe saved={load.notices} />
           <p className="rounded-2xl bg-muted px-3.5 py-3 text-sm text-muted-foreground">
             {t('assistantSettings.note')}
           </p>
