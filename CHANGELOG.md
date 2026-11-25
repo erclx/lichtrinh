@@ -1,5 +1,14 @@
 # Changelog
 
+## [0.0.5](https://github.com/erclx/lichtrinh/compare/v0.0.4...v0.0.5) (2026-11-25)
+
+
+### Features
+
+* **dev:** add dev:full to run the whole app on invented data ([#32](https://github.com/erclx/lichtrinh/issues/32)) ([591cb77](https://github.com/erclx/lichtrinh/commit/591cb77993fd58e429e6d4e0e959111e81e4bc67))
+* **install:** add the app to an iPhone home screen from Settings ([#36](https://github.com/erclx/lichtrinh/issues/36)) ([50c588f](https://github.com/erclx/lichtrinh/commit/50c588f1507eb7aa237d457596ad5298f082d74d))
+* **web:** show each trip's change history with undo ([#37](https://github.com/erclx/lichtrinh/issues/37)) ([840fb54](https://github.com/erclx/lichtrinh/commit/840fb549a9acd0ceb48a0f6182cff90839a26997))
+
 ## [0.0.4](https://github.com/erclx/lichtrinh/compare/v0.0.3...v0.0.4) (2026-11-23)
 
 
