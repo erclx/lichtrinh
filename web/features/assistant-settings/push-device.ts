@@ -7,11 +7,7 @@ import type { PushDevice } from '@shared/notices.ts'
  */
 export type PushAnswer = 'on' | 'off' | 'blocked' | 'install' | 'unsupported'
 
-/**
- * The device's own side of the setting. On takes all three: the API holding
- * this session's device, the permission, and a live subscription, so a device
- * blocked since reads off.
- */
+/** The device's own side of the setting, which the browser can change alone. */
 export async function readPushAnswer(deviceOn: boolean): Promise<PushAnswer> {
   const cannot = whyNot()
   if (cannot !== null) return cannot
@@ -38,7 +34,6 @@ export async function subscribeDevice(
   if (cannot !== null) return cannot
   const permission = await Notification.requestPermission()
   if (permission === 'denied') return 'blocked'
-  // Dismissed without an answer, so the next On asks again.
   if (permission !== 'granted') return 'off'
   const registration = await navigator.serviceWorker.getRegistration()
   if (registration === undefined) return 'unsupported'

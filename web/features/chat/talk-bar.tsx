@@ -17,10 +17,9 @@ interface TalkBarProps {
 }
 
 /**
- * The bar that opens the assistant: above the tabs on a phone, where it
- * opens the latest chat's page, and at the foot of the page from 480 wide,
- * where it opens the sheet. The mic lives in the composer it opens. With no
- * connection it stays, saying it waits.
+ * The bar that opens the assistant: the latest chat's page on a phone, above
+ * the tabs, and the sheet from 480 wide, at the page's foot. With no connection
+ * it stays, saying it waits.
  */
 export function TalkBar({ onOpenPanel, talkRef }: TalkBarProps) {
   const { t } = useTranslation()

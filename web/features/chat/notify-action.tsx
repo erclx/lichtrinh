@@ -64,8 +64,7 @@ function Notify({ kind, contactName }: Omit<NotifyActionProps, 'admin'>) {
   if (notice !== null) {
     return <SentLine ref={sentRef} notice={notice} back={t(copy.back)} />
   }
-  // Nothing until the read lands, so the card never swaps one ending for
-  // another, and whom to ask once it fails.
+  // So the card never swaps one ending for another as the read lands.
   if (reachable === undefined && !unread) return null
   if (reachable !== true) {
     return (

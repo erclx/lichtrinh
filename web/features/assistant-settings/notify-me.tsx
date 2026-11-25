@@ -273,8 +273,7 @@ function EmailRow({ address, on, onTurn, onSetting }: EmailRowProps) {
     }
   }
 
-  // An invalid address clears its error as soon as it reads right, and an
-  // unconfirmed one as soon as it is another address.
+  // An invalid address keeps its error until it reads right.
   function onType(next: string) {
     setTyped(next)
     const stillInvalid =

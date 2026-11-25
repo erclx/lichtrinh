@@ -53,8 +53,7 @@ export function Thread({ chatId, layout }: ThreadProps) {
   const contact = useContact()
   const admin = useSession().user?.role === 'admin'
   const { online, voiceOnline } = useAssistantStatus()
-  // With no connection whether the workspace PC is off is unknown, and the
-  // card over the page says why nothing here answers.
+  // Without it, whether the workspace PC is off is unknown.
   const connected = useOnline()
   const start = useStartChat()
   const navigate = useNavigate()

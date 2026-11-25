@@ -24,10 +24,7 @@ export const noticeState = z.strictObject({
 })
 export type NoticeState = z.infer<typeof noticeState>
 
-/**
- * A send. The kind is the whole key, since an outage takes one notice, so a
- * repeat answers the notice already sent.
- */
+/** A send, which a repeat in the same outage answers with the one notice. */
 export const noticeSend = z.strictObject({ kind: noticeKind })
 export type NoticeSend = z.infer<typeof noticeSend>
 
@@ -53,10 +50,9 @@ export const noticeEmailWrite = z.strictObject({
 export type NoticeEmailWrite = z.infer<typeof noticeEmailWrite>
 
 /**
- * The signed-in admin's own setting, which every write to it answers. A null
- * `push` or `email` means this copy of the app has no key or no sender, so its
- * row leaves the page. `deviceOn` is this session's device alone, a null
- * address is email switched off, and `reachable` counts every admin.
+ * The signed-in admin's own setting, which every write answers. A null `push`
+ * or `email` is one this copy cannot send by, a null address is email off, and
+ * `deviceOn` is this session's device, where `reachable` counts every admin.
  */
 export const noticeSetting = z.strictObject({
   reachable: z.boolean(),
