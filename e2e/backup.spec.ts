@@ -65,6 +65,36 @@ test('the admin downloads a file holding the trip and entry just made', async ({
   })
 })
 
+test('a failed download says so clear of the phone tab bar', async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 390, height: 844 })
+  await signIn(page.request, fixture('admin'))
+  await page.goto('/admin/accounts')
+  const button = page.getByRole('button', { name: 'Download backup' })
+  await expect(button).toBeVisible()
+  await page.route('**/api/admin/backup', (route) => route.abort())
+
+  await button.click()
+
+  const message = page.getByRole('alert').filter({ hasText: "Can't connect" })
+  await expect(message).toBeVisible()
+  const tabs = page.getByRole('navigation')
+  await expect
+    .poll(
+      async () => {
+        const [shown, bar] = await Promise.all([
+          message.boundingBox(),
+          tabs.boundingBox(),
+        ])
+        if (shown === null || bar === null) throw new Error('Nothing to place')
+        return shown.y + shown.height - bar.y
+      },
+      { timeout: 5000 },
+    )
+    .toBeLessThanOrEqual(0)
+})
+
 test('a member is refused the backup', async ({ page }) => {
   await signIn(page.request, fixture('member'))
 

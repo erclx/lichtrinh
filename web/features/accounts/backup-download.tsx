@@ -1,6 +1,6 @@
 import type { Backup } from '@shared/backup.ts'
 import { backup } from '@shared/backup.ts'
-import { useId, useState } from 'react'
+import { useEffect, useId, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import { Button } from '@/components/ui/button'
@@ -32,7 +32,14 @@ export function BackupDownload() {
   const { t } = useTranslation()
   const ids = useId()
   const [outcome, setOutcome] = useState<Outcome>({ kind: 'idle' })
+  const section = useRef<HTMLElement>(null)
   const pending = outcome.kind === 'pending'
+  const settled = outcome.kind === 'saved' || outcome.kind === 'failed'
+
+  // The result and the offline banner push the section under the tab bar.
+  useEffect(() => {
+    if (settled) section.current?.scrollIntoView?.({ block: 'nearest' })
+  }, [settled])
 
   async function onDownload() {
     if (pending) return
@@ -53,14 +60,14 @@ export function BackupDownload() {
 
   return (
     <section
+      ref={section}
       aria-labelledby={`${ids}-title`}
-      className="mt-8 flex flex-col gap-3"
+      className="mt-8 flex scroll-mb-28 flex-col gap-3"
     >
       <h2 id={`${ids}-title`} className="text-lg font-extrabold">
         {t('backup.title')}
       </h2>
       <p className="text-base text-muted-foreground">{t('backup.lead')}</p>
-      {/* Above the button, since the phone tab bar covers what appears below. */}
       {outcome.kind === 'saved' && (
         <p
           role="status"
