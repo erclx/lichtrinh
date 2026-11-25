@@ -17,6 +17,7 @@ async function offlineWithSavedPlan(page: Page, route: string) {
     },
     // The entries and the rate save apart, and the total needs both.
     ['Sunset boat trip', `"rate":"${FIXTURE_RATES[0].rate}"`],
+    { timeout: 10_000 },
   )
   await page
     .context()

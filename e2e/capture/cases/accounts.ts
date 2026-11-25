@@ -23,7 +23,7 @@ type BackupAnswer = keyof typeof SHOWN
 // shows, and the moment and zone are pinned for the date in the saved line.
 async function downloaded(page: Page, answer: BackupAnswer) {
   await page.route('**/capture-settled', async (route) => {
-    await page.getByText(SHOWN[answer]).waitFor()
+    await page.getByText(SHOWN[answer]).waitFor({ timeout: 10_000 })
     await route.fulfill({ status: 204 })
   })
   await page.addInitScript((answer) => {
