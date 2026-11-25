@@ -88,8 +88,7 @@ export function registerPanel(
         lock,
         ...command,
       ]
-      // A panel past its restart limit refuses a start until this clears it,
-      // and systemd refuses this for a unit it has not loaded.
+      // Lifts a restart limit, which systemd refuses on a unit not loaded.
       await run(systemctl('reset-failed', PANEL_UNIT), { mayFail: true })
       if ((await run(systemctl('start', PANEL_UNIT))) !== 0) return
       // A later open starts nothing the owner stopped.
