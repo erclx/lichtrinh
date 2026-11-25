@@ -1,13 +1,8 @@
 import type { AssistantModel } from '@shared/assistant.ts'
-import { assistantModel } from '@shared/assistant.ts'
+import { assistantModel, MODEL_KEEP_ALIVE } from '@shared/assistant.ts'
 import type { OfferedTool } from '@shared/assistant-tools.ts'
 import type { Message } from 'ollama/browser'
 import { Ollama } from 'ollama/browser'
-
-// Keeps the model loaded between the traveler's messages, so a reply does
-// not pay the load again, and lets it go after a quiet quarter hour so the
-// graphics card is free for voice.
-const KEEP_ALIVE = '15m'
 
 export type { Message }
 
@@ -40,7 +35,7 @@ export function turnModel(host: string): TurnModel {
         ...request,
         stream: true,
         think: true,
-        keep_alive: KEEP_ALIVE,
+        keep_alive: MODEL_KEEP_ALIVE,
       }),
     abort: () => client.abort(),
   }
@@ -51,7 +46,7 @@ export async function warm(host: string, model: AssistantModel) {
   await new Ollama({ host }).chat({
     model,
     messages: [],
-    keep_alive: KEEP_ALIVE,
+    keep_alive: MODEL_KEEP_ALIVE,
   })
 }
 
