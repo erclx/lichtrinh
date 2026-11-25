@@ -3,6 +3,11 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 
 import { verifyPassword } from './password.ts'
 
+// Made at 100,000 rounds, a count earlier than the one new hashes take. The key
+// is from Python's `hashlib.pbkdf2_hmac`, over a salt of sixteen 0x07 bytes.
+const OLDER_HASH =
+  'pbkdf2-sha256$100000$BwcHBwcHBwcHBwcHBwcHBw==$6RN8aBHbzAAyYJcF/vMbQ1W3I4x4aPQmBJOJa8VGvFA='
+
 afterEach(() => {
   vi.restoreAllMocks()
 })
@@ -18,6 +23,14 @@ describe('verifyPassword', () => {
     const stored = await hashPassword('abcdefghjkmn')
 
     expect(await verifyPassword('abcdefghjkmp', stored)).toBe(false)
+  })
+
+  it('accepts a password whose hash was stored at an older count', async () => {
+    expect(await verifyPassword('abcdefghjkmn', OLDER_HASH)).toBe(true)
+  })
+
+  it('refuses a wrong password against an older count', async () => {
+    expect(await verifyPassword('abcdefghjkmp', OLDER_HASH)).toBe(false)
   })
 
   it.each([

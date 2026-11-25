@@ -25,7 +25,7 @@ describe('hashPassword', () => {
   it('writes the scheme and the iteration count into the string', async () => {
     const stored = await hashPassword('abcdefghjkmn', SALT)
 
-    expect(stored.startsWith('pbkdf2-sha256$100000$')).toBe(true)
+    expect(stored.startsWith(`pbkdf2-sha256$${PBKDF2_ITERATIONS}$`)).toBe(true)
   })
 
   it('round-trips through parse to the key the password derives', async () => {

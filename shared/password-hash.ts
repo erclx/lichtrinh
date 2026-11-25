@@ -1,9 +1,10 @@
 // Runs alike in the Worker and in Bun on standard Web Crypto, so the admin
 // command and sign-in hash a password the same way.
 
-// The free plan's 10 ms CPU cap fits PBKDF2 near 100k iterations and no
-// memory-hard hash, which `.claude/rules/project/code/passwords.md` records.
-export const PBKDF2_ITERATIONS = 100_000
+// An unmeasured estimate, per `.claude/rules/project/code/passwords.md`. A row
+// on an older count still signs in at its old cost, and an unknown name answers
+// in equal time only once every account is reset onto this one.
+export const PBKDF2_ITERATIONS = 25_000
 
 const SCHEME = 'pbkdf2-sha256'
 const SALT_BYTES = 16
