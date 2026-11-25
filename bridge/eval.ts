@@ -132,6 +132,7 @@ async function runOne(host: string, model: AssistantModel, text: string) {
       turnId: crypto.randomUUID(),
       model,
       messages: buildPrompt({
+        language: 'vi',
         trip,
         entries,
         history: [],

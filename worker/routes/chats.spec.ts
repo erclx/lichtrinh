@@ -174,6 +174,29 @@ describe('POST /api/chats/:id/messages', () => {
     return bridge
   }
 
+  it.each([
+    ['English', 'an English account', 'en'],
+    ['Vietnamese', 'a Vietnamese account', 'vi'],
+    ['Vietnamese', 'an account with no saved language', null],
+  ] as const)('asks for a reply in %s for %s', async (reply, _, language) => {
+    const { cookie, chat } = await chatterWithChat({ language })
+    const bridge = await connectBridge()
+    open.push(bridge)
+
+    const res = await sendMessage(cookie, chat.id)
+    const turn = await bridge.next()
+    if (turn.type !== 'turn') throw new Error(`Expected turn, got ${turn.type}`)
+    bridge.send({
+      type: 'final',
+      turnId: turn.turnId,
+      text: 'Invented reply',
+      heldRemoval: false,
+    })
+    await readEvents(res)
+
+    expect(turn.messages[0].content).toContain(`Reply in ${reply}`)
+  })
+
   it('answers a retried send with the saved reply and runs no second turn', async () => {
     const { cookie, chat } = await chatterWithChat()
     const body = { id: crypto.randomUUID(), text: 'Invented ask' }

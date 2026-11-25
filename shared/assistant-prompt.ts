@@ -1,4 +1,5 @@
 import { toolEntry } from './assistant-tools.ts'
+import type { Language } from './auth.ts'
 import type { TurnMessage } from './bridge-frames.ts'
 import type { ChatRole } from './chats.ts'
 import { minorDigits } from './currency.ts'
@@ -9,11 +10,18 @@ import type { Trip } from './trips.ts'
 /** How many earlier messages a turn sends, inside the 16,384-token alias. */
 export const HISTORY_LENGTH = 20
 
-const INSTRUCTIONS = `You are the planning assistant inside a shared trip calendar for a Vietnamese family.
+// The only lines that name a language, so every rule below holds in both. A
+// Vietnamese prompt changed by a word loses the eval score measured on it.
+const OPENING: Record<Language, string> = {
+  vi: `You are the planning assistant inside a shared trip calendar for a Vietnamese family.
 The traveler writes in Vietnamese, often without diacritics. Read such text as the Vietnamese it stands for.
-Reply in Vietnamese with full diacritics, in a few short sentences.
+Reply in Vietnamese with full diacritics, in a few short sentences.`,
+  en: `You are the planning assistant inside a shared trip calendar whose entries are in Vietnamese.
+The traveler writes in English. Write every entry title and note in Vietnamese with full diacritics, since the whole family reads them.
+Reply in English, in a few short sentences, whatever language earlier messages used.`,
+}
 
-What you answer:
+const RULES = `What you answer:
 - Answer questions about the plan from the trip and entries below, without calling a tool.
 - Answer general travel questions, such as food, customs, and useful phrases, from your own knowledge.
 - You have no internet access and what you know may be out of date. Say so plainly when it matters, and never invent live details such as prices, opening hours, or weather.
@@ -40,6 +48,8 @@ const WEEKDAYS = [
 ]
 
 export interface PromptInput {
+  // The language the traveler writes and is answered in, never the entries'.
+  language: Language
   trip: Trip
   entries: Entry[]
   // Earlier messages, oldest first, without the one being sent.
@@ -64,7 +74,7 @@ export function buildPrompt(input: PromptInput): TurnMessage[] {
   ]
 }
 
-function systemText({ trip, entries, at }: PromptInput) {
+function systemText({ language, trip, entries, at }: PromptInput) {
   const digits = minorDigits(trip.currency)
   const now = nowInZone(at, trip.timeZone)
   const clock = `${String(Math.floor(now.minute / 60)).padStart(2, '0')}:${String(now.minute % 60).padStart(2, '0')}`
@@ -76,7 +86,9 @@ function systemText({ trip, entries, at }: PromptInput) {
           ...entries.map((e) => JSON.stringify(toolEntry(e, digits))),
         ]
   return [
-    INSTRUCTIONS,
+    OPENING[language],
+    '',
+    RULES,
     '',
     `Trip: ${trip.name}, ${trip.startsOn} to ${trip.endsOn}, time zone ${trip.timeZone}, costs in ${trip.currency}`,
     `Trip days: ${tripDays(trip).join(', ')}`,

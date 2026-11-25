@@ -47,6 +47,7 @@ function input(overrides: Partial<PromptInput> = {}): PromptInput {
     trip,
     entries: [entry()],
     history: [],
+    language: 'vi',
     text: 'Invented request',
     // 09:05 on Friday 11 April in Ho Chi Minh City.
     at: new Date('2031-04-11T02:05:00Z'),
@@ -172,5 +173,40 @@ describe('buildPrompt, the approval rules', () => {
   it('reads text without diacritics and keeps proper names as typed', () => {
     expect(rules).toContain('often without diacritics')
     expect(rules).toContain('Keep proper names as the traveler wrote them')
+  })
+})
+
+describe('buildPrompt, the language', () => {
+  const vietnamese = system(buildPrompt(input({ language: 'vi' }))).split('\n')
+  const english = system(buildPrompt(input({ language: 'en' }))).split('\n')
+
+  it('opens the Vietnamese prompt with the lines the eval was scored on', () => {
+    expect(vietnamese.slice(0, 3)).toEqual([
+      'You are the planning assistant inside a shared trip calendar for a Vietnamese family.',
+      'The traveler writes in Vietnamese, often without diacritics. Read such text as the Vietnamese it stands for.',
+      'Reply in Vietnamese with full diacritics, in a few short sentences.',
+    ])
+  })
+
+  it('asks for an English reply whatever earlier messages used', () => {
+    const rules = english.join('\n')
+
+    expect(rules).toContain('Reply in English, in a few short sentences')
+    expect(rules).toContain('whatever language earlier messages used')
+    expect(rules).not.toContain('Reply in Vietnamese')
+  })
+
+  it('asks for Vietnamese titles and notes on an English account', () => {
+    expect(english.join('\n')).toContain(
+      'Write every entry title and note in Vietnamese with full diacritics',
+    )
+  })
+
+  it('shares every rule and the whole trip between the two', () => {
+    const rulesFrom = (lines: string[]) =>
+      lines.slice(lines.indexOf('What you answer:'))
+
+    expect(rulesFrom(english)).toEqual(rulesFrom(vietnamese))
+    expect(rulesFrom(english).length).toBeGreaterThan(15)
   })
 })

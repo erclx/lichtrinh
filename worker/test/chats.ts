@@ -1,3 +1,4 @@
+import type { Language } from '@shared/auth.ts'
 import type { ChatEvent } from '@shared/chats.ts'
 import { chatEvent, chatRead } from '@shared/chats.ts'
 import type { VoiceSend } from '@shared/voice.ts'
@@ -9,8 +10,10 @@ import { addTrip } from './trips.ts'
 import { signedIn } from './users.ts'
 
 /** A chatting account with a chat bound to an invented trip of its own. */
-export async function chatterWithChat() {
-  const signed = await signedIn({ canChat: true })
+export async function chatterWithChat(
+  options: { language?: Language | null } = {},
+) {
+  const signed = await signedIn({ canChat: true, ...options })
   const { trip } = await addTrip(signed.cookie)
   const res = await app.request(
     '/api/chats',
