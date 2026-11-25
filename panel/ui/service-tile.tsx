@@ -143,7 +143,7 @@ export function ServiceTile({
             aria-expanded={open}
             aria-controls={`${ids}-log`}
             onClick={() => setToggled(!open)}
-            className="-mx-1 -mb-3 flex h-16 items-center justify-between border-t-2 px-1 text-sm font-extrabold outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
+            className="-mx-1 -mb-3 flex h-16 items-center justify-between rounded-b-lg border-t-2 px-1 text-sm font-extrabold outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
           >
             Recent log lines
             <span className="sr-only">of {label}</span>
