@@ -1,5 +1,20 @@
 # Changelog
 
+## [0.0.8](https://github.com/erclx/lichtrinh/compare/v0.0.7...v0.0.8) (2026-11-25)
+
+
+### Features
+
+* **assistant:** follow the account's language in voice and replies ([#45](https://github.com/erclx/lichtrinh/issues/45)) ([41c0a5b](https://github.com/erclx/lichtrinh/commit/41c0a5b93ac55e599e3a22414f4641001ca209ed))
+* **chat:** show the last message under each chat in the list ([#47](https://github.com/erclx/lichtrinh/issues/47)) ([a91da51](https://github.com/erclx/lichtrinh/commit/a91da51703ff2b4de7f1d7c2413f535c095f6c26))
+* **notices:** let the traveler tell the admin the assistant is off ([#49](https://github.com/erclx/lichtrinh/issues/49)) ([ab541ee](https://github.com/erclx/lichtrinh/commit/ab541ee033ec0accfc2f1ecd71656ee796cae2a3))
+* **panel:** start and watch the workspace PC from one shortcut ([#48](https://github.com/erclx/lichtrinh/issues/48)) ([e8f57dc](https://github.com/erclx/lichtrinh/commit/e8f57dc9490d5cf511f6d76bc15f2960c50033b2))
+
+
+### Bug Fixes
+
+* **session:** attach the offline listener in the commit ([#44](https://github.com/erclx/lichtrinh/issues/44)) ([13adac1](https://github.com/erclx/lichtrinh/commit/13adac179d2489717f7c50a158b1a8843a76427c))
+
 ## [0.0.7](https://github.com/erclx/lichtrinh/compare/v0.0.6...v0.0.7) (2026-11-25)
 
 
