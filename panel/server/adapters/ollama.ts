@@ -52,13 +52,14 @@ export async function loadedModels(
   }
 }
 
-/** Puts a model on the card, settling once it is there. */
+/** Puts a model on the card, settling once it is there. An abort drops it. */
 export async function loadModel(
   fetcher: typeof fetch,
   ollamaUrl: string,
   model: AssistantModel,
+  signal?: AbortSignal,
 ) {
-  await keep(fetcher, ollamaUrl, model, MODEL_KEEP_ALIVE)
+  await keep(fetcher, ollamaUrl, model, MODEL_KEEP_ALIVE, signal)
 }
 
 /** Frees a model's memory. Ollama ends a running reply first. */
@@ -76,14 +77,16 @@ async function keep(
   ollamaUrl: string,
   model: AssistantModel,
   keepAlive: string | 0,
+  signal?: AbortSignal,
 ) {
+  const limit = AbortSignal.timeout(LOAD_TIMEOUT_MS)
   let status: number
   try {
     const response = await fetcher(`${ollamaUrl}/api/generate`, {
       method: 'POST',
       headers: { 'content-type': 'application/json' },
       body: JSON.stringify({ model, keep_alive: keepAlive, stream: false }),
-      signal: AbortSignal.timeout(LOAD_TIMEOUT_MS),
+      signal: signal === undefined ? limit : AbortSignal.any([signal, limit]),
     })
     status = response.status
   } catch (error) {
