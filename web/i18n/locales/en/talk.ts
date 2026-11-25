@@ -23,6 +23,8 @@ export const talk = {
     'Speech recognition runs on the computer at home, and it is off. You can still type.',
   offContact: 'Ask {{name}} to turn voice back on.',
   offAdmin: 'Ask the admin to turn voice back on.',
+  offSelf: 'Turn voice on at the home computer to bring it back.',
+  noticeBack: 'The mic comes back by itself once voice is on.',
   deniedTitle: 'The microphone is off for this app',
   deniedBody:
     'To turn it on, open Settings on the iPhone, go to Safari, then Microphone, and pick Allow. You can still type.',

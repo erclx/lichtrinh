@@ -1,6 +1,7 @@
 import '@/i18n/setup'
 
 import type { AssistantStatus } from '@shared/assistant.ts'
+import type { User } from '@shared/auth.ts'
 import type { ChatEvent, ChatMessage } from '@shared/chats.ts'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { render, screen } from '@testing-library/react'
@@ -9,6 +10,7 @@ import { createMemoryRouter, RouterProvider } from 'react-router'
 
 import { Thread } from '@/features/chat/thread'
 import { applyLanguage } from '@/i18n/setup'
+import { SessionContext, type SessionValue } from '@/session/session-context'
 import {
   aChat,
   aMoveChange,
@@ -17,7 +19,7 @@ import {
   aStep,
   aUserMessage,
 } from '@/test/chat'
-import { failure, fakeApi, json } from '@/test/fake-api'
+import { aUser, failure, fakeApi, json } from '@/test/fake-api'
 import { aFakeStream, FakeMediaRecorder } from '@/test/media'
 
 type Routes = Parameters<typeof fakeApi>[0]
@@ -66,7 +68,23 @@ function chatApi(
   })
 }
 
-function renderThread(layout: 'page' | 'panel' = 'panel') {
+const unused = async () => undefined
+
+function aSession(user: User): SessionValue {
+  return {
+    status: 'signed-in',
+    user,
+    signIn: unused,
+    signOut: unused,
+    refresh: unused,
+    saveLanguage: unused,
+  }
+}
+
+function renderThread(
+  layout: 'page' | 'panel' = 'panel',
+  user = aUser({ canChat: true }),
+) {
   const client = new QueryClient({
     defaultOptions: {
       queries: { retry: false, refetchInterval: false },
@@ -83,9 +101,11 @@ function renderThread(layout: 'page' | 'panel' = 'panel') {
     { initialEntries: ['/chats/chat-today'] },
   )
   render(
-    <QueryClientProvider client={client}>
-      <RouterProvider router={router} />
-    </QueryClientProvider>,
+    <SessionContext value={aSession(user)}>
+      <QueryClientProvider client={client}>
+        <RouterProvider router={router} />
+      </QueryClientProvider>
+    </SessionContext>,
   )
   return { router }
 }
@@ -325,6 +345,35 @@ describe('Thread', () => {
       expect(
         await screen.findByText('Ask the admin to turn it back on.'),
       ).toBeInTheDocument()
+    })
+
+    it('offers Notify in the card once a way to notify is set', async () => {
+      chatApi([], {
+        'GET /assistant/status': () => json(aStatus(false)),
+        'GET /notices': () =>
+          json({ reachable: true, assistant: null, voice: null }),
+      })
+      renderThread()
+
+      expect(
+        await screen.findByRole('button', { name: 'Notify the admin' }),
+      ).toBeInTheDocument()
+    })
+
+    it('tells an admin to turn the computer on, and offers no Notify', async () => {
+      chatApi([], {
+        'GET /assistant/status': () => json(aStatus(false)),
+        'GET /notices': () =>
+          json({ reachable: true, assistant: null, voice: null }),
+      })
+      renderThread('panel', aUser({ role: 'admin', canChat: true }))
+
+      expect(
+        await screen.findByText('Turn the home computer on to bring it back.'),
+      ).toBeInTheDocument()
+      expect(
+        screen.queryByRole('button', { name: 'Notify the admin' }),
+      ).toBeNull()
     })
 
     it('shows the offline card when a send finds the workspace PC off', async () => {

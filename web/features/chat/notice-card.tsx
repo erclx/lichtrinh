@@ -2,14 +2,21 @@ import { useId } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import { Button } from '@/components/ui/button'
+import { NotifyAction } from '@/features/chat/notify-action'
 import { StartFailed } from '@/features/chat/start-failed'
 import { PlusIcon } from '@/shell/icons'
 
+interface OfflineCardProps {
+  contactName: string | null
+  admin: boolean
+}
+
 /**
- * Says the workspace PC is off and whom to ask, from the admin's contact
- * setting. The plan stays editable by hand, which the card says too.
+ * Says the workspace PC is off and ends on telling the admin, or whom to ask
+ * from the contact setting. The plan stays editable by hand, which the card
+ * says too.
  */
-export function OfflineCard({ contactName }: { contactName: string | null }) {
+export function OfflineCard({ contactName, admin }: OfflineCardProps) {
   const { t } = useTranslation()
   const titleId = useId()
 
@@ -22,11 +29,7 @@ export function OfflineCard({ contactName }: { contactName: string | null }) {
         {t('chat.offlineTitle')}
       </h2>
       <p className="text-base">{t('chat.offlineBody')}</p>
-      <p className="text-base font-bold">
-        {contactName === null
-          ? t('chat.offlineAdmin')
-          : t('chat.offlineContact', { name: contactName })}
-      </p>
+      <NotifyAction kind="assistant" contactName={contactName} admin={admin} />
     </section>
   )
 }

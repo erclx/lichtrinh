@@ -35,6 +35,8 @@ interface ComposerProps {
   empty: boolean
   /** Whom the voice-off card asks, or null for the admin. */
   contactName: string | null
+  /** The reader is an admin, whose voice-off card has nobody to tell. */
+  admin: boolean
   /** Resolves false when the send was turned away, putting the text back. */
   onSend: (text: string, voice?: VoiceSend) => Promise<boolean>
   onStop: () => void
@@ -63,6 +65,7 @@ export function Composer({
   voiceOnline,
   empty,
   contactName,
+  admin,
   onSend,
   onStop,
   onLive,
@@ -150,7 +153,7 @@ export function Composer({
 
   return (
     <div className="flex flex-col gap-3">
-      {voiceOff && <VoiceOffCard contactName={contactName} />}
+      {voiceOff && <VoiceOffCard contactName={contactName} admin={admin} />}
       {talk.state.phase === 'denied' && <MicDeniedCard />}
       <Notice state={talk.state} hint={guide} />
       {showSamples && (

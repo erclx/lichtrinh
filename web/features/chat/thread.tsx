@@ -29,6 +29,7 @@ import {
 } from '@/features/chat/voice/live-words'
 import { useLanguage } from '@/i18n/use-language'
 import { cn } from '@/lib/utils'
+import { useSession } from '@/session/session-context'
 
 interface ThreadProps {
   chatId: string
@@ -49,6 +50,7 @@ export function Thread({ chatId, layout }: ThreadProps) {
   const { turn, send, stop } = useTurn(chatId)
   const thread = useThread(chatId, unsavedSend(turn))
   const contact = useContact()
+  const admin = useSession().user?.role === 'admin'
   const { online, voiceOnline } = useAssistantStatus()
   const start = useStartChat()
   const navigate = useNavigate()
@@ -110,7 +112,9 @@ export function Thread({ chatId, layout }: ThreadProps) {
             panel ? 'min-h-0 overflow-y-auto px-4 py-3' : 'pb-3',
           )}
         >
-          {offline && <OfflineCard contactName={contact.data ?? null} />}
+          {offline && (
+            <OfflineCard contactName={contact.data ?? null} admin={admin} />
+          )}
           {thread.isPending ? (
             <p role="status" className="text-base text-muted-foreground">
               {t('shell.loading')}
@@ -185,6 +189,7 @@ export function Thread({ chatId, layout }: ThreadProps) {
             voiceOnline={voiceOnline}
             empty={!thread.isPending && items.length === 0}
             contactName={contact.data ?? null}
+            admin={admin}
             onSend={send}
             onStop={stop}
             onLive={setLiveWords}

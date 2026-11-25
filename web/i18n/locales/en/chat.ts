@@ -47,6 +47,18 @@ export const chat = {
     'The computer at home is off, so the assistant cannot answer right now. You can still see and edit the plan by hand.',
   offlineContact: 'Ask {{name}} to turn it back on.',
   offlineAdmin: 'Ask the admin to turn it back on.',
+  offlineSelf: 'Turn the home computer on to bring it back.',
+  notify: 'Notify the admin',
+  notifyHint: 'The admin gets a notice to turn the computer back on.',
+  notifying: 'Sending the notice…',
+  noticeSent: 'Notice sent to the admin at {{time}}',
+  noticeSentOn: 'Notice sent to the admin on {{date}} at {{time}}',
+  noticeTold: '{{name}} sent a notice at {{time}}',
+  noticeToldOn: '{{name}} sent a notice on {{date}} at {{time}}',
+  noticeBack:
+    'The assistant comes back here by itself once the computer is on.',
+  noticeFailed:
+    'The notice did not go out. Try again, or ask the admin yourself.',
   failedTitle: 'The connection dropped partway',
   failedNothing: 'Nothing in the plan changed.',
   failedSome: 'Some changes were made, each shown here with Undo.',

@@ -43,6 +43,7 @@ function renderComposer({
         voiceOnline={voice}
         empty={empty}
         contactName={null}
+        admin={false}
         onSend={onSend}
         onStop={onStop}
         onLive={onLive}

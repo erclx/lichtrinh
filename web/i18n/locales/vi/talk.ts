@@ -25,6 +25,8 @@ export const talk = {
     'Nhận giọng nói chạy trên máy ở nhà, và máy đang tắt. Bạn vẫn gõ chữ được.',
   offContact: 'Nhờ {{name}} bật lại giọng nói.',
   offAdmin: 'Nhờ quản trị viên bật lại giọng nói.',
+  offSelf: 'Bật giọng nói trên máy ở nhà để dùng lại.',
+  noticeBack: 'Khi giọng nói bật lại, nút nói sẽ tự sáng lên.',
   deniedTitle: 'Micro đang tắt cho ứng dụng này',
   deniedBody:
     'Để bật lại, mở Cài đặt trên iPhone, vào Safari, chọn Micro rồi chọn Cho phép. Bạn vẫn gõ chữ được.',
