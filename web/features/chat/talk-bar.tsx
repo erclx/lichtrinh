@@ -5,6 +5,9 @@ import { useNavigate } from 'react-router'
 import { useOpenLatestChat } from '@/features/chat/chat-api'
 import { StartFailed } from '@/features/chat/start-failed'
 import { useMediaQuery } from '@/hooks/use-media-query'
+import { cn } from '@/lib/utils'
+import { useOnline } from '@/offline/connection'
+import { offlineReasonId, waitingClass } from '@/offline/offline-card'
 import { AssistantIcon } from '@/shell/icons'
 
 interface TalkBarProps {
@@ -16,7 +19,8 @@ interface TalkBarProps {
 /**
  * The bar that opens the assistant: above the tabs on a phone, where it
  * opens the latest chat's page, and at the foot of the page from 480 wide,
- * where it opens the sheet. The mic lives in the composer it opens.
+ * where it opens the sheet. The mic lives in the composer it opens. With no
+ * connection it stays, saying it waits.
  */
 export function TalkBar({ onOpenPanel, talkRef }: TalkBarProps) {
   const { t } = useTranslation()
@@ -25,8 +29,10 @@ export function TalkBar({ onOpenPanel, talkRef }: TalkBarProps) {
   const { open } = useOpenLatestChat()
   const [error, setError] = useState<unknown>(null)
   const [opening, setOpening] = useState(false)
+  const online = useOnline()
 
   async function press() {
+    if (!online) return
     if (roomy) {
       onOpenPanel()
       return
@@ -52,11 +58,15 @@ export function TalkBar({ onOpenPanel, talkRef }: TalkBarProps) {
           ref={talkRef}
           type="button"
           onClick={() => void press()}
-          aria-disabled={opening}
-          className="flex min-h-target w-full items-center justify-center gap-3 rounded-full bg-primary px-6 text-lg font-extrabold text-primary-foreground outline-none focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+          aria-disabled={opening || !online}
+          aria-describedby={online ? undefined : offlineReasonId}
+          className={cn(
+            'flex min-h-target w-full items-center justify-center gap-3 rounded-full bg-primary px-6 text-lg font-extrabold text-primary-foreground outline-none focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:ring-offset-2 focus-visible:ring-offset-background',
+            !online && waitingClass,
+          )}
         >
           <AssistantIcon aria-hidden="true" className="size-7 shrink-0" />
-          {t('chat.talk')}
+          {t(online ? 'chat.talk' : 'offline.needsConnection')}
         </button>
       </div>
     </div>

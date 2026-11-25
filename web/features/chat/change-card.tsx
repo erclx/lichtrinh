@@ -11,6 +11,8 @@ import { formatCardDate, formatTime } from '@/i18n/format'
 import type { Language } from '@/i18n/resources'
 import { useLanguage } from '@/i18n/use-language'
 import { cn } from '@/lib/utils'
+import { useOnline } from '@/offline/connection'
+import { offlineReasonId, waitingClass } from '@/offline/offline-card'
 
 interface Shown {
   title: string
@@ -68,11 +70,15 @@ const messageKey = {
   failed: 'errors.generic',
 } as const
 
-/** One change a reply made, tinted by the entry's kind, with Undo. */
+/**
+ * One change a reply made, tinted by the entry's kind, with Undo, which waits
+ * with no connection.
+ */
 export function ChangeCard({ change }: { change: Change }) {
   const { t } = useTranslation()
   const language = useLanguage()
   const client = useQueryClient()
+  const online = useOnline()
   const { outcome, isPending, run } = useChangeUndo(change, {
     onUndone: () => void client.invalidateQueries({ queryKey: chatKeys.all }),
   })
@@ -104,10 +110,14 @@ export function ChangeCard({ change }: { change: Change }) {
         {canUndo ? (
           <button
             type="button"
-            onClick={run}
-            aria-disabled={isPending}
+            onClick={online ? run : undefined}
+            aria-disabled={isPending || !online}
+            aria-describedby={online ? undefined : offlineReasonId}
             aria-label={t('chat.undoLabel', { title: shown.title })}
-            className="inline-flex min-h-target shrink-0 items-center rounded-lg bg-primary px-4 text-sm font-extrabold text-primary-foreground outline-none focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:ring-offset-2 aria-disabled:opacity-70"
+            className={cn(
+              'inline-flex min-h-target shrink-0 items-center rounded-lg bg-primary px-4 text-sm font-extrabold text-primary-foreground outline-none focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:ring-offset-2',
+              online ? 'aria-disabled:opacity-70' : waitingClass,
+            )}
           >
             {isPending ? t('chat.undoing') : t('chat.undo')}
           </button>

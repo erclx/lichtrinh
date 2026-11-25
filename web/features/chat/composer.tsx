@@ -26,6 +26,8 @@ interface ComposerProps {
   running: boolean
   /** The workspace PC is off, which the offline card above explains. */
   offline: boolean
+  /** The app reaches the API. Without it the row waits, whatever else is off. */
+  connected: boolean
   /**
    * Whether voice answers, from the status read. False draws the mic off,
    * and null, from an API reporting no voice, leaves it on.
@@ -62,6 +64,7 @@ const SAMPLES = [
 export function Composer({
   running,
   offline,
+  connected,
   voiceOnline,
   empty,
   contactName,
@@ -83,6 +86,7 @@ export function Composer({
     setLanded(next)
   })
   const recording = isRecording(talk.state)
+  const blocked = offline || !connected
 
   useEffect(() => {
     if (talk.state.phase === 'review') box.current?.focus()
@@ -100,7 +104,7 @@ export function Composer({
 
   async function submit() {
     const asked = text.trim()
-    if (running || offline || recording || asked === '') return
+    if (running || blocked || recording || asked === '') return
     const voice =
       talk.state.phase === 'review' && landed !== null
         ? {
@@ -136,18 +140,20 @@ export function Composer({
     box.current?.focus()
   }
 
-  const placeholder = offline
-    ? t('chat.offlinePlaceholder')
-    : running
-      ? t('chat.workingPlaceholder')
-      : t('chat.messagePlaceholder')
+  const placeholder = !connected
+    ? t('offline.needsConnection')
+    : offline
+      ? t('chat.offlinePlaceholder')
+      : running
+        ? t('chat.workingPlaceholder')
+        : t('chat.messagePlaceholder')
 
   // A failed clip shows voice off until a status read says otherwise.
   const voiceOff =
-    !offline &&
+    !blocked &&
     (voiceOnline === false ||
       (voiceOnline === null && talk.state.phase === 'off'))
-  const guide = empty && !offline && !voiceOff
+  const guide = empty && !blocked && !voiceOff
   const showSamples =
     guide && text === '' && talk.state.phase !== 'review' && talk.words === ''
 
@@ -185,7 +191,7 @@ export function Composer({
               value={text}
               onChange={(event) => setText(event.target.value)}
               onKeyDown={onKeyDown}
-              disabled={offline}
+              disabled={blocked}
               rows={1}
               aria-label={t('chat.messageLabel')}
               placeholder={placeholder}
@@ -193,7 +199,11 @@ export function Composer({
                 'field-sizing-content max-h-40 min-h-target min-w-0 flex-1 resize-none rounded-lg border-2 border-input bg-card px-4 py-[15px] text-base text-card-foreground outline-none placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 disabled:opacity-60',
               )}
             />
-            <MicButton off={offline || voiceOnline === false} onTap={tapMic} />
+            <MicButton
+              off={blocked || voiceOnline === false}
+              reason={t(connected ? 'talk.micOff' : 'offline.needsConnection')}
+              onTap={tapMic}
+            />
             {running ? (
               <button
                 type="button"
@@ -210,7 +220,7 @@ export function Composer({
             ) : (
               <button
                 type="submit"
-                disabled={offline}
+                disabled={blocked}
                 aria-label={t('chat.send')}
                 className={round}
               >

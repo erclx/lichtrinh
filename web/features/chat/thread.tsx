@@ -29,6 +29,7 @@ import {
 } from '@/features/chat/voice/live-words'
 import { useLanguage } from '@/i18n/use-language'
 import { cn } from '@/lib/utils'
+import { useOnline } from '@/offline/connection'
 import { useSession } from '@/session/session-context'
 
 interface ThreadProps {
@@ -52,6 +53,9 @@ export function Thread({ chatId, layout }: ThreadProps) {
   const contact = useContact()
   const admin = useSession().user?.role === 'admin'
   const { online, voiceOnline } = useAssistantStatus()
+  // With no connection whether the workspace PC is off is unknown, and the
+  // card over the page says why nothing here answers.
+  const connected = useOnline()
   const start = useStartChat()
   const navigate = useNavigate()
   const [liveWords, setLiveWords] = useState('')
@@ -78,7 +82,9 @@ export function Thread({ chatId, layout }: ThreadProps) {
   ])
 
   const retry = (text: string | null) =>
-    text === null || offline || running ? null : () => void send(text)
+    text === null || offline || !connected || running
+      ? null
+      : () => void send(text)
 
   const lastStep = turn?.steps.at(-1)
   const announcement =
@@ -112,7 +118,7 @@ export function Thread({ chatId, layout }: ThreadProps) {
             panel ? 'min-h-0 overflow-y-auto px-4 py-3' : 'pb-3',
           )}
         >
-          {offline && (
+          {offline && connected && (
             <OfflineCard contactName={contact.data ?? null} admin={admin} />
           )}
           {thread.isPending ? (
@@ -186,6 +192,7 @@ export function Thread({ chatId, layout }: ThreadProps) {
           <Composer
             running={running}
             offline={offline}
+            connected={connected}
             voiceOnline={voiceOnline}
             empty={!thread.isPending && items.length === 0}
             contactName={contact.data ?? null}

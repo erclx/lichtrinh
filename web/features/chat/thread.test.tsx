@@ -124,6 +124,7 @@ beforeEach(async () => {
 })
 
 afterEach(() => {
+  vi.restoreAllMocks()
   vi.unstubAllGlobals()
 })
 
@@ -376,6 +377,24 @@ describe('Thread', () => {
       ).toBeNull()
     })
 
+    it('shows no offline card and no Notify with no connection', async () => {
+      vi.spyOn(navigator, 'onLine', 'get').mockReturnValue(false)
+      chatApi([aUserMessage(), aReply({ status: 'failed', text: '' })], {
+        'GET /assistant/status': () => json(aStatus(false)),
+      })
+      renderThread()
+
+      expect(
+        await screen.findByText('The connection dropped partway'),
+      ).toBeInTheDocument()
+      expect(screen.queryByText('The assistant is offline')).toBeNull()
+      expect(screen.queryByRole('button', { name: 'Try again' })).toBeNull()
+      expect(screen.getByLabelText('Message the assistant')).toHaveAttribute(
+        'placeholder',
+        'Needs a connection',
+      )
+    })
+
     it('shows the offline card when a send finds the workspace PC off', async () => {
       let online = true
       chatApi([], {
@@ -434,6 +453,8 @@ describe('Thread', () => {
       const { stream } = aFakeStream()
       vi.stubGlobal('navigator', {
         ...navigator,
+        // The spread above misses it, since it is a getter on the prototype.
+        onLine: true,
         mediaDevices: { getUserMedia: async () => stream },
       })
     })
