@@ -112,6 +112,10 @@ export function entriesOfTrip(db: Db, tripId: string) {
   return readEntries(db, eq(entries.tripId, tripId))
 }
 
+export function liveEntries(db: Db) {
+  return readEntries(db, undefined)
+}
+
 export async function getEntry(db: Db, id: string) {
   const [entry] = await readEntries(db, eq(entries.id, id))
   return entry
