@@ -158,8 +158,7 @@ describe('the verdict', () => {
 })
 
 describe('Stop all', () => {
-  // The dialog takes focus a frame after it opens, and a key pressed before
-  // that frame still reaches the button behind it.
+  // A key pressed before the dialog takes focus reaches the button behind it.
   const openDialog = async (shown = state()) => {
     const opened = page(shown)
     const trigger = screen.getByRole('button', { name: 'Stop all' })
