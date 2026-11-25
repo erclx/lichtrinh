@@ -4,7 +4,9 @@ import packageJson from '../package.json' with { type: 'json' }
 import { registerAdmin } from './commands/admin'
 import { registerBridge } from './commands/bridge'
 import { registerDb } from './commands/db'
+import { registerPanel } from './commands/panel'
 import { registerVoice } from './commands/voice'
+import { type PanelMachine, thisMachine } from './panel/machine'
 
 export interface CliIo {
   stdout: (text: string) => void
@@ -34,6 +36,8 @@ export interface ProgramContext {
   /** Runs one task to its end and returns its exit code. */
   runTask: (task: Task) => Promise<number>
   findCheckout: (cwd: string) => Checkout
+  /** The machine the panel installs on, this one where a test hands in none. */
+  machine?: PanelMachine
 }
 
 /**
@@ -42,7 +46,12 @@ export interface ProgramContext {
  */
 export type RunInCheckout = (command: readonly string[]) => Promise<number>
 
-export function createProgram(io: CliIo, run: RunInCheckout): Command {
+export function createProgram(
+  io: CliIo,
+  run: RunInCheckout,
+  root: () => string,
+  machine: PanelMachine,
+): Command {
   // Commander copies these settings onto each subcommand, so they come first.
   const program = new Command('lichtrinh')
     .description("Run the product's services from any folder")
@@ -56,6 +65,7 @@ export function createProgram(io: CliIo, run: RunInCheckout): Command {
   registerAdmin(program, run, io)
   registerVoice(program, run, io)
   registerBridge(program, run)
+  registerPanel(program, run, io, root, machine)
   return program
 }
 
@@ -77,7 +87,12 @@ export async function runCli(
     if (exitCode === 0) exitCode = code
     return code
   }
-  const program = createProgram(context.io, run)
+  const program = createProgram(
+    context.io,
+    run,
+    () => context.findCheckout(context.io.cwd).root,
+    context.machine ?? thisMachine(process.env),
+  )
   try {
     await program.parseAsync(argv, { from: 'user' })
     return exitCode
