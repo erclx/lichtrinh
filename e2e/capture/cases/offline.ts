@@ -1,5 +1,6 @@
 import type { Page } from '@playwright/test'
 
+import { FIXTURE_RATES } from '../../../scripts/seed'
 import type { CaptureCase } from '../../capture-types'
 import { atDemoInstantInTripZone, BASE_URL, lightAndDark } from '../page-setup'
 
@@ -9,10 +10,13 @@ import { atDemoInstantInTripZone, BASE_URL, lightAndDark } from '../page-setup'
 async function offlineWithSavedPlan(page: Page, route: string) {
   await atDemoInstantInTripZone(page)
   await page.goto(`${BASE_URL}${route}`)
-  await page.waitForFunction(() =>
-    (localStorage.getItem('lichtrinh.calendarCache') ?? '').includes(
-      'Sunset boat trip',
-    ),
+  await page.waitForFunction(
+    (saved) => {
+      const plan = localStorage.getItem('lichtrinh.calendarCache') ?? ''
+      return saved.every((part) => plan.includes(part))
+    },
+    // The entries and the rate save apart, and the total needs both.
+    ['Sunset boat trip', `"rate":"${FIXTURE_RATES[0].rate}"`],
   )
   await page
     .context()
