@@ -11,7 +11,6 @@ import { parseArgs } from 'node:util'
 import { z } from 'zod'
 
 import { smokeCheck, type SmokeResult } from './smoke'
-import { seedStaging } from './staging-seed'
 
 export type Target = 'staging' | 'production'
 
@@ -389,13 +388,16 @@ if (import.meta.main) {
     inCi: process.env.GITHUB_ACTIONS === 'true',
     run: (command) => spawnCommand(command, write),
     readBuild: () => readBuild(resolve(import.meta.dirname, '..', '..')),
-    seedStaging: () =>
-      seedStaging({
+    // Loads Wrangler, which only a staging deploy needs.
+    seedStaging: async () => {
+      const { seedStaging } = await import('./staging-seed')
+      await seedStaging({
         accountId: process.env.CLOUDFLARE_ACCOUNT_ID ?? '',
         token: process.env.CLOUDFLARE_API_TOKEN ?? '',
         now: new Date(),
         fetch,
-      }),
+      })
+    },
     smoke: (host, script) =>
       smokeCheck({ host, script, fetch, write, now: Date.now, wait }),
     write,

@@ -1,5 +1,6 @@
 import { join } from 'node:path'
 
+import { unstable_readConfig } from 'wrangler'
 import { z } from 'zod'
 
 import {
@@ -44,7 +45,7 @@ const answer = z.object({
  * password, since the fixture passwords are public.
  */
 export async function seedStaging(seed: StagingSeed): Promise<void> {
-  const send = await openStaging(seed)
+  const send = openStaging(seed)
   const today = fixtureToday(seed.now)
   const [covering] = await send(
     statement(
@@ -85,8 +86,7 @@ const recorder: SeedDatabase<Query> = {
 }
 
 /** Takes the database from the committed `staging` environment, nowhere else. */
-async function openStaging(seed: StagingSeed) {
-  const { unstable_readConfig } = await import('wrangler')
+function openStaging(seed: StagingSeed) {
   const config = unstable_readConfig(
     {
       config: join(import.meta.dirname, '../../wrangler.jsonc'),
