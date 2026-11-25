@@ -13,7 +13,7 @@ bun install
 bun run check
 ```
 
-`bun install` activates the git hooks in `.husky/`. `bun run check` runs the same lint, format, and type checks as the pre-push hook and writes nothing.
+`bun install` activates the git hooks in `.husky/`. `bun run check` runs every check, the unit tests, and the build, and the pre-push hook runs the shorter `bun run check:changed`. Neither writes.
 
 ## Layout
 
