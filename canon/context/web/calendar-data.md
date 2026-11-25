@@ -27,6 +27,6 @@ Holds a trip's Change history page at `/trips/:tripId/history`, built against `c
 
 - A row reads by its before and after alone, so an undo reads like any change beside an Undo tag
 - A row groups and times on the trip's clock, and an older cost reads in the currency the trip was in then
-- A conflict keeps Undo on the row, since undoing the later change makes the older one undoable again
+- A conflict keeps Undo on the row, and its line clears once an undo puts the entry back, since the older change is undoable again
 - Undoing a trip's creation removes the trip and this page with it, so the undo status offers the way back
 - The undo itself is `web/components/change-undo.ts`, which the chat's change card shares

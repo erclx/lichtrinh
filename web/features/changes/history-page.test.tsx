@@ -383,6 +383,93 @@ describe('HistoryPage undo', () => {
     expect(row).toHaveFocus()
   })
 
+  it('moves focus to the row when a keyboard undo was already undone', async () => {
+    const user = userEvent.setup()
+    serve([aPersonAdd()], {
+      [undoMarket]: () => failure('already_undone', 409),
+    })
+    renderRoute(historyPath)
+    const row = await rowOf(/^Added/)
+    within(row).getByRole('button').focus()
+
+    await user.keyboard('{Enter}')
+
+    await within(row).findByText('That was already undone.')
+    expect(row).toHaveFocus()
+  })
+
+  it('leaves focus alone when a refusal keeps the button', async () => {
+    const user = userEvent.setup()
+    serve([aPersonAdd()], {
+      [undoMarket]: () => failure('undo_conflict', 409),
+    })
+    renderRoute(historyPath)
+    const row = await rowOf(/^Added/)
+    within(row).getByRole('button').focus()
+
+    await user.keyboard('{Enter}')
+
+    await within(row).findByText(/someone changed it after/)
+    expect(within(row).getByRole('button')).toHaveFocus()
+  })
+
+  it('clears the refusal once the later change is undone', async () => {
+    const user = userEvent.setup()
+    const moved = { ...market, startTime: '09:30', endTime: '10:30' }
+    const move = aPersonAdd({
+      id: 'change-move',
+      op: 'update',
+      before: market,
+      after: moved,
+    })
+    const undo = aPersonAdd({
+      id: 'change-undo',
+      op: 'undo',
+      before: moved,
+      after: market,
+    })
+    let undone = false
+    serve([], {
+      [changesRoute]: () =>
+        json({
+          changes: undone
+            ? [undo, { ...move, undoneBy: 'change-undo' }, aPersonAdd()]
+            : [move, aPersonAdd()],
+          nextBefore: null,
+        }),
+      [undoMarket]: () => failure('undo_conflict', 409),
+      'POST /changes/change-move/undo': () => {
+        undone = true
+        return json({ change: undo })
+      },
+    })
+    renderRoute(historyPath)
+    const added = await rowOf(/^Added/)
+    await user.click(within(added).getByRole('button'))
+    await within(added).findByText(/someone changed it after/)
+
+    const movedRow = await rowOf(/^Moved “Flower market” 09:00 → 09:30/)
+    await user.click(within(movedRow).getByRole('button'))
+
+    await screen.findByText(/^Moved “Flower market” 09:30 → 09:00/)
+    expect(within(added).queryByText(/someone changed it after/)).toBeNull()
+    expect(within(added).getByRole('button')).toBeVisible()
+  })
+
+  it.each([
+    ['entries_outside_range', /outside the trip's dates/],
+    ['currency_has_costs', /another currency/],
+  ] as const)('says plainly why %s refuses', async (code, text) => {
+    const user = userEvent.setup()
+    serve([aPersonAdd()], { [undoMarket]: () => failure(code, 409) })
+    renderRoute(historyPath)
+    const row = await rowOf(/^Added/)
+
+    await user.click(within(row).getByRole('button'))
+
+    expect(await within(row).findByText(text)).toBeVisible()
+  })
+
   it('offers the way back when an undo removes the trip itself', async () => {
     const user = userEvent.setup()
     const removal = { ...aTripChange(tripFields, null), id: 'change-undo' }

@@ -19,17 +19,28 @@ function undoIdOf(body: unknown): unknown {
     : undefined
 }
 
-function renderUndo(change: Change, onUndone?: (undo: Change) => void) {
+interface ShownProps {
+  shown: Change
+  restoredBy?: string
+}
+
+function renderUndo(
+  change: Change,
+  onUndone?: (undo: Change) => void,
+  restoredBy?: string,
+) {
   const client = new QueryClient({
     defaultOptions: { queries: { retry: false }, mutations: { retry: false } },
   })
   function wrapper({ children }: { children: ReactNode }) {
     return <QueryClientProvider client={client}>{children}</QueryClientProvider>
   }
-  return renderHook(({ shown }) => useChangeUndo(shown, onUndone), {
-    wrapper,
-    initialProps: { shown: change },
-  })
+  const initialProps: ShownProps = { shown: change, restoredBy }
+  return renderHook(
+    (props: ShownProps) =>
+      useChangeUndo(props.shown, { onUndone, restoredBy: props.restoredBy }),
+    { wrapper, initialProps },
+  )
 }
 
 afterEach(() => {
@@ -71,6 +82,8 @@ describe('useChangeUndo', () => {
   it.each([
     ['undo_conflict', 'conflict'],
     ['already_undone', 'alreadyUndone'],
+    ['entries_outside_range', 'outsideDates'],
+    ['currency_has_costs', 'otherCurrency'],
     ['internal_error', 'failed'],
   ] as const)('reads %s as %s', async (code, outcome) => {
     fakeApi({ [undoPath]: () => failure(code, 409) })
@@ -90,6 +103,47 @@ describe('useChangeUndo', () => {
     rerender({ shown: anAddChange({ undoneBy: 'change-undo' }) })
 
     expect(result.current.outcome).toBe('alreadyUndone')
+  })
+
+  it('drops a conflict once an undo puts the entity back', async () => {
+    fakeApi({ [undoPath]: () => failure('undo_conflict', 409) })
+    const { result, rerender } = renderUndo(anAddChange())
+    act(() => result.current.run())
+    await waitFor(() => expect(result.current.outcome).toBe('conflict'))
+
+    rerender({ shown: anAddChange(), restoredBy: 'change-undo-of-move' })
+
+    expect(result.current.outcome).toBe('ready')
+  })
+
+  it('keeps a conflict when the refresh shows the change it lost to', async () => {
+    fakeApi({ [undoPath]: () => failure('undo_conflict', 409) })
+    const { result, rerender } = renderUndo(
+      anAddChange(),
+      undefined,
+      'change-breakfast',
+    )
+    act(() => result.current.run())
+    await waitFor(() => expect(result.current.outcome).toBe('conflict'))
+
+    rerender({ shown: anAddChange(), restoredBy: undefined })
+
+    expect(result.current.outcome).toBe('conflict')
+  })
+
+  it('keeps a conflict while the list it was refused against stands', async () => {
+    fakeApi({ [undoPath]: () => failure('undo_conflict', 409) })
+    const { result, rerender } = renderUndo(
+      anAddChange(),
+      undefined,
+      'change-breakfast',
+    )
+    act(() => result.current.run())
+    await waitFor(() => expect(result.current.outcome).toBe('conflict'))
+
+    rerender({ shown: anAddChange(), restoredBy: 'change-breakfast' })
+
+    expect(result.current.outcome).toBe('conflict')
   })
 
   it('reuses the undo id when a lost answer is asked again', async () => {

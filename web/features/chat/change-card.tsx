@@ -62,6 +62,8 @@ function shownOf(change: Change, t: TFunction, language: Language): Shown {
 
 const messageKey = {
   conflict: 'chat.undoConflict',
+  outsideDates: 'undo.outsideDates',
+  otherCurrency: 'undo.otherCurrency',
   network: 'errors.network',
   failed: 'errors.generic',
 } as const
@@ -71,13 +73,12 @@ export function ChangeCard({ change }: { change: Change }) {
   const { t } = useTranslation()
   const language = useLanguage()
   const client = useQueryClient()
-  const { outcome, isPending, run } = useChangeUndo(
-    change,
-    () => void client.invalidateQueries({ queryKey: chatKeys.all }),
-  )
+  const { outcome, isPending, run } = useChangeUndo(change, {
+    onUndone: () => void client.invalidateQueries({ queryKey: chatKeys.all }),
+  })
   const shown = shownOf(change, t, language)
-  const canUndo =
-    outcome === 'ready' || outcome === 'network' || outcome === 'failed'
+  const isUndone = outcome === 'undone' || outcome === 'alreadyUndone'
+  const canUndo = !isUndone && outcome !== 'conflict'
 
   return (
     <div
@@ -110,16 +111,18 @@ export function ChangeCard({ change }: { change: Change }) {
           >
             {isPending ? t('chat.undoing') : t('chat.undo')}
           </button>
-        ) : outcome === 'undone' || outcome === 'alreadyUndone' ? (
+        ) : isUndone ? (
           <span className="shrink-0 px-2 text-sm font-extrabold">
             {t('chat.undone')}
           </span>
         ) : null}
       </div>
       <p role="status" className="text-sm empty:hidden">
-        {outcome === 'conflict' || outcome === 'network' || outcome === 'failed'
-          ? t(messageKey[outcome])
-          : null}
+        {outcome === 'ready' ||
+        outcome === 'undone' ||
+        outcome === 'alreadyUndone'
+          ? null
+          : t(messageKey[outcome])}
       </p>
     </div>
   )

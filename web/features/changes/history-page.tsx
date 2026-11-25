@@ -2,7 +2,7 @@ import type { Change } from '@shared/changes.ts'
 import { nowInZone, shiftClock } from '@shared/trip-time.ts'
 import type { Trip } from '@shared/trips.ts'
 import { SparkleIcon } from 'lucide-react'
-import { useId, useRef } from 'react'
+import { useCallback, useId, useRef } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link, useParams } from 'react-router'
 
@@ -132,6 +132,8 @@ interface Row {
   time: string
   /** The currency the trip was in when the change was made. */
   currency: string
+  /** The entity's newest change, when it left the state this one did. */
+  restoredBy?: string
 }
 
 interface Day {
@@ -139,14 +141,22 @@ interface Day {
   rows: Row[]
 }
 
+function leftSameState(a: Change, b: Change) {
+  return JSON.stringify(a.after) === JSON.stringify(b.after)
+}
+
 function daysOf(trip: Trip, changes: readonly Change[]): Day[] {
   const days: Day[] = []
   // Walking back past a change of currency, older costs read in the old one.
   let currency = trip.currency
+  const newest = new Map<string, Change>()
   for (const change of changes) {
+    const latest = newest.get(change.entityId) ?? change
+    newest.set(change.entityId, latest)
+    const restoredBy = leftSameState(latest, change) ? latest.id : undefined
     const { date, minute } = nowInZone(new Date(change.at), trip.timeZone)
     const { time } = shiftClock({ date, time: '00:00' }, minute)
-    const row = { change, time, currency }
+    const row = { change, time, currency, restoredBy }
     const day = days.at(-1)
     if (day?.date === date) day.rows.push(row)
     else days.push({ date, rows: [row] })
@@ -183,6 +193,8 @@ function ChangeDays({ trip, changes }: ChangeDaysProps) {
 
 const messageKey = {
   conflict: 'undo.conflict',
+  outsideDates: 'undo.outsideDates',
+  otherCurrency: 'undo.otherCurrency',
   alreadyUndone: 'undo.alreadyUndone',
   network: 'errors.network',
   failed: 'errors.generic',
@@ -194,12 +206,15 @@ function messageOf(outcome: UndoOutcome) {
     : messageKey[outcome]
 }
 
-function ChangeRow({ change, time, currency }: Row) {
+function ChangeRow({ change, time, currency, restoredBy }: Row) {
   const { t } = useTranslation()
   const language = useLanguage()
   const offerUndo = useOfferUndo()
   const row = useRef<HTMLLIElement>(null)
-  const { outcome, isPending, run } = useChangeUndo(change, onUndone)
+  const { outcome, isPending, run } = useChangeUndo(change, {
+    onUndone,
+    restoredBy,
+  })
 
   const sentence = describeChange(change, currency, t, language)
   const byAssistant = change.source === 'assistant'
@@ -207,9 +222,14 @@ function ChangeRow({ change, time, currency }: Row) {
   const gone = outcome === 'undone' || outcome === 'alreadyUndone'
   const message = messageOf(outcome)
 
+  // Stable, since a new callback would run its cleanup on every render.
+  const keepFocus = useCallback((button: HTMLButtonElement) => {
+    return () => {
+      if (document.activeElement === button) row.current?.focus()
+    }
+  }, [])
+
   function onUndone(undo: Change) {
-    // The pressed button leaves the page, so its focus moves to the row.
-    if (row.current?.contains(document.activeElement)) row.current.focus()
     // A removed trip takes this list with it, so the way back is offered here.
     if (undo.entity === 'trip' && undo.after === null) {
       offerUndo(t('undo.deleted', { title: undo.before?.name ?? '' }), undo.id)
@@ -256,6 +276,7 @@ function ChangeRow({ change, time, currency }: Row) {
           </span>
         ) : (
           <button
+            ref={keepFocus}
             type="button"
             onClick={run}
             aria-disabled={isPending}

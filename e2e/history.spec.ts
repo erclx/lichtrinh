@@ -64,6 +64,7 @@ test('a person reads a trip’s history, is refused an older undo, and undoes th
   await expect(page.getByRole('listitem').first()).toContainText(
     'Moved “Coffee break” 09:30 → 09:00',
   )
+  await expect(added.getByText(/someone changed it/)).toHaveCount(0)
 
   await page.goto(`/trips/${tripId}/days/2031-09-20`)
   await expect(page.getByRole('link', { name: /Coffee break/ })).toContainText(
