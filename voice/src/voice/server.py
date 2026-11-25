@@ -18,7 +18,14 @@ from starlette.exceptions import HTTPException
 from voice.config import HOST, Settings
 from voice.decode import MAX_SECONDS, SAMPLE_RATE, ClipError, decode
 from voice.form import FormError, parse_form
-from voice.models import DEFAULT_MODEL, MODELS, Model, find_model
+from voice.models import (
+    DEFAULT_LANGUAGE,
+    DEFAULT_MODEL,
+    MODELS,
+    Language,
+    Model,
+    find_model,
+)
 from voice.runner import Failure, Runner, WorkerUnavailableError
 from voice.workers import worker_command
 
@@ -111,9 +118,8 @@ def create_app(
             raise _invalid('Send the clip as multipart/form-data.') from error
         if 'file' not in form:
             raise _invalid('The form has no file field.')
-        model = _model(
-            form['model'].decode('utf-8', 'replace') if 'model' in form else None
-        )
+        model = _model(_text(form, 'model'))
+        language = _language(model, _text(form, 'language'))
         clip = form['file']
 
         started = time.perf_counter()
@@ -126,7 +132,7 @@ def create_app(
         duration = len(samples) / SAMPLE_RATE
 
         try:
-            transcript = await runner.transcribe(model, samples)
+            transcript = await runner.transcribe(model, samples, language)
         except WorkerUnavailableError as error:
             log.warning(
                 'transcribe model=%s duration=%.2fs outcome=%s',
@@ -240,6 +246,18 @@ def _model(model_id: str | None) -> Model:
         names = ', '.join(model.id for model in MODELS)
         raise ApiError(400, 'unknown_model', f'Pick one of: {names}.')
     return model
+
+
+def _language(model: Model, code: str | None) -> Language:
+    spoken = DEFAULT_LANGUAGE if code is None or code == '' else code
+    if spoken not in model.languages:
+        codes = ', '.join(sorted(model.languages))
+        raise ApiError(400, 'unknown_language', f'{model.id} hears: {codes}.')
+    return Language(spoken)
+
+
+def _text(form: dict[str, bytes], name: str) -> str | None:
+    return form[name].decode('utf-8', 'replace') if name in form else None
 
 
 def _invalid(message: str) -> ApiError:

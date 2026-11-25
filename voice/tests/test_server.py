@@ -40,9 +40,13 @@ def make_client(tmp_path: Path) -> Iterator[MakeClient]:
 
 
 def post_clip(
-    client: TestClient, clip: bytes, model: str | None = None
+    client: TestClient,
+    clip: bytes,
+    model: str | None = None,
+    language: str | None = None,
 ) -> dict[str, object]:
-    data = {} if model is None else {'model': model}
+    fields = {'model': model, 'language': language}
+    data = {name: value for name, value in fields.items() if value is not None}
     response = client.post(
         '/v1/audio/transcriptions',
         files={'file': ('clip.webm', clip, 'audio/webm')},
@@ -90,6 +94,28 @@ class TestTranscriptions:
 
         assert body['status'] == 400
         assert error_code(body) == 'unknown_model'
+
+    def test_hears_a_clip_in_the_language_named(self, make_client: MakeClient) -> None:
+        client = make_client()
+
+        body = post_clip(client, encode_tone(0.5), language='en')
+
+        assert str(body['text']).startswith('qwen3-asr-1.7b:en:')
+
+    @pytest.mark.parametrize(
+        ('model', 'language'),
+        [('qwen3-asr-1.7b', 'fr'), ('phowhisper-large', 'en')],
+        ids=['no-model-hears-it', 'this-model-does-not'],
+    )
+    def test_refuses_a_language_the_model_does_not_hear(
+        self, make_client: MakeClient, model: str, language: str
+    ) -> None:
+        client = make_client()
+
+        body = post_clip(client, encode_tone(0.5), model, language)
+
+        assert body['status'] == 400
+        assert error_code(body) == 'unknown_language'
 
     @pytest.mark.parametrize(
         ('clip', 'code'),

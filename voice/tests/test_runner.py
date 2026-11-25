@@ -9,11 +9,12 @@ import numpy as np
 import pytest
 from fake_worker import CRASH, STALL
 
-from voice.models import MODELS, Model
+from voice.models import MODELS, Language, Model
 from voice.runner import Runner, WorkerUnavailableError
 
 FAKE_WORKER = Path(__file__).parent / 'fake_worker.py'
 QWEN, TURBO, PHO = MODELS
+VI = Language.VIETNAMESE
 
 
 class Clock:
@@ -81,20 +82,30 @@ async def test_loads_the_model_on_the_first_clip(
 ) -> None:
     runner = make_runner()
 
-    transcript = await runner.transcribe(QWEN, clip(5))
+    transcript = await runner.transcribe(QWEN, clip(5), VI)
 
     assert transcript.text == 'qwen3-asr-1.7b:5'
     assert transcript.load_seconds > 0
     assert runner.loaded == QWEN
 
 
+async def test_hands_the_worker_the_spoken_language(
+    make_runner: Callable[..., Runner],
+) -> None:
+    runner = make_runner()
+
+    transcript = await runner.transcribe(QWEN, clip(5), Language.ENGLISH)
+
+    assert transcript.text == 'qwen3-asr-1.7b:en:5'
+
+
 async def test_reuses_the_loaded_worker_for_the_next_clip(
     make_runner: Callable[..., Runner],
 ) -> None:
     runner = make_runner()
-    await runner.transcribe(QWEN, clip(5))
+    await runner.transcribe(QWEN, clip(5), VI)
 
-    transcript = await runner.transcribe(QWEN, clip(7))
+    transcript = await runner.transcribe(QWEN, clip(7), VI)
 
     assert transcript.text == 'qwen3-asr-1.7b:7'
     assert transcript.load_seconds == 0
@@ -104,10 +115,10 @@ async def test_a_new_model_stops_the_old_worker_before_loading(
     make_runner: Callable[..., Runner],
 ) -> None:
     runner = make_runner()
-    await runner.transcribe(QWEN, clip())
+    await runner.transcribe(QWEN, clip(), VI)
 
     # The fake refuses to load while another holds the card lock.
-    transcript = await runner.transcribe(TURBO, clip(3))
+    transcript = await runner.transcribe(TURBO, clip(3), VI)
 
     assert transcript.text == 'whisper-large-v3-turbo:3'
     assert runner.loaded == TURBO
@@ -119,7 +130,7 @@ async def test_clips_for_two_models_arriving_together_run_in_order(
     runner = make_runner()
 
     first, second = await asyncio.gather(
-        runner.transcribe(QWEN, clip(2)), runner.transcribe(PHO, clip(4))
+        runner.transcribe(QWEN, clip(2), VI), runner.transcribe(PHO, clip(4), VI)
     )
 
     assert (first.text, second.text) == ('qwen3-asr-1.7b:2', 'phowhisper-large:4')
@@ -139,7 +150,7 @@ async def test_keeps_the_model_until_the_idle_timeout(
     make_runner: Callable[..., Runner], clock: Clock
 ) -> None:
     runner = make_runner()
-    await runner.transcribe(QWEN, clip())
+    await runner.transcribe(QWEN, clip(), VI)
     clock.now += 899
 
     unloaded = await runner.unload_if_idle()
@@ -152,7 +163,7 @@ async def test_a_warm_on_the_loaded_model_restarts_the_idle_clock(
     make_runner: Callable[..., Runner], clock: Clock
 ) -> None:
     runner = make_runner()
-    await runner.transcribe(QWEN, clip())
+    await runner.transcribe(QWEN, clip(), VI)
     clock.now += 899
     await runner.warm(QWEN)
     clock.now += 1
@@ -167,7 +178,7 @@ async def test_unloads_once_idle_and_frees_the_card(
     make_runner: Callable[..., Runner], clock: Clock, card: Path
 ) -> None:
     runner = make_runner()
-    await runner.transcribe(QWEN, clip())
+    await runner.transcribe(QWEN, clip(), VI)
     clock.now += 900
 
     unloaded = await runner.unload_if_idle()
@@ -181,10 +192,10 @@ async def test_a_worker_dying_mid_clip_fails_that_clip(
     make_runner: Callable[..., Runner],
 ) -> None:
     runner = make_runner()
-    await runner.transcribe(QWEN, clip())
+    await runner.transcribe(QWEN, clip(), VI)
 
     with pytest.raises(WorkerUnavailableError) as failed:
-        await runner.transcribe(QWEN, clip(first=CRASH))
+        await runner.transcribe(QWEN, clip(first=CRASH), VI)
 
     assert failed.value.reason == 'worker_died'
     assert runner.loaded is None
@@ -195,9 +206,9 @@ async def test_the_clip_after_a_crash_starts_a_fresh_worker(
 ) -> None:
     runner = make_runner()
     with pytest.raises(WorkerUnavailableError):
-        await runner.transcribe(QWEN, clip(first=CRASH))
+        await runner.transcribe(QWEN, clip(first=CRASH), VI)
 
-    transcript = await runner.transcribe(QWEN, clip(6))
+    transcript = await runner.transcribe(QWEN, clip(6), VI)
 
     assert transcript.text == 'qwen3-asr-1.7b:6'
     assert transcript.load_seconds > 0
@@ -210,7 +221,7 @@ async def test_a_worker_that_never_answers_is_stopped(
     await runner.warm(QWEN)
 
     with pytest.raises(WorkerUnavailableError) as failed:
-        await runner.transcribe(QWEN, clip(first=STALL))
+        await runner.transcribe(QWEN, clip(first=STALL), VI)
 
     assert failed.value.reason == 'worker_timeout'
     assert runner.loaded is None
@@ -225,7 +236,7 @@ async def test_a_clip_the_model_fails_keeps_the_worker_loaded(
     )
 
     with pytest.raises(WorkerUnavailableError) as failed:
-        await runner.transcribe(QWEN, clip())
+        await runner.transcribe(QWEN, clip(), VI)
 
     assert failed.value.reason == 'transcribe_failed'
     assert runner.loaded == QWEN
@@ -237,7 +248,7 @@ async def test_a_worker_that_exits_before_ready_fails_the_load(
     runner = make_runner(lambda model: [sys.executable, '-c', 'raise SystemExit(1)'])
 
     with pytest.raises(WorkerUnavailableError) as failed:
-        await runner.transcribe(QWEN, clip())
+        await runner.transcribe(QWEN, clip(), VI)
 
     assert failed.value.reason == 'load_failed'
     assert runner.loaded is None

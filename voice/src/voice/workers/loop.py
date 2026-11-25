@@ -1,20 +1,33 @@
 """The loop every worker runs: load once, then answer clips until stdin closes.
 Every reply carries `ok`. The first reports the load, and each later one
-answers one clip with its text or an error code."""
+answers one clip or one live step with its text or an error code."""
 
 import logging
 import os
 import sys
 import time
 from collections.abc import Callable
-from typing import BinaryIO
+from typing import BinaryIO, Protocol
 
 import numpy as np
 
 from voice.decode import Samples
+from voice.models import Language
 from voice.protocol import Frame, PipeClosedError, read_frame, write_frame
 
-Transcriber = Callable[[Samples], str]
+
+class Recognizer(Protocol):
+    """One loaded model. Either call answers empty text when nobody speaks."""
+
+    def transcribe(self, samples: Samples, language: Language) -> str: ...
+
+    def live(
+        self, samples: Samples, language: Language, state: object
+    ) -> tuple[str, object]:
+        """The text so far in a turn still being spoken, and the state the next
+        step brings back, which is JSON and None on the first."""
+        ...
+
 
 log = logging.getLogger('voice.worker')
 
@@ -22,7 +35,7 @@ log = logging.getLogger('voice.worker')
 LOAD_ERRORS = (OSError, RuntimeError, ValueError, ImportError)
 
 
-def serve(load: Callable[[], Transcriber]) -> int:
+def serve(load: Callable[[], Recognizer]) -> int:
     logging.basicConfig(level=logging.INFO, format='%(name)s %(message)s')
     # `voice models` downloads every model ahead, so a worker never reaches the network.
     os.environ.setdefault('HF_HUB_OFFLINE', '1')
@@ -30,7 +43,7 @@ def serve(load: Callable[[], Transcriber]) -> int:
     requests = sys.stdin.buffer
     started = time.perf_counter()
     try:
-        transcribe = load()
+        recognizer = load()
     except LOAD_ERRORS:
         log.exception('load failed')
         write_frame(channel, Frame({'ok': False, 'error': 'load_failed'}))
@@ -43,19 +56,26 @@ def serve(load: Callable[[], Transcriber]) -> int:
             request = read_frame(requests)
         except PipeClosedError:
             return 0
-        write_frame(channel, _answer(transcribe, request))
+        write_frame(channel, _answer(recognizer, request))
 
 
-def _answer(transcribe: Transcriber, request: Frame) -> Frame:
-    if request.header.get('op') != 'transcribe':
+def _answer(recognizer: Recognizer, request: Frame) -> Frame:
+    op = request.header.get('op')
+    if op not in ('transcribe', 'live'):
         return Frame({'ok': False, 'error': 'unknown_op'})
     samples = np.frombuffer(request.payload, dtype='<f4')
     started = time.perf_counter()
     try:
-        text = transcribe(samples)
+        language = Language(str(request.header.get('language')))
+        if op == 'live':
+            text, state = recognizer.live(
+                samples, language, request.header.get('state')
+            )
+            return Frame({'ok': True, 'text': text, 'state': state})
+        text = recognizer.transcribe(samples, language)
     except (RuntimeError, ValueError) as error:
         # The type alone, since a message could quote what the model heard.
-        log.error('transcribe failed: %s', type(error).__name__)
+        log.error('%s failed: %s', op, type(error).__name__)
         return Frame({'ok': False, 'error': 'transcribe_failed'})
     seconds = time.perf_counter() - started
     return Frame({'ok': True, 'text': text, 'transcribe_seconds': seconds})

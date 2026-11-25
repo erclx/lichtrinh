@@ -10,7 +10,7 @@ from dataclasses import dataclass
 from enum import StrEnum
 
 from voice.decode import Samples
-from voice.models import Model
+from voice.models import Language, Model
 from voice.protocol import (
     Frame,
     PipeClosedError,
@@ -85,12 +85,17 @@ class Runner:
             self._last_used = self._clock()
             return seconds
 
-    async def transcribe(self, model: Model, samples: Samples) -> Transcript:
+    async def transcribe(
+        self, model: Model, samples: Samples, language: Language
+    ) -> Transcript:
         async with self._lock:
             load_seconds = await self._ensure(model)
             worker = self._worker
             assert worker is not None
-            request = Frame({'op': 'transcribe'}, samples.astype('<f4').tobytes())
+            request = Frame(
+                {'op': 'transcribe', 'language': language.value},
+                samples.astype('<f4').tobytes(),
+            )
             reply = await self._exchange(worker, request)
             self._last_used = self._clock()
         if reply.header.get('ok') is not True:
