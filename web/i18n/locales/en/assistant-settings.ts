@@ -24,6 +24,33 @@ export const assistantSettings = {
   contactSaved: 'Saved.',
   contactCleared: 'Cleared. The traveler sees Admin instead.',
   note: 'Only admins see this page. A model change applies from the next message.',
+  notify: {
+    heading: 'Notify me by',
+    hint: 'When the assistant or voice is off and someone taps Notify.',
+    push: 'Push',
+    email: 'Email',
+    on: 'On',
+    off: 'Off',
+    deviceOn:
+      'On for this device. Each phone or computer is turned on separately.',
+    deviceOff: 'Each phone or computer is turned on separately.',
+    asking: 'Choose Allow on the question this device shows.',
+    blocked:
+      'Notifications are blocked for this app on this device. Allow them in the device settings, then choose On again.',
+    install:
+      'On an iPhone or iPad, add the app to the home screen first, then turn this on there.',
+    addToHome: 'Add to home screen',
+    unsupported:
+      'This browser cannot show notices. Turn this on from another device.',
+    none: 'No one gets a notice now. The traveler is told whom to ask instead.',
+    address: 'Email address',
+    invalid: 'Enter an email address like name@example.com',
+    unconfirmed:
+      'Confirm this address in Cloudflare first, then choose Save again',
+    saved: 'Saved. A test email is on its way.',
+    testFailed:
+      'The test email did not go out, so the address was not saved. Try again later.',
+  },
   speech: {
     heading: 'Speech recognition',
     qwen: 'Qwen3-ASR',

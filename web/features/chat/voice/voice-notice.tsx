@@ -1,14 +1,21 @@
 import { useId } from 'react'
 import { useTranslation } from 'react-i18next'
 
+import { NotifyAction } from '@/features/chat/notify-action'
+
 const card =
   'flex flex-col gap-2 rounded-xl border-[1.5px] border-border bg-muted p-5'
 
+interface VoiceOffCardProps {
+  contactName: string | null
+  admin: boolean
+}
+
 /**
- * Says voice is off while the assistant still answers, and whom to ask.
- * It offers nothing to press, as the chat's offline card does.
+ * Says voice is off while the assistant still answers, ending as the chat's
+ * offline card does.
  */
-export function VoiceOffCard({ contactName }: { contactName: string | null }) {
+export function VoiceOffCard({ contactName, admin }: VoiceOffCardProps) {
   const { t } = useTranslation()
   const titleId = useId()
 
@@ -18,11 +25,7 @@ export function VoiceOffCard({ contactName }: { contactName: string | null }) {
         {t('talk.offTitle')}
       </h2>
       <p className="text-base">{t('talk.offBody')}</p>
-      <p className="text-base font-bold">
-        {contactName === null
-          ? t('talk.offAdmin')
-          : t('talk.offContact', { name: contactName })}
-      </p>
+      <NotifyAction kind="voice" contactName={contactName} admin={admin} />
     </section>
   )
 }

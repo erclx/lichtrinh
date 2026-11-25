@@ -55,6 +55,8 @@ function adminApi(routes: Routes = {}) {
     'GET /assistant/status': () => json(aStatus()),
     'GET /settings': () => json({ contactName: null }),
     'GET /admin/voice': () => json(aVoice()),
+    'GET /admin/notices': () =>
+      json({ reachable: false, push: null, email: null }),
     ...routes,
   })
 }

@@ -5,6 +5,8 @@ import { useTranslation } from 'react-i18next'
 interface MicButtonProps {
   /** Voice or the whole workspace PC is off, which a card above explains. */
   off: boolean
+  /** Why it is off, read out while it is. */
+  reason: string
   onTap: () => void
 }
 
@@ -13,7 +15,7 @@ interface MicButtonProps {
  * is offline, so the row keeps its shape, and kept focusable so its reason
  * reads out.
  */
-export function MicButton({ off, onTap }: MicButtonProps) {
+export function MicButton({ off, reason, onTap }: MicButtonProps) {
   const { t } = useTranslation()
   const reasonId = useId()
 
@@ -31,7 +33,7 @@ export function MicButton({ off, onTap }: MicButtonProps) {
       </button>
       {off && (
         <span id={reasonId} className="sr-only">
-          {t('talk.micOff')}
+          {reason}
         </span>
       )}
     </>

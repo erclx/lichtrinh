@@ -19,6 +19,7 @@ import {
 interface Options {
   running?: boolean
   offline?: boolean
+  connected?: boolean
   voiceOnline?: boolean | null
   empty?: boolean
   accepted?: boolean
@@ -27,6 +28,7 @@ interface Options {
 function renderComposer({
   running = false,
   offline = false,
+  connected = true,
   voiceOnline = null,
   empty = false,
   accepted = true,
@@ -40,9 +42,11 @@ function renderComposer({
       <Composer
         running={running}
         offline={offline}
+        connected={connected}
         voiceOnline={voice}
         empty={empty}
         contactName={null}
+        admin={false}
         onSend={onSend}
         onStop={onStop}
         onLive={onLive}
@@ -166,6 +170,26 @@ describe('Composer', () => {
     await user.type(box, 'ca phe{Enter}')
 
     expect(onSend).not.toHaveBeenCalled()
+  })
+
+  it('waits for a connection, whatever else is off', () => {
+    const { box } = renderComposer({
+      connected: false,
+      offline: true,
+      voiceOnline: false,
+      empty: true,
+    })
+
+    expect(box).toBeDisabled()
+    expect(box).toHaveAttribute('placeholder', 'Needs a connection')
+    expect(screen.getByRole('button', { name: 'Send' })).toBeDisabled()
+    expect(
+      screen.getByRole('button', { name: 'Talk' }),
+    ).toHaveAccessibleDescription('Needs a connection')
+    expect(
+      screen.queryByRole('heading', { name: 'Voice is offline' }),
+    ).toBeNull()
+    expect(screen.queryByRole('list', { name: 'Sample requests' })).toBeNull()
   })
 
   it('turns the box off with the reason while the assistant is offline', () => {

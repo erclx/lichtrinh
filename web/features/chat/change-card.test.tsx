@@ -2,11 +2,12 @@ import '@/i18n/setup'
 
 import type { Change } from '@shared/changes.ts'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { render, screen } from '@testing-library/react'
+import { act, render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 
 import { ChangeCard } from '@/features/chat/change-card'
 import { applyLanguage } from '@/i18n/setup'
+import { apiFetch } from '@/lib/api'
 import { aMoveChange, anAddChange } from '@/test/chat'
 import { failure, fakeApi, json, offline } from '@/test/fake-api'
 
@@ -40,6 +41,7 @@ beforeEach(async () => {
 })
 
 afterEach(() => {
+  vi.restoreAllMocks()
   vi.unstubAllGlobals()
 })
 
@@ -70,6 +72,19 @@ describe('ChangeCard', () => {
     expect(undoIdOf(requests[0]?.body)).toMatch(uuid)
   })
 
+  it('waits for a connection and sends nothing on a press', async () => {
+    const user = userEvent.setup()
+    vi.spyOn(navigator, 'onLine', 'get').mockReturnValue(false)
+    const { requests } = fakeApi({})
+    renderCards(anAddChange())
+
+    const undo = screen.getByRole('button', { name: 'Undo “Pho breakfast”' })
+    await user.click(undo)
+
+    expect(undo).toHaveAttribute('aria-disabled', 'true')
+    expect(requests).toEqual([])
+  })
+
   it('gives each card its own undo id', async () => {
     const user = userEvent.setup()
     const { requests } = fakeApi({
@@ -97,15 +112,19 @@ describe('ChangeCard', () => {
         calls += 1
         return calls === 1 ? offline() : undone()
       },
+      // Any answer tells the app its connection is back.
+      'GET /settings': () => json({ contactName: null }),
     })
     renderCards(anAddChange())
 
     await user.click(screen.getByRole('button', { name: /^Undo/ }))
     await screen.findByText(/Can't connect/)
+    await act(() => apiFetch('/settings'))
     await user.click(screen.getByRole('button', { name: /^Undo/ }))
 
     expect(await screen.findByText('Undone')).toBeInTheDocument()
-    expect(undoIdOf(requests[1]?.body)).toBe(undoIdOf(requests[0]?.body))
+    const undos = requests.filter(({ method }) => method === 'POST')
+    expect(undoIdOf(undos[1]?.body)).toBe(undoIdOf(undos[0]?.body))
   })
 
   it('says someone changed it since on a conflict, and offers no Undo', async () => {

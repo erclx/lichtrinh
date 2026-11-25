@@ -5,9 +5,11 @@ import {
   PROTOCOL_MISMATCH,
   readFrame,
   REPLACED,
+  SILENT,
   upFrame,
 } from '@shared/bridge-frames.ts'
 import type { ChatEvent, ChatMessage, MessageStatus } from '@shared/chats.ts'
+import type { NoticeKind } from '@shared/notices.ts'
 import type { ClipType, SpokenLanguage, VoiceModel } from '@shared/voice.ts'
 import { DurableObject } from 'cloudflare:workers'
 
@@ -40,6 +42,12 @@ interface Attachment {
   voiceOnline?: boolean
   // The bridge answers live pieces and reads a clip's language.
   live?: boolean
+}
+
+/** Whether a service answers now, and when it last came up, if ever. */
+export interface ServiceState {
+  online: boolean
+  upAt: number | null
 }
 
 /** A clip the voice route hands the relay, held in memory for one request. */
@@ -134,6 +142,7 @@ export class AssistantRelay extends DurableObject<Env> {
   // Fields rather than the constants, so a spec can shorten a wait.
   clipTimeoutMs = CLIP_TIMEOUT_MS
   liveTimeoutMs = LIVE_TIMEOUT_MS
+  silentAfterMs = SILENT_AFTER_MS
 
   constructor(ctx: DurableObjectState, env: Env) {
     super(ctx, env)
@@ -167,6 +176,17 @@ export class AssistantRelay extends DurableObject<Env> {
   /** Whether a clip sent now would reach a voice server that answers. */
   voiceOnline(): boolean {
     return this.voiceSocket() !== undefined
+  }
+
+  /**
+   * Both services at once. The times are stored, since an outage ends when
+   * its service comes up and the socket that said so is gone by the next one.
+   */
+  services(): Record<NoticeKind, ServiceState> {
+    return {
+      assistant: { online: this.online(), upAt: this.upAt('assistant') },
+      voice: { online: this.voiceOnline(), upAt: this.upAt('voice') },
+    }
   }
 
   /** Asks the bridge to load a speech model ahead of a clip. */
@@ -254,12 +274,14 @@ export class AssistantRelay extends DurableObject<Env> {
         voice: frame.voice === true,
         voiceOnline: false,
       } satisfies Attachment)
+      this.cameUp('assistant')
       send(ws, { type: 'ready' })
       logOutcome('bridge_ready')
       return
     }
     if (frame.type === 'voice_status') {
       const attachment = ws.deserializeAttachment() as Attachment
+      if (frame.online && attachment.voiceOnline !== true) this.cameUp('voice')
       ws.serializeAttachment({
         ...attachment,
         voiceOnline: frame.online,
@@ -330,6 +352,16 @@ export class AssistantRelay extends DurableObject<Env> {
     return new Response(null, { status: 101, webSocket: client })
   }
 
+  private upAt(kind: NoticeKind): number | null {
+    return this.ctx.storage.kv.get<number>(`up:${kind}`) ?? null
+  }
+
+  private cameUp(kind: NoticeKind) {
+    this.ctx.storage.kv.put(`up:${kind}`, Date.now())
+  }
+
+  // A socket found silent is closed, so a bridge that only slept comes back
+  // with a hello and its outage ends.
   private liveSocket(): WebSocket | undefined {
     const now = Date.now()
     return this.ctx.getWebSockets().find((ws) => {
@@ -337,7 +369,10 @@ export class AssistantRelay extends DurableObject<Env> {
       const { readyAt } = ws.deserializeAttachment() as Attachment
       if (readyAt === null) return false
       const pinged = this.ctx.getWebSocketAutoResponseTimestamp(ws)?.getTime()
-      return now - Math.max(readyAt, pinged ?? 0) < SILENT_AFTER_MS
+      if (now - Math.max(readyAt, pinged ?? 0) < this.silentAfterMs) return true
+      ws.close(SILENT, 'No ping heard')
+      logOutcome('bridge_silent')
+      return false
     })
   }
 

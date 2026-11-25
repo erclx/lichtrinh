@@ -19,6 +19,9 @@
       "migrations_dir": "worker/db/migrations",
     },
   ],
+  // Sends the admin's notices. The sender is the NOTICE_FROM secret, so no
+  // address sits in this file, and email stays off while it is unset.
+  "send_email": [{ "name": "EMAIL" }],
   "durable_objects": {
     "bindings": [
       // One instance holds the workspace PC's bridge socket and the turn it
@@ -46,6 +49,7 @@
           "migrations_dir": "worker/db/migrations",
         },
       ],
+      "send_email": [{ "name": "EMAIL" }],
       "durable_objects": {
         "bindings": [
           { "name": "ASSISTANT_RELAY", "class_name": "AssistantRelay" },
@@ -67,6 +71,7 @@
           "migrations_dir": "worker/db/migrations",
         },
       ],
+      "send_email": [{ "name": "EMAIL" }],
       "durable_objects": {
         "bindings": [
           { "name": "ASSISTANT_RELAY", "class_name": "AssistantRelay" },

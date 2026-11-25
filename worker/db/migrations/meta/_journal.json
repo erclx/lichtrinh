@@ -36,6 +36,13 @@
       "when": 1795423779911,
       "tag": "0004_transcriptions",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "6",
+      "when": 1795643051533,
+      "tag": "0005_notices",
+      "breakpoints": true
     }
   ]
 }

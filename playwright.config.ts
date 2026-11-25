@@ -65,6 +65,8 @@ export default defineConfig({
       env: {
         LICHTRINH_STATE_ROOT: stateRoot,
         BRIDGE_SECRET: E2E_BRIDGE_SECRET,
+        // Local mail is written to a file here and sent nowhere.
+        NOTICE_FROM: 'notices@example.com',
         CLOUDFLARE_INCLUDE_PROCESS_ENV: 'true',
       },
       url: baseURL,

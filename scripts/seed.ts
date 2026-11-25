@@ -573,6 +573,7 @@ async function insertAccounts(state: string, calendar: Calendar) {
     await proxy.env.DB.batch(historyRows(proxy.env.DB))
     await proxy.env.DB.batch(chatRows(proxy.env.DB))
     await proxy.env.DB.batch(rateRows(proxy.env.DB))
+    await proxy.env.DB.batch(noticeRows(proxy.env.DB))
   } finally {
     await proxy.dispose()
   }
@@ -675,6 +676,25 @@ export function rateRows<Statement>(db: SeedDatabase<Statement>): Statement[] {
   return FIXTURE_RATES.map((fixture) =>
     rate.bind(`rate:${fixture.from}:${fixture.to}`, fixture.rate, at),
   )
+}
+
+/** The admin's address, at the domain no mail leaves for. */
+export const FIXTURE_NOTICE_EMAIL = 'admin@example.com'
+
+// Email switched on, so a run with a sender has someone to notify. Left out
+// of staging, whose sender is a real one.
+export function noticeRows<Statement>(
+  db: SeedDatabase<Statement>,
+): Statement[] {
+  return [
+    db
+      .prepare(
+        `INSERT INTO notify_emails (user_id, address, time_zone, updated_at)
+         VALUES ('fixture-admin', ?, 'Asia/Ho_Chi_Minh', ?)
+         ON CONFLICT (user_id) DO NOTHING`,
+      )
+      .bind(FIXTURE_NOTICE_EMAIL, Date.UTC(2031, 4, 1)),
+  ]
 }
 
 // The shape `shared/changes.ts` reads back.

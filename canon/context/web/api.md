@@ -50,6 +50,16 @@ Holds the speech model setting, the language an account speaks and is answered i
 - A clip takes the account's language, Vietnamese when unset, and the default model when the picked one cannot hear it. Only such a bridge is told the language, as an older one drops a clip naming it.
 - A row holds the outcome, the timings, the transcript's length, never its text, and the model that ran. A send carrying `voice` marks the sender's own row with the edit ratio measured.
 
+### `worker/notices/`
+
+Tells each admin once per outage that the assistant or voice is off, by push, email, or both. Each admin turns push on per device and saves one email address, through `/api/admin/notices`.
+
+- `outage.ts` claims an outage in one upsert, releases it when every send fails, and frees a crashed one after 30 seconds. It ends at the up time the relay stores, so a silent socket is closed.
+- `recipients.ts` reads role and session on every send, so a demotion, a sign-out, or an expiry stops a notice
+- `push.ts` posts only to a fixed list of push services and follows no redirect, since a saved endpoint is an address the Worker calls
+- `email.ts` sends as the `NOTICE_FROM` secret. An unset sender or VAPID key takes its row off the page, and no refusal code fails a request.
+- No read answers an endpoint, a key, or another admin's address, and a log line carries ids, the kind, and a count
+
 ### `shared/`
 
 Holds the schemas the app, the API, and the assistant's tools all import as `@shared/*`, plus the password hash and generator the Worker and the admin command share. The import direction between it, `web/`, and `worker/` is `.claude/rules/project/code/imports.md`.
@@ -60,7 +70,7 @@ Holds the schemas the app, the API, and the assistant's tools all import as `@sh
 
 The Worker's two smaller folders each carry one job.
 
-- `worker/routes/`: one Hono router per area, being health, auth, admin users, backup, settings, rates, trips, entries, changes, chats, voice, and the assistant's status, model write, and bridge socket
+- `worker/routes/`: one Hono router per area, being health, auth, users, backup, settings, rates, trips, entries, changes, chats, voice, notices, and the assistant with its bridge socket
 - `worker/routes/backup.ts` answers the file `shared/backup.ts` versions. `readBackup` in `worker/calendar/backup.ts` makes two queries, since the free plan caps a request at 50.
 - `worker/routes/users.ts` edits an account in one `UPDATE` that counts admins itself, since a separate count lets two demotions both pass
 - `worker/test/`: the migrating setup, the test-only binding types, and builders for invented records, requests, and a scripted fake bridge. `bare()` sends the Origin `csrf()` needs on a bodiless POST.

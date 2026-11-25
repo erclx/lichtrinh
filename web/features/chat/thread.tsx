@@ -29,6 +29,8 @@ import {
 } from '@/features/chat/voice/live-words'
 import { useLanguage } from '@/i18n/use-language'
 import { cn } from '@/lib/utils'
+import { useOnline } from '@/offline/connection'
+import { useSession } from '@/session/session-context'
 
 interface ThreadProps {
   chatId: string
@@ -49,7 +51,10 @@ export function Thread({ chatId, layout }: ThreadProps) {
   const { turn, send, stop } = useTurn(chatId)
   const thread = useThread(chatId, unsavedSend(turn))
   const contact = useContact()
+  const admin = useSession().user?.role === 'admin'
   const { online, voiceOnline } = useAssistantStatus()
+  // Without it, whether the workspace PC is off is unknown.
+  const connected = useOnline()
   const start = useStartChat()
   const navigate = useNavigate()
   const [liveWords, setLiveWords] = useState('')
@@ -76,7 +81,9 @@ export function Thread({ chatId, layout }: ThreadProps) {
   ])
 
   const retry = (text: string | null) =>
-    text === null || offline || running ? null : () => void send(text)
+    text === null || offline || !connected || running
+      ? null
+      : () => void send(text)
 
   const lastStep = turn?.steps.at(-1)
   const announcement =
@@ -110,7 +117,9 @@ export function Thread({ chatId, layout }: ThreadProps) {
             panel ? 'min-h-0 overflow-y-auto px-4 py-3' : 'pb-3',
           )}
         >
-          {offline && <OfflineCard contactName={contact.data ?? null} />}
+          {offline && connected && (
+            <OfflineCard contactName={contact.data ?? null} admin={admin} />
+          )}
           {thread.isPending ? (
             <p role="status" className="text-base text-muted-foreground">
               {t('shell.loading')}
@@ -182,9 +191,11 @@ export function Thread({ chatId, layout }: ThreadProps) {
           <Composer
             running={running}
             offline={offline}
+            connected={connected}
             voiceOnline={voiceOnline}
             empty={!thread.isPending && items.length === 0}
             contactName={contact.data ?? null}
+            admin={admin}
             onSend={send}
             onStop={stop}
             onLive={setLiveWords}

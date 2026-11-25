@@ -64,8 +64,40 @@ describe('migrations', () => {
   })
 })
 
+describe('rolling back the notices migration', () => {
+  it('leaves the transcriptions schema and no notices table', async () => {
+    await rollBack('0005_notices.sql')
+
+    expect((await appTables()).sort()).toEqual([
+      'auth_sessions',
+      'changes',
+      'chat_messages',
+      'chats',
+      'entries',
+      'settings',
+      'sign_in_attempts',
+      'transcriptions',
+      'trips',
+      'users',
+    ])
+  })
+
+  it('removes its own d1_migrations row alone', async () => {
+    await rollBack('0005_notices.sql')
+
+    expect(await appliedMigrations()).toEqual([
+      '0000_init.sql',
+      '0001_accounts.sql',
+      '0002_trips_entries.sql',
+      '0003_chats.sql',
+      '0004_transcriptions.sql',
+    ])
+  })
+})
+
 describe('rolling back the transcriptions migration', () => {
   it('leaves the chats schema and no transcriptions table', async () => {
+    await rollBack('0005_notices.sql')
     await rollBack('0004_transcriptions.sql')
 
     expect((await appTables()).sort()).toEqual([
@@ -82,6 +114,7 @@ describe('rolling back the transcriptions migration', () => {
   })
 
   it('leaves no transcriptions index', async () => {
+    await rollBack('0005_notices.sql')
     await rollBack('0004_transcriptions.sql')
 
     const { results } = await env.DB.prepare(
@@ -91,6 +124,7 @@ describe('rolling back the transcriptions migration', () => {
   })
 
   it('removes its own d1_migrations row alone', async () => {
+    await rollBack('0005_notices.sql')
     await rollBack('0004_transcriptions.sql')
 
     expect(await appliedMigrations()).toEqual([
@@ -106,6 +140,7 @@ describe('rolling back the transcriptions migration', () => {
 // runs after it only to keep the order an operator would take.
 describe('rolling back the chats migration', () => {
   it('leaves the calendar schema and no chat table', async () => {
+    await rollBack('0005_notices.sql')
     await rollBack('0004_transcriptions.sql')
     await rollBack('0003_chats.sql')
 
@@ -121,6 +156,7 @@ describe('rolling back the chats migration', () => {
   })
 
   it('leaves no chat index', async () => {
+    await rollBack('0005_notices.sql')
     await rollBack('0004_transcriptions.sql')
     await rollBack('0003_chats.sql')
 
@@ -131,6 +167,7 @@ describe('rolling back the chats migration', () => {
   })
 
   it('removes its own d1_migrations row alone', async () => {
+    await rollBack('0005_notices.sql')
     await rollBack('0004_transcriptions.sql')
     await rollBack('0003_chats.sql')
 
@@ -146,6 +183,7 @@ describe('rolling back the chats migration', () => {
 // ones above it, as an operator rolling back in order would.
 describe('rolling back the trips and entries migration', () => {
   it('leaves the accounts schema and no calendar table', async () => {
+    await rollBack('0005_notices.sql')
     await rollBack('0004_transcriptions.sql')
     await rollBack('0003_chats.sql')
     await rollBack('0002_trips_entries.sql')
@@ -159,6 +197,7 @@ describe('rolling back the trips and entries migration', () => {
   })
 
   it('leaves no calendar index', async () => {
+    await rollBack('0005_notices.sql')
     await rollBack('0004_transcriptions.sql')
     await rollBack('0003_chats.sql')
     await rollBack('0002_trips_entries.sql')
@@ -170,6 +209,7 @@ describe('rolling back the trips and entries migration', () => {
   })
 
   it('removes its own d1_migrations row alone', async () => {
+    await rollBack('0005_notices.sql')
     await rollBack('0004_transcriptions.sql')
     await rollBack('0003_chats.sql')
     await rollBack('0002_trips_entries.sql')
@@ -185,6 +225,7 @@ describe('rolling back the trips and entries migration', () => {
 // the one above it, as an operator rolling back in order would.
 describe('rolling back the accounts migration', () => {
   it('leaves the users table alone', async () => {
+    await rollBack('0005_notices.sql')
     await rollBack('0004_transcriptions.sql')
     await rollBack('0003_chats.sql')
     await rollBack('0002_trips_entries.sql')
@@ -194,6 +235,7 @@ describe('rolling back the accounts migration', () => {
   })
 
   it('drops the sign-in, chat, and language columns from users', async () => {
+    await rollBack('0005_notices.sql')
     await rollBack('0004_transcriptions.sql')
     await rollBack('0003_chats.sql')
     await rollBack('0002_trips_entries.sql')
@@ -209,6 +251,7 @@ describe('rolling back the accounts migration', () => {
   })
 
   it('removes its own d1_migrations row alone', async () => {
+    await rollBack('0005_notices.sql')
     await rollBack('0004_transcriptions.sql')
     await rollBack('0003_chats.sql')
     await rollBack('0002_trips_entries.sql')

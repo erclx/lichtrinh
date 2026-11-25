@@ -15,7 +15,9 @@ Row v01.5 builds these screens. These frames are a reference, and where that row
 - `web/features/chat/composer.tsx`: the message box with Send, and Stop while a turn runs, with the mic `canon/design/talk.md` covers
 - `web/features/chat/change-card.tsx`: one change a reply made, tinted by the entry's kind, with Undo and Undone
 - `web/features/chat/step-line.tsx`: one step the assistant took, in plain words
-- `web/features/chat/notice-card.tsx`: the offline card naming whom to contact, and the failed card with Try again, on the muted fill
+- `web/features/chat/notice-card.tsx`: the offline card, and the failed card with Try again, on the muted fill
+- `web/features/chat/notify-action.tsx`: what either offline card ends on, being Notify the admin, its sending, sent, and failed states, or whom to ask
+- The strip atop each offline frame names the state for the board and is never built
 
 ## States
 
@@ -23,4 +25,5 @@ Row v01.5 builds these screens. These frames are a reference, and where that row
 - The list and a thread
 - The assistant thinking, and working on a change
 - A failed request
-- The assistant offline, before and after the family is told
+- The assistant offline, ready to notify, sending, sent, failed, and already told by someone else
+- The assistant offline with no way to notify set, and on the admin's own account

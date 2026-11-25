@@ -1,9 +1,10 @@
 import type { DownFrame } from '@shared/bridge-frames.ts'
+import { SILENT } from '@shared/bridge-frames.ts'
 import { chatThread } from '@shared/chats.ts'
 import { apiError } from '@shared/errors.ts'
 import { runInDurableObject } from 'cloudflare:test'
 import { env } from 'cloudflare:workers'
-import { afterEach, describe, expect, it } from 'vitest'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 
 import { app } from '../app.ts'
 import type { FakeBridge } from '../test/bridge.ts'
@@ -12,6 +13,7 @@ import {
   answerLive,
   connectBridge,
   connectVoiceBridge,
+  sayVoice,
 } from '../test/bridge.ts'
 import { chatterWithChat, readEvents, sendMessage } from '../test/chats.ts'
 import { bare } from '../test/requests.ts'
@@ -563,5 +565,101 @@ describe('a live piece beside everything else', () => {
     await clip
 
     expect(frame).not.toHaveProperty('language')
+  })
+})
+
+describe('when each service last came up', () => {
+  function services() {
+    return relayOf(env).services()
+  }
+
+  function setSilentAfter(ms: number) {
+    return runInDurableObject(relayOf(env), (relay: AssistantRelay) => {
+      relay.silentAfterMs = ms
+    })
+  }
+
+  it('moves the assistant to now on a hello and leaves voice alone', async () => {
+    const before = await services()
+    const at = Date.now()
+
+    await bridgeOnline()
+
+    const after = await services()
+    expect(after.assistant.online).toBe(true)
+    expect(after.assistant.upAt).toBeGreaterThanOrEqual(at)
+    expect(after.voice).toEqual({ online: false, upAt: before.voice.upAt })
+  })
+
+  it('moves voice to now when its server starts answering', async () => {
+    const bridge = await connectBridge({ voice: true })
+    open.push(bridge)
+    const at = Date.now()
+
+    await sayVoice(bridge, true)
+
+    const { voice } = await services()
+    expect(voice.online).toBe(true)
+    expect(voice.upAt).toBeGreaterThanOrEqual(at)
+  })
+
+  it('keeps the time through a repeated voice status', async () => {
+    const bridge = await connectBridge({ voice: true })
+    open.push(bridge)
+    await sayVoice(bridge, true)
+    const first = await services()
+    await vi.waitFor(() => {
+      expect(Date.now()).toBeGreaterThan(first.voice.upAt ?? 0)
+    })
+
+    bridge.send({ type: 'voice_status', online: true })
+    // Read after the status above, so the relay has read both.
+    await sayVoice(bridge, false)
+
+    expect((await services()).voice.upAt).toBe(first.voice.upAt)
+  })
+
+  it('keeps the time once the bridge has gone', async () => {
+    const bridge = await connectBridge()
+    const up = await services()
+
+    await bridge.close()
+
+    expect((await services()).assistant).toEqual({
+      online: false,
+      upAt: up.assistant.upAt,
+    })
+  })
+
+  it('hangs up on a bridge gone silent, so its return is a new hello', async () => {
+    const bridge = await connectBridge()
+    const up = await services()
+    await setSilentAfter(0)
+
+    const silent = await services()
+
+    await setSilentAfter(60_000)
+    expect(silent.assistant.online).toBe(false)
+    expect((await bridge.closed).code).toBe(SILENT)
+    // Live again by the clock alone, yet down until it says hello.
+    expect((await services()).assistant).toEqual({
+      online: false,
+      upAt: up.assistant.upAt,
+    })
+  })
+
+  it('moves the time on when the bridge comes back', async () => {
+    const bridge = await connectBridge()
+    const first = await services()
+    await bridge.close()
+    await vi.waitFor(() => {
+      expect(Date.now()).toBeGreaterThan(first.assistant.upAt ?? 0)
+    })
+
+    await bridgeOnline()
+
+    expect((await services()).assistant.upAt).toBeGreaterThan(
+      first.assistant.upAt ?? 0,
+    )
   })
 })
