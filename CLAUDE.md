@@ -31,6 +31,7 @@ The API behind the app, the shapes both sides share, the owner's command, and th
 - `worker/`: the Cloudflare Worker serving the app and the Hono API under `/api`, with its D1 schema, migrations, and rollbacks in `worker/db/`
 - `shared/`: zod schemas the app, the API, and the assistant's tools all parse with, imported as `@shared/*`
 - `cli/`: the `lichtrinh` command the owner runs by hand for product services, one file per verb group under `cli/commands/`, installed once with `bun link`
+- `panel/`: the owner panel on the workspace PC, being the status server in `panel/server/` and its page in `panel/ui/`
 - `voice/`: the Python speech recognition server behind `lichtrinh voice`, run on the workspace PC
 
 ### Content
