@@ -49,8 +49,7 @@ export function createMachine(tools: Tools, config: PanelConfig): Machine {
   let load: LoadProgress = 'idle'
   let pending: AbortController | undefined
 
-  // Answers before the model is on the card, since a cold load takes a while
-  // and the tile says Loading meanwhile.
+  // Answers before the model is on the card, since a cold load takes a while.
   async function startLoad() {
     pending?.abort()
     const mine = new AbortController()
@@ -71,8 +70,7 @@ export function createMachine(tools: Tools, config: PanelConfig): Machine {
   }
 
   async function unload() {
-    // Ollama drops a load whose caller hung up, where an unload would miss a
-    // model not on the card yet.
+    // Ollama drops a load whose caller hung up, which no unload reaches.
     pending?.abort()
     pending = undefined
     const models = (await loadedModels(fetcher, config.ollamaUrl)) ?? []

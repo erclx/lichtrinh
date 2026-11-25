@@ -43,8 +43,7 @@ export function PanelPage({
   const rest = state.services.filter((service) => service.status !== 'failed')
   const allPending = pending.some((press) => press.on === 'all')
 
-  // A press can move its tile or take its button away, and a keyboard would
-  // then start over from the top of the page.
+  // A press can take its own button away, which drops a keyboard to the top.
   useEffect(() => {
     const pressed = lastPress.current
     if (pressed === null || document.activeElement !== document.body) return

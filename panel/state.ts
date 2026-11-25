@@ -81,7 +81,6 @@ export type ServiceAction = z.infer<typeof serviceAction>
 export const allAction = z.enum(['start', 'stop'])
 export type AllAction = z.infer<typeof allAction>
 
-/** An action's answer, sent once its commands have ended. */
 export const actionDone = z.strictObject({ ok: z.literal(true) })
 
 export const panelErrorCode = z.enum([

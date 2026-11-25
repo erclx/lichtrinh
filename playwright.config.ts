@@ -8,8 +8,7 @@ import { E2E_BRIDGE_SECRET } from './e2e/fake-bridge'
 const isCI = !!process.env.CI
 const portOffset = Number(process.env.WORKTREE_PORT_OFFSET) || 0
 const baseURL = `http://localhost:${5173 + portOffset}`
-// The owner panel's own server, over a fake machine, so no run reads or
-// drives the workspace PC.
+// The owner panel over a fake machine, never the workspace PC itself.
 const panelPort = 4280 + portOffset
 const panelURL = `http://localhost:${panelPort}`
 // One folder per worktree, wiped and seeded before the server starts, so a

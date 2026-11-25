@@ -88,8 +88,7 @@ export function registerPanel(
         ...command,
       ]
       if ((await run(systemctl('start', PANEL_UNIT))) !== 0) return
-      // A later open starts nothing the owner stopped, and the panel says what
-      // a failed start left down.
+      // A later open starts nothing the owner stopped.
       await run(unlessHeld(systemctl('start', TARGET)))
       await run(windowCommand(machine, root()))
       await run(unlessHeld(['bash', 'cli/panel/hold.sh', PANEL_UNIT]))
