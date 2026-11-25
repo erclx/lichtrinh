@@ -111,7 +111,7 @@ Holds the git hooks that run the checks before a commit or a push leaves.
 
 Holds the toolkit settings. `config.json` marks the files below customized, so a sync leaves each alone and reports when the toolkit copy moves.
 
-- `vite.config.ts` adds the Worker, the offline build, and the state root, and `vitest.config.ts` adds a project per runtime
+- `vite.config.ts` adds the Worker, the offline build, the state root, and staging's names, and `vitest.config.ts` adds a project per runtime
 - `playwright.config.ts` adds the seeded state root, the test bridge secret, and the fake microphone
 - `tsconfig.json` adds the `@shared/*` alias, and `.oxfmtrc.json` ignores the generated migration files and the design assets
 - The `typecheck` script generates the Worker types first, and `screenshot` seeds a temp database
