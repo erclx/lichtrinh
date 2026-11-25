@@ -18,7 +18,7 @@ export default defineConfig({
   // Absorbs shared-runner noise on a fresh scaffold with no flake history, at the cost of hiding a real defect until someone reads the run summary.
   retries: isCI ? 2 : 0,
   // No override here: Playwright's own CPU-derived default suits every CI runner
-  reporter: isCI ? 'list' : 'html',
+  reporter: isCI ? [['list'], ['html', { open: 'never' }]] : 'html',
   use: {
     trace: 'on-first-retry',
     baseURL,
@@ -27,6 +27,8 @@ export default defineConfig({
     // `contextOptions` is the spelling that works on every version.
     contextOptions: { reducedMotion: 'reduce' },
   },
+  // The one engine CI runs. A second would replace the chat specs' bridge on the
+  // shared relay, and Linux WebKit drops the Secure cookie on http://localhost.
   projects: [
     {
       name: 'chromium',
@@ -41,8 +43,6 @@ export default defineConfig({
         },
       },
     },
-    { name: 'firefox', use: { ...devices['Desktop Firefox'] } },
-    { name: 'webkit', use: { ...devices['Desktop Safari'] } },
   ],
   webServer: {
     // Seeded here rather than in a global setup, which Playwright runs only

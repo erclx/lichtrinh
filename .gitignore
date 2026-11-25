@@ -30,7 +30,7 @@ playwright-report/
 blob-report/
 playwright/.cache/
 
-# Captures written by e2e/screenshot.ts, read by scripts/readme-screenshot.sh
+# Captures written by e2e/screenshot.ts
 screenshots/
 
 # Python voice server

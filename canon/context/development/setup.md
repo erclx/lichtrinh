@@ -15,10 +15,11 @@ Install [Bun](https://bun.sh) with `curl -fsSL https://bun.sh/install | bash` an
 
 ### `scripts/`
 
-| Command          | Purpose                                                                                  |
-| ---------------- | ---------------------------------------------------------------------------------------- |
-| `bun run check`  | Gates locally and writes nothing. Fails on formatting drift until `bun run format` runs. |
-| `bun run format` | Auto-fix oxfmt formatting.                                                               |
+| Command                 | Purpose                                                                                              |
+| ----------------------- | ---------------------------------------------------------------------------------------------------- |
+| `bun run check:changed` | Gates a push with the static checks and the tests tied to the change, skipping an untouched `voice/` |
+| `bun run check`         | Runs every check, the full unit run, the build, and the voice checks by hand. Neither check writes.  |
+| `bun run format`        | Auto-fix oxfmt formatting.                                                                           |
 
 These run and test the app, its local database, and the generated Worker types.
 
@@ -27,7 +28,7 @@ These run and test the app, its local database, and the generated Worker types.
 | `bun run dev`          | Serve the app and the API on port 5173, plus the worktree offset            |
 | `bun run dev:full`     | Seed `.wrangler/dev/`, start the app, voice, and the bridge, stop on Ctrl-C |
 | `bun run test:run`     | Run the Vitest unit and component tests once                                |
-| `bun run test:e2e`     | Seed a fresh temp database, then run Playwright in three engines            |
+| `bun run test:e2e`     | Seed a fresh temp database, then run Playwright in Chromium                 |
 | `bun run screenshot`   | Seed a temp database, build, serve on 4173, and capture each case           |
 | `bun scripts/seed.ts`  | Migrate and write the invented fixture accounts, safe to run twice          |
 | `bun run db:generate`  | Write the next migration from `worker/db/schema.ts`                         |
@@ -96,11 +97,21 @@ Holds the git hooks that run the checks before a commit or a push leaves.
 
 - `pre-commit` runs `lint-staged` (oxfmt on staged files)
 - `commit-msg` runs `commitlint` against the conventional commit format
-- `pre-push` runs `bun run check`, and also gates on banned characters across every tracked markdown file except `CHANGELOG.md` when a markdown-bans audit tool is on PATH
+- `pre-push` runs `bun run check:changed`, and also gates on banned characters across every tracked markdown file except `CHANGELOG.md` when a markdown-bans audit tool is on PATH
+
+### `canon/config/`
+
+Holds the toolkit settings. `config.json` marks the files below customized, so a sync leaves each alone and reports when the toolkit copy moves.
+
+- `vite.config.ts` adds the Worker, the offline build, and the state root, and `vitest.config.ts` adds a project per runtime
+- `playwright.config.ts` adds the seeded state root, the test bridge secret, and the fake microphone
+- `tsconfig.json` adds the `@shared/*` alias, and `.oxfmtrc.json` ignores the generated migration files and the design assets
+- The `typecheck` script generates the Worker types first, and `screenshot` seeds a temp database
+- In `voice/`, `mypy.ini` and `pytest.ini` keep the project's own settings, and the placeholder smoke test is declined
 
 ## Gotchas
 
-- A push fails on formatting drift until `bun run format` runs, since the `pre-push` hook writes nothing
+- A push fails on formatting drift until `bun run format` runs, since the `pre-push` hook writes nothing. It skips content that already passed, so run `bun run check:changed --force` after a reinstall.
 - The root `check` finds `voice/` through its tracked `scripts/verify.json` and runs it as a nested root, so a second call to it in the `check` script runs the voice checks twice
 - `uv add` in `voice/` writes TOML that root oxfmt rejects, so run `bun run format` at the root after a dependency change
 - Local D1 state lives under `.wrangler/state/v3/d1`, or below `LICHTRINH_STATE_ROOT` when set, which keeps e2e, captures, and drives off the developer's database

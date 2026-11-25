@@ -9,10 +9,7 @@ const dayPath = `/trips/${DEMO_DAY.tripId}/days/${DEMO_DAY.date}`
 // and leaves the page itself to load, the part the worker covers in a build.
 test('a day loaded once reads the same entries after an offline reload', async ({
   page,
-  browserName,
 }) => {
-  // Linux WebKit drops Secure cookies on http://localhost, unlike iPhone Safari.
-  test.skip(browserName === 'webkit', 'Linux WebKit drops the Secure cookie')
   if (fixtureAdmin === undefined) throw new Error('The seed holds no admin')
   // Installed, not pinned, so the saved plan goes stale and its refresh fails.
   await page.clock.install({ time: new Date(DEMO_INSTANT) })

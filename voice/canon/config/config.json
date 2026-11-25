@@ -2,8 +2,8 @@
   "covers": ["tooling"],
   "domains": {
     "tooling": {
-      "version": "5.122.0",
-      "syncedAt": "2026-11-24T17:39:55.050Z",
+      "version": "5.129.0",
+      "syncedAt": "2026-11-25T13:00:52.111Z",
       "files": {
         ".coveragerc": "sha256:d37121459eb61dc477ded273d8eab0ff341d23da2d4ca3a8f18d3796d2cb9f40",
         ".python-version": "sha256:a876e0b10411037a012498b9fe18d9bc1df32ed8b722a13564dc944ddcfd9135",
@@ -11,7 +11,7 @@
         "pytest.ini": "sha256:680baa9c5781df0f56711429fa30cd6b94e1eeb811c0766be2d7a688635b953c",
         "ruff.toml": "sha256:6b135f66e4948c61a094a93081274e86a235a29d89e66d5fb985380d1ecc74b9",
         "scripts/verify.json": "sha256:699966ec87255d9e030c805d9ee8f1f8f92167292203bd1b03c6e68d18e2ff15",
-        "scripts/verify.ts": "sha256:29d74763f72fa0214aec0d2289aa747d2b2400b756538fa1cf5db22a1192bea2"
+        "scripts/verify.ts": "sha256:5ff2af9cccae3d5e03de69d2f03a2d3f0c6d6fa14c3cf5748c00ef54c5bc4864"
       },
       "chain": ["python"],
       "dispositions": {
