@@ -51,11 +51,13 @@ async def make_runner(card: Path, clock: Clock) -> AsyncIterator[Callable[..., R
     def make(
         command_for: Callable[[Model], Sequence[str]] = fake_command,
         timeout_seconds: float = 30.0,
+        live_seconds: float = 30.0,
     ) -> Runner:
         runner = Runner(
             command_for,
             idle_seconds=900,
             timeout_seconds=timeout_seconds,
+            live_seconds=live_seconds,
             clock=clock,
         )
         runners.append(runner)
@@ -264,3 +266,123 @@ async def test_close_stops_the_worker_and_frees_the_card(
 
     assert runner.loaded is None
     assert card_is_free(card)
+
+
+async def test_a_live_step_answers_its_text_and_the_state_to_bring_back(
+    make_runner: Callable[..., Runner],
+) -> None:
+    runner = make_runner()
+    await runner.warm(QWEN)
+
+    first = await runner.live(QWEN, clip(5), VI, None)
+    assert first is not None
+    second = await runner.live(QWEN, clip(7), VI, first.state)
+
+    assert first.text == 'step1:qwen3-asr-1.7b:5'
+    assert second is not None
+    assert second.text == 'step2:qwen3-asr-1.7b:7'
+
+
+async def test_a_live_step_behind_a_clip_answers_nothing_at_once(
+    make_runner: Callable[..., Runner],
+) -> None:
+    runner = make_runner(timeout_seconds=1.0)
+    await runner.warm(QWEN)
+    stuck = asyncio.create_task(runner.transcribe(QWEN, clip(first=STALL), VI))
+    await asyncio.sleep(0)
+
+    step = await runner.live(QWEN, clip(), VI, None)
+
+    assert step is None
+    assert not stuck.done()
+    with pytest.raises(WorkerUnavailableError):
+        await stuck
+
+
+async def test_a_live_step_never_joins_a_queue_a_clip_is_in(
+    make_runner: Callable[..., Runner],
+) -> None:
+    runner = make_runner()
+    await runner.warm(QWEN)
+    first = asyncio.create_task(runner.transcribe(QWEN, clip(), VI))
+    second = asyncio.create_task(runner.transcribe(QWEN, clip(), VI))
+
+    # The lock is free for a moment between the two, and still spoken for.
+    await first
+    step = await runner.live(QWEN, clip(), VI, None)
+
+    assert step is None
+    await second
+
+
+async def test_a_live_step_on_an_unloaded_model_loads_it_without_waiting(
+    make_runner: Callable[..., Runner],
+) -> None:
+    runner = make_runner()
+
+    step = await runner.live(QWEN, clip(5), VI, None)
+    await asyncio.sleep(0)
+    transcript = await runner.transcribe(QWEN, clip(5), VI)
+
+    assert step is None
+    # The clip waited behind the load the step began, and paid none of its own.
+    assert transcript.load_seconds == 0
+    assert await runner.live(QWEN, clip(5), VI, None) is not None
+
+
+async def test_a_live_step_whose_model_cannot_load_answers_nothing(
+    make_runner: Callable[..., Runner],
+) -> None:
+    runner = make_runner(lambda model: [sys.executable, '-c', 'raise SystemExit(1)'])
+
+    first = await runner.live(QWEN, clip(), VI, None)
+    with pytest.raises(WorkerUnavailableError):
+        await runner.warm(QWEN)
+    second = await runner.live(QWEN, clip(), VI, None)
+
+    assert first is None
+    assert second is None
+
+
+async def test_a_live_step_keeps_the_worker_warm(
+    make_runner: Callable[..., Runner], clock: Clock
+) -> None:
+    runner = make_runner()
+    await runner.warm(QWEN)
+    clock.now += 899
+    await runner.live(QWEN, clip(), VI, None)
+    clock.now += 1
+
+    unloaded = await runner.unload_if_idle()
+
+    assert not unloaded
+    assert runner.loaded == QWEN
+
+
+async def test_a_stalled_live_step_stops_the_worker(
+    make_runner: Callable[..., Runner], card: Path
+) -> None:
+    runner = make_runner(live_seconds=0.5)
+    await runner.warm(QWEN)
+
+    with pytest.raises(WorkerUnavailableError) as failed:
+        await runner.live(QWEN, clip(first=STALL), VI, None)
+
+    assert failed.value.reason == 'worker_timeout'
+    assert runner.loaded is None
+    assert card_is_free(card)
+
+
+async def test_a_live_step_the_model_fails_keeps_the_worker_loaded(
+    make_runner: Callable[..., Runner], card: Path
+) -> None:
+    runner = make_runner(
+        lambda model: [sys.executable, str(FAKE_WORKER), model.id, str(card), 'fail']
+    )
+    await runner.warm(QWEN)
+
+    with pytest.raises(WorkerUnavailableError) as failed:
+        await runner.live(QWEN, clip(), VI, None)
+
+    assert failed.value.reason == 'transcribe_failed'
+    assert runner.loaded == QWEN
