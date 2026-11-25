@@ -22,7 +22,11 @@ import {
 } from '@/features/chat/turn'
 import { useAssistantStatus } from '@/features/chat/use-assistant-status'
 import { useTurn } from '@/features/chat/use-turn'
-import { LiveWords } from '@/features/chat/voice/live-words'
+import {
+  LiveFade,
+  LiveGround,
+  LiveWords,
+} from '@/features/chat/voice/live-words'
 import { useLanguage } from '@/i18n/use-language'
 import { cn } from '@/lib/utils'
 
@@ -89,7 +93,15 @@ export function Thread({ chatId, layout }: ThreadProps) {
   const panel = layout === 'panel'
 
   return (
-    <div className={cn('flex flex-col', panel ? 'min-h-0 flex-1' : 'flex-1')}>
+    // Clipped while covered, so words past the thread's top stay off its header.
+    <div
+      className={cn(
+        'flex flex-1 flex-col',
+        panel && 'min-h-0',
+        covered && 'overflow-y-clip',
+      )}
+    >
+      {covered && <LiveFade />}
       <div className={cn('relative flex flex-1 flex-col', panel && 'min-h-0')}>
         <div
           inert={covered}
@@ -156,7 +168,7 @@ export function Thread({ chatId, layout }: ThreadProps) {
             ))}
           <div ref={end} className={panel ? undefined : 'scroll-mb-28'} />
         </div>
-        {covered && <LiveWords text={liveWords} layout={layout} />}
+        {covered && <LiveGround />}
       </div>
       <div
         className={cn(
@@ -165,16 +177,19 @@ export function Thread({ chatId, layout }: ThreadProps) {
             : 'sticky bottom-0 bg-background pt-2 pb-[max(16px,env(safe-area-inset-bottom))]',
         )}
       >
-        <Composer
-          running={running}
-          offline={offline}
-          voiceOnline={voiceOnline}
-          empty={!thread.isPending && items.length === 0}
-          contactName={contact.data ?? null}
-          onSend={send}
-          onStop={stop}
-          onLive={setLiveWords}
-        />
+        <div className="relative">
+          {covered && <LiveWords text={liveWords} layout={layout} />}
+          <Composer
+            running={running}
+            offline={offline}
+            voiceOnline={voiceOnline}
+            empty={!thread.isPending && items.length === 0}
+            contactName={contact.data ?? null}
+            onSend={send}
+            onStop={stop}
+            onLive={setLiveWords}
+          />
+        </div>
       </div>
       <p aria-live="polite" className="sr-only">
         {announcement}

@@ -1,4 +1,4 @@
-import { expect, test } from '@playwright/test'
+import { expect, type Page, test } from '@playwright/test'
 
 import {
   DEMO_DAY,
@@ -73,6 +73,21 @@ test('the traveler reads the offline card, then chats with the assistant and und
   }
 })
 
+/** The live words show whole above Stop with the thread scrolled `share` down. */
+async function expectAboveStop(page: Page, share: number) {
+  await page.evaluate((at) => {
+    scrollTo(0, at * (document.body.scrollHeight - innerHeight))
+  }, share)
+  const words = page.getByText('doi an toi', { exact: true })
+  await expect(words).toBeInViewport({ ratio: 1 })
+  const [wordsBox, stopBox] = await Promise.all([
+    words.boundingBox(),
+    page.getByRole('button', { name: 'Stop and write it down' }).boundingBox(),
+  ])
+  if (wordsBox === null || stopBox === null) throw new Error('No box')
+  expect(wordsBox.y + wordsBox.height).toBeLessThanOrEqual(stopBox.y)
+}
+
 // Runs after the journey above in the same worker, since the relay holds one
 // bridge per server and a second spec file would run beside it.
 test('the traveler speaks a request, fixes the transcript, sends it, and types while voice is off', async ({
@@ -92,6 +107,8 @@ test('the traveler speaks a request, fixes the transcript, sends it, and types w
 
   const bridge = await connectFakeBridge(baseURL, { voice: true })
   try {
+    // Short enough that the thread scrolls under its composer.
+    await page.setViewportSize({ width: 390, height: 600 })
     await page.goto('/chats/fixture-chat-today')
     await page.getByRole('button', { name: 'Talk' }).click()
     const stop = page.getByRole('button', { name: 'Stop and write it down' })
@@ -103,6 +120,12 @@ test('the traveler speaks a request, fixes the transcript, sends it, and types w
     const words = page.getByText('doi an toi', { exact: true })
     await bridge.answerLive('doi an toi')
     await expect(words).toBeVisible()
+    expect(
+      await page.evaluate(() => document.body.scrollHeight - innerHeight),
+    ).toBeGreaterThan(300)
+    await expectAboveStop(page, 0)
+    await expectAboveStop(page, 0.5)
+    await expectAboveStop(page, 1)
 
     const transcribed = bridge.answerClip('doi an toi sang 8 gio', 800)
     await stop.click()
