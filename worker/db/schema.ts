@@ -224,3 +224,39 @@ export const transcriptions = sqliteTable(
   },
   (table) => [index('transcriptions_model_idx').on(table.model)],
 )
+
+// One row per kind, so claiming it is one atomic upsert. A row with no
+// `sent_at` is a send under way, or one that crashed partway.
+export const outageNotices = sqliteTable('outage_notices', {
+  kind: text('kind', { enum: ['assistant', 'voice'] }).primaryKey(),
+  claimId: text('claim_id').notNull(),
+  userId: text('user_id')
+    .notNull()
+    .references(() => users.id, { onDelete: 'cascade' }),
+  claimedAt: integer('claimed_at', { mode: 'timestamp_ms' }).notNull(),
+  sentAt: integer('sent_at', { mode: 'timestamp_ms' }),
+})
+
+// A device belongs to the session it signed in with and goes with it, so a
+// sign-out or a password reset stops its push. The endpoint and keys reach
+// that device with no sign-in, so no read returns them.
+export const pushDevices = sqliteTable('push_devices', {
+  sessionId: text('session_id')
+    .primaryKey()
+    .references(() => authSessions.id, { onDelete: 'cascade' }),
+  endpoint: text('endpoint').notNull().unique(),
+  p256dh: text('p256dh').notNull(),
+  auth: text('auth').notNull(),
+  createdAt: integer('created_at', { mode: 'timestamp_ms' }).notNull(),
+})
+
+// A row is an admin with email switched on, and switching it off removes it.
+export const notifyEmails = sqliteTable('notify_emails', {
+  userId: text('user_id')
+    .primaryKey()
+    .references(() => users.id, { onDelete: 'cascade' }),
+  address: text('address').notNull(),
+  // The zone the admin's browser was in, which the email tells the time in.
+  timeZone: text('time_zone').notNull(),
+  updatedAt: integer('updated_at', { mode: 'timestamp_ms' }).notNull(),
+})
