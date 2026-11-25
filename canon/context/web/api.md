@@ -22,7 +22,7 @@ Holds the Worker entry and the Hono app mounted on `/api`. The root `wrangler.js
 
 ### `worker/auth/`
 
-Holds sign-in and the guard every route sits behind. The app runs the body limit, then `csrf()`, then a check that answers `415 unsupported_media_type` to any unsafe-method body other than JSON, then the guard. The clip and live routes pass `audio/webm` and `audio/mp4` too, and every other route still refuses them.
+Holds sign-in and the guard every route sits behind. The app runs the body limit, then `csrf()`, then a check that answers `415 unsupported_media_type` to any unsafe-method body other than JSON or an empty one, then the guard. The clip and live routes pass `audio/webm` and `audio/mp4` too, and every other route still refuses them.
 
 - `guard.ts` lets a signed-out caller reach health, sign-in, and the bridge's `GET /api/bridge/connect` alone, so a new route, an unknown path included, answers `401 unauthenticated`
 - `guard.ts` puts `user` and `sessionId` on the Hono context. `requireAdmin` answers `403 forbidden` on `/api/admin/*`, and `requireChat` does so for an account whose `canChat` is off.

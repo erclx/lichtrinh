@@ -6,7 +6,7 @@ import path from 'path'
 import { defineConfig } from 'vite'
 import { VitePWA } from 'vite-plugin-pwa'
 
-import { manifest } from './pwa-manifest.ts'
+import { manifest, stagingManifest } from './pwa-manifest.ts'
 
 const portOffset = Number(process.env.WORKTREE_PORT_OFFSET) || 0
 
@@ -32,6 +32,12 @@ const appVersion: string = JSON.parse(
   ),
 )['.']
 
+// The variable the Cloudflare plugin picks the Worker by.
+const staging = process.env.CLOUDFLARE_ENV === 'staging'
+
+// A Worker-only change moves no hashed file name, so this tells builds apart.
+const commit = process.env.GITHUB_SHA
+
 export default defineConfig({
   define: {
     __APP_VERSION__: JSON.stringify(appVersion),
@@ -40,13 +46,27 @@ export default defineConfig({
     react(),
     tailwindcss(),
     cloudflare(cloudflareOptions),
+    commit !== undefined && {
+      name: 'commit-stamp',
+      transformIndexHtml: () => [
+        { tag: 'meta', attrs: { name: 'build', content: commit } },
+      ],
+    },
+    staging && {
+      name: 'staging-title',
+      transformIndexHtml: (html: string) =>
+        html.replace(
+          /<title>[^<]*<\/title>/,
+          `<title>${stagingManifest.name}</title>`,
+        ),
+    },
     // A worker holding the built app, so a reload with no connection still
     // opens it. It never answers under `/api/`, so a cached answer cannot
     // outlive a sign-out.
     VitePWA({
       registerType: 'autoUpdate',
       injectRegister: false,
-      manifest,
+      manifest: staging ? stagingManifest : manifest,
       workbox: {
         globPatterns: ['**/*.{js,css,html,svg,png,ico,woff2}'],
         // The social cards are for link previews, never read in the app.

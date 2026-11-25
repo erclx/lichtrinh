@@ -8,7 +8,13 @@ import { hashPassword } from '@shared/password-hash'
 
 import type { CliIo, RunInCheckout } from '../program'
 
-export type Database = 'local' | 'remote'
+export type Database = 'local' | 'production' | 'staging'
+
+const WRANGLER_FLAGS: Record<Database, readonly string[]> = {
+  local: ['--local'],
+  production: ['--remote', '--env', 'production'],
+  staging: ['--remote', '--env', 'staging'],
+}
 
 export interface AdminRequest {
   username: string
@@ -96,7 +102,7 @@ export async function createAdmin(
       'd1',
       'execute',
       'DB',
-      `--${request.database}`,
+      ...WRANGLER_FLAGS[request.database],
       '--file',
       file,
     ])

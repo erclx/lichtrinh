@@ -55,7 +55,9 @@ app.use('*', async (c, next) => {
     UNSAFE_METHOD.test(c.req.method) &&
     hasBody &&
     !audio &&
-    !JSON_TYPE.test(contentType ?? '')
+    !JSON_TYPE.test(contentType ?? '') &&
+    // Some servers hand a bodiless POST on with an empty stream.
+    (await c.req.arrayBuffer()).byteLength > 0
   ) {
     return c.json(
       fail('unsupported_media_type', 'Send the body as application/json'),

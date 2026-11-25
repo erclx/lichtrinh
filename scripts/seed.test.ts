@@ -1,6 +1,12 @@
 import { describe, expect, it } from 'vitest'
 
-import { FIXTURE_ENTRIES, FIXTURE_TRIPS, todayFixtures } from './seed'
+import {
+  accountRows,
+  FIXTURE_ENTRIES,
+  FIXTURE_TRIPS,
+  fixtureToday,
+  todayFixtures,
+} from './seed'
 
 describe('todayFixtures', () => {
   it('spans two days before the date to four after', () => {
@@ -57,5 +63,45 @@ describe('todayFixtures', () => {
         fixtureIds.has(id),
       ),
     ).toBe(false)
+  })
+
+  it('shares no id with a trip written under another key', () => {
+    const first = todayFixtures('2026-11-24', 'staging-2026-11-24')
+    const second = todayFixtures('2026-12-10', 'staging-2026-12-10')
+
+    const ids = [first, second].flatMap(({ trip, entries }) => [
+      trip.id,
+      ...entries.map(({ id }) => id),
+    ])
+
+    expect(new Set(ids).size).toBe(ids.length)
+  })
+
+  it('keeps the ids a dev database already holds when no key is named', () => {
+    const { trip, entries } = todayFixtures('2026-11-24')
+
+    expect(trip.id).toBe('dev-trip-today')
+    expect(entries[0]?.id).toBe('dev-entry-arrive')
+  })
+})
+
+describe('fixtureToday', () => {
+  it('reads the date where the fixture trips are', () => {
+    expect(fixtureToday(new Date('2026-11-24T18:30:00Z'))).toBe('2026-11-25')
+  })
+})
+
+describe('accountRows', () => {
+  it('writes the hash it is given, null included, beside each username', () => {
+    const rows = accountRows(
+      { prepare: () => ({ bind: (...values: unknown[]) => values }) },
+      1_700_000_000_000,
+      ({ role }) => (role === 'admin' ? 'invented-hash' : null),
+    )
+
+    expect(rows.map((values) => [values[1], values[5]])).toEqual([
+      ['admin', 'invented-hash'],
+      ['traveler', null],
+    ])
   })
 })

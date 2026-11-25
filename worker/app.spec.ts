@@ -125,6 +125,64 @@ describe('an unsafe request with a body', () => {
   })
 })
 
+describe('an unsafe request with an empty body', () => {
+  const emptyStream = () =>
+    new ReadableStream({ start: (controller) => controller.close() })
+
+  // A browser sends a bodiless POST this way through some servers and edges.
+  it.each([
+    ['an empty string', () => ''],
+    ['a stream that ends at once', emptyStream],
+  ])('lets %s through to the route as absent', async (_case, body) => {
+    const { cookie } = await signedIn()
+
+    const res = await app.request(
+      '/api/auth/sign-out',
+      { ...bare('POST', cookie), body: body() },
+      env,
+    )
+
+    expect(res.status).toBe(204)
+  })
+
+  it('answers a route that needs a body as it answers an absent one', async () => {
+    const absent = await app.request('/api/auth/sign-in', bare('POST'), env)
+
+    const empty = await app.request(
+      '/api/auth/sign-in',
+      { ...bare('POST'), body: '' },
+      env,
+    )
+
+    expect(empty.status).toBe(absent.status)
+    expect(await empty.json()).toEqual(await absent.json())
+  })
+
+  it('refuses a one-byte plain body whose length header says zero', async () => {
+    const { cookie } = await signedIn()
+
+    const res = await app.request(
+      '/api/auth/sign-out',
+      {
+        method: 'POST',
+        headers: {
+          'content-type': 'text/plain',
+          'content-length': '0',
+          origin: TEST_ORIGIN,
+          cookie,
+        },
+        body: 'x',
+      },
+      env,
+    )
+
+    expect(res.status).toBe(415)
+    expect(apiError.parse(await res.json()).error.code).toBe(
+      'unsupported_media_type',
+    )
+  })
+})
+
 describe('a thrown error in a route', () => {
   it('answers 500 with the internal_error envelope', async () => {
     vi.spyOn(console, 'error').mockImplementation(() => {})

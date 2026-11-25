@@ -3,6 +3,7 @@
   "name": "lichtrinh",
   "compatibility_date": "2026-11-17",
   "main": "./worker/index.ts",
+  "send_metrics": false,
   "assets": {
     "not_found_handling": "single-page-application",
     // Only the API reaches the Worker first, so every other path, client
@@ -11,8 +12,8 @@
   },
   "d1_databases": [
     {
-      // No database id, so local development creates the database under
-      // .wrangler/ and the deploy row binds the real one.
+      // No id here, since local state is keyed by it and an id would hide
+      // every developer's local data. Each environment below binds its own.
       "binding": "DB",
       "database_name": "lichtrinh",
       "migrations_dir": "worker/db/migrations",
@@ -29,4 +30,48 @@
     // SQLite is the only Durable Object storage the free plan offers.
     { "tag": "v1", "new_sqlite_classes": ["AssistantRelay"] },
   ],
+  // Wrangler inherits neither bindings nor routes, so each copy repeats them.
+  // A copy is named lichtrinh-<environment>, which a bare deploy never touches.
+  "env": {
+    "production": {
+      "workers_dev": false,
+      "preview_urls": false,
+      "routes": [{ "pattern": "lichtrinh.erclx.com", "custom_domain": true }],
+      "observability": { "enabled": true },
+      "d1_databases": [
+        {
+          "binding": "DB",
+          "database_name": "lichtrinh-production",
+          "database_id": "36291962-42f9-4bfd-abd0-c3a40197a72a",
+          "migrations_dir": "worker/db/migrations",
+        },
+      ],
+      "durable_objects": {
+        "bindings": [
+          { "name": "ASSISTANT_RELAY", "class_name": "AssistantRelay" },
+        ],
+      },
+    },
+    "staging": {
+      "workers_dev": false,
+      "preview_urls": false,
+      "routes": [
+        { "pattern": "lichtrinh-staging.erclx.com", "custom_domain": true },
+      ],
+      "observability": { "enabled": true },
+      "d1_databases": [
+        {
+          "binding": "DB",
+          "database_name": "lichtrinh-staging",
+          "database_id": "fdbfc114-ec31-406a-ba3b-5d0d9dd7a3de",
+          "migrations_dir": "worker/db/migrations",
+        },
+      ],
+      "durable_objects": {
+        "bindings": [
+          { "name": "ASSISTANT_RELAY", "class_name": "AssistantRelay" },
+        ],
+      },
+    },
+  },
 }

@@ -1,7 +1,7 @@
 import { username as usernameRule } from '@shared/users'
 import { type Command, Option } from 'commander'
 
-import { createAdmin } from '../admin/create'
+import { createAdmin, type Database } from '../admin/create'
 import type { CliIo, RunInCheckout } from '../program'
 
 /** Accounts made by hand, since the app has no public sign-up. */
@@ -19,9 +19,17 @@ export function registerAdmin(
     .description('Create an admin account and print its password once')
     .argument('<username>', 'the name the admin signs in with')
     .addOption(
-      new Option('--local', 'write to the local database').conflicts('remote'),
+      new Option('--local', 'write to the local database').conflicts([
+        'remote',
+        'staging',
+      ]),
     )
-    .addOption(new Option('--remote', 'write to the deployed database'))
+    .addOption(new Option('--remote', 'write to the production database'))
+    .addOption(
+      new Option('--staging', 'write to the staging database').conflicts(
+        'remote',
+      ),
+    )
     .addOption(
       new Option('--language <code>', 'the language the account opens in')
         .choices(['vi', 'en'] as const)
@@ -30,7 +38,12 @@ export function registerAdmin(
     .action(
       async (
         name: string,
-        options: { local?: boolean; remote?: boolean; language: 'vi' | 'en' },
+        options: {
+          local?: boolean
+          remote?: boolean
+          staging?: boolean
+          language: 'vi' | 'en'
+        },
         command: Command,
       ) => {
         const username = usernameRule.safeParse(name)
@@ -39,14 +52,16 @@ export function registerAdmin(
             'error: a username takes 2 to 32 lowercase letters, digits, dots, dashes, or underscores',
           )
         }
-        if (!options.local && !options.remote) {
-          command.error('error: name the database with --local or --remote')
+        const database = databaseOf(options)
+        if (database === undefined) {
+          command.error(
+            'error: name the database with --local, --staging, or --remote',
+          )
         }
-        const database = options.remote ? 'remote' : 'local'
-        if (database === 'remote') {
+        if (database !== 'local') {
           const confirmed =
             (await io.confirm?.(
-              `Create admin ${username.data} on the remote database?`,
+              `Create admin ${username.data} on the ${database} database?`,
             )) ?? false
           if (!confirmed) command.error('error: not confirmed, so nothing ran')
         }
@@ -57,4 +72,15 @@ export function registerAdmin(
         )
       },
     )
+}
+
+function databaseOf(options: {
+  local?: boolean
+  remote?: boolean
+  staging?: boolean
+}): Database | undefined {
+  if (options.local) return 'local'
+  if (options.staging) return 'staging'
+  if (options.remote) return 'production'
+  return undefined
 }
