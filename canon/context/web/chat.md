@@ -35,4 +35,5 @@ Holds the mic in the composer, from a tap to the words landing in the box for th
 
 - A Stop or a drop carries no saved reply, so the thread asks again every second until the reply saves, then drops back to 30 seconds
 - The e2e server reads `BRIDGE_SECRET` from its environment, and a `.dev.vars` holding one overrides it, so `e2e/chat.spec.ts` fails from such a checkout
+- A device showing the other language still speaks and is answered in the account's, since the Worker reads the account and nothing here sends a language
 - The relay holds one bridge per server, so every journey using the fake bridge stays in `e2e/chat.spec.ts` on Chromium alone, since a second file or engine would run beside it

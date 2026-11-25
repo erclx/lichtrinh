@@ -42,13 +42,13 @@ Holds the chat store, the calendar tools, and the `AssistantRelay` Durable Objec
 
 ### `worker/voice/`
 
-Holds the speech model setting and the `transcriptions` record the admin ranks models by. A clip rides the bridge socket as base64 in a `transcribe` frame, so the workspace PC opens no port for voice.
+Holds the speech model setting, the language an account speaks and is answered in, and the `transcriptions` record the admin ranks models by. A clip rides the bridge socket as base64 in a `transcribe` frame, so the workspace PC opens no port for voice.
 
 - The relay sends a clip only to a bridge whose hello said `voice` and whose last `voice_status` read online, and answers `503 voice_unavailable` otherwise
 - A clip waits up to 60 seconds beside the running turn, never behind it, and a socket closing with one pending answers `502 voice_failed` at once
 - `PUT /api/voice/live/:id` puts a piece of a clip still being spoken to a bridge that said `live_ready`, waiting 5 seconds. It writes no row and logs no line, and its id carries the account.
-- The relay names the language of a clip to such a bridge alone, since every frame is a strict object and an older bridge would drop the whole clip over it
-- A row holds the outcome, the timings, and the transcript's length, never its text. A send carrying `voice` marks the sender's own row with the edit ratio the browser measured.
+- A clip takes the account's language, Vietnamese when unset, and the default model when the picked one cannot hear it. Only such a bridge is told the language, as an older one drops a clip naming it.
+- A row holds the outcome, the timings, the transcript's length, never its text, and the model that ran. A send carrying `voice` marks the sender's own row with the edit ratio measured.
 
 ### `shared/`
 

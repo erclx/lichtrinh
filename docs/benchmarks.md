@@ -9,7 +9,7 @@ Each table below is one suite, measured on the workspace PC's RTX 5090 with 32,6
 
 ## Assistant
 
-Each alias answers 15 invented requests twice, once with diacritics and once without, through the real prompt and tool loop over an in-memory trip. A turn passes when its tool call or answer matches the expected change.
+Each alias answers 15 invented Vietnamese requests twice, once with diacritics and once without, through the real prompt and tool loop over an in-memory trip. A turn passes when its tool call or answer matches the expected change. The rerun also scores 6 English requests apart, which no row below holds yet.
 
 - Date: 2026-11-23
 - Runtime: Ollama 0.33.1, each alias at a 16,384-token context
