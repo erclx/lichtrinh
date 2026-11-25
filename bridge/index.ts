@@ -11,7 +11,13 @@ import type { BridgeSocket } from './socket.ts'
 import { openSocket } from './socket.ts'
 import type { RunningTurn } from './turn.ts'
 import { runTurn } from './turn.ts'
-import { transcribe, voiceHealthy, warmVoice, watchVoice } from './voice.ts'
+import {
+  liveStep,
+  transcribe,
+  voiceHealthy,
+  warmVoice,
+  watchVoice,
+} from './voice.ts'
 
 const FIRST_RETRY_MS = 1_000
 const LAST_RETRY_MS = 30_000
@@ -83,6 +89,7 @@ function onFrame(opened: BridgeSocket, frame: DownFrame) {
   if (frame.type === 'ready') {
     retryMs = FIRST_RETRY_MS
     log('ready')
+    opened.send({ type: 'live_ready' })
     // A new socket starts with voice unknown to the relay, so say it again.
     voiceWatch.reset()
     void voiceWatch.check()
@@ -108,7 +115,10 @@ function onFrame(opened: BridgeSocket, frame: DownFrame) {
     )
     return
   }
-  if (frame.type === 'live') return
+  if (frame.type === 'live') {
+    void liveStep(config.voiceUrl, frame).then((answer) => opened.send(answer))
+    return
+  }
   if (frame.type === 'tool_result') {
     pending.get(frame.callId)?.resolve(frame.result)
     pending.delete(frame.callId)

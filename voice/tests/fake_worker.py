@@ -1,7 +1,6 @@
 """A worker on the real loop: fake_worker.py <model-id> <lock-path> [fail|die]. It
 holds the lock as a model holds the card and answers '<model-id>:<sample count>',
-naming a language other than Vietnamese. It fails every clip, or dies on one.
-A live step counts in its state. A first sample of CRASH or STALL exits or stalls."""
+a live step counted in its state. A first sample of CRASH or STALL exits or stalls."""
 
 import fcntl
 import os

@@ -24,8 +24,7 @@ class Recognizer(Protocol):
     def live(
         self, samples: Samples, language: Language, state: object
     ) -> tuple[str, object]:
-        """The text so far in a turn still being spoken, and the state the next
-        step brings back, which is JSON and None on the first."""
+        """The text so far, and the JSON state the turn's next step brings back."""
         ...
 
 
