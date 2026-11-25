@@ -35,3 +35,10 @@ export const manifest = {
     },
   ],
 } satisfies Partial<ManifestOptions>
+
+/** The staging copy, so its home-screen icon never reads as the real app. */
+export const stagingManifest = {
+  ...manifest,
+  name: 'Lịch trình (staging)',
+  short_name: 'Staging',
+} satisfies Partial<ManifestOptions>

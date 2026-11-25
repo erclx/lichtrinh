@@ -1,7 +1,7 @@
 import { existsSync } from 'node:fs'
 import path from 'node:path'
 
-import { manifest } from './pwa-manifest'
+import { manifest, stagingManifest } from './pwa-manifest'
 
 // Chrome offers an install only when a manifest carries each of these.
 describe('manifest', () => {
@@ -38,4 +38,19 @@ describe('manifest', () => {
       expect(existsSync(file)).toBe(true)
     },
   )
+})
+
+describe('stagingManifest', () => {
+  it('names itself staging on the home screen and at install', () => {
+    expect(stagingManifest.name).toBe('Lịch trình (staging)')
+    expect(stagingManifest.short_name).toBe('Staging')
+  })
+
+  it('differs from the production manifest in its names alone', () => {
+    expect({
+      ...stagingManifest,
+      name: manifest.name,
+      short_name: manifest.short_name,
+    }).toEqual(manifest)
+  })
 })
