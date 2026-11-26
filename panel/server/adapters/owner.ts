@@ -13,10 +13,8 @@ const READ_TIMEOUT_MS = 5_000
 const READ_EVERY_MS = 30_000
 
 /**
- * Reads the app's owner summary, at most every thirty seconds and only when
- * asked, so a page left hidden reads nothing. A failed read answers
- * unreachable and keeps no rows from the one before. Turns count from this
- * machine's midnight.
+ * Reads the app's owner summary when asked, at most every thirty seconds, so
+ * a hidden page reads nothing. A failed read keeps no rows from the last one.
  */
 export function createOwnerReader(
   fetcher: typeof fetch,

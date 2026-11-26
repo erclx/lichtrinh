@@ -12,9 +12,8 @@ export interface AuthEnv {
 }
 
 // The only routes a signed-out caller reaches, so a new route is protected
-// by default. The bridge socket and the owner panel's read each carry a
-// secret their own route checks, named by method and whole path so no later
-// route under the same prefix opens with them.
+// by default. The bridge and the owner panel each carry a secret their own
+// route checks, named by whole path so no sibling route opens with them.
 const SIGNED_OUT_ROUTES = new Set([
   'GET /api/health',
   'POST /api/auth/sign-in',
