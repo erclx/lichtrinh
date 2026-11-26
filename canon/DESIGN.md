@@ -66,7 +66,6 @@ Calm, large, and plain for an older traveler reading on an iPhone. Near-black co
 
 - Phone is under 480 wide, tablet runs from 480 to 1023, and desktop starts at 1024, landscape iPad included.
 - The middle column keeps a 40px gutter from each sidebar on desktop and 32px on tablet, whose nav keeps a label under each icon.
-
 - Every app screen has an accepted frame at each draw width, and a frame at one width alone shows something that width alone has.
 
 Draw widths: 390, 834, 1440
