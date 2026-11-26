@@ -23,17 +23,17 @@ Install [Bun](https://bun.sh) with `curl -fsSL https://bun.sh/install | bash` an
 
 These run and test the app, its local database, and the generated Worker types.
 
-| Command                | Purpose                                                                     |
-| ---------------------- | --------------------------------------------------------------------------- |
-| `bun run dev`          | Serve the app and the API on port 5173, plus the worktree offset            |
-| `bun run dev:full`     | Seed `.wrangler/dev/`, start the app, voice, and the bridge, stop on Ctrl-C |
-| `bun run test:run`     | Run the Vitest unit and component tests once                                |
-| `bun run test:e2e`     | Seed a fresh temp database, then run Playwright in Chromium                 |
-| `bun run screenshot`   | Seed a temp database, build, serve on 4173, and capture each case           |
-| `bun scripts/seed.ts`  | Migrate and write the invented fixture accounts, safe to run twice          |
-| `bun run db:generate`  | Write the next migration from `worker/db/schema.ts`                         |
-| `bun run db:migrate`   | Apply pending migrations to the local D1 database under `.wrangler/`        |
-| `bun run types:worker` | Regenerate the Worker types from `wrangler.jsonc`, which typecheck runs     |
+| Command                | Purpose                                                                                                       |
+| ---------------------- | ------------------------------------------------------------------------------------------------------------- |
+| `bun run dev`          | Serve the app and the API on port 5173, plus the worktree offset                                              |
+| `bun run dev:full`     | Seed `.wrangler/dev/`, start the app, voice, and the bridge, stop on Ctrl-C                                   |
+| `bun run test:run`     | Run the Vitest unit and component tests once                                                                  |
+| `bun run test:e2e`     | Seed a fresh temp database, then run Playwright in Chromium                                                   |
+| `bun run screenshot`   | Seed a temp database, build, serve on 4173, and capture each case                                             |
+| `bun scripts/seed.ts`  | Migrate and write the invented fixtures, safe to run twice, and `--reset` clears every app table's rows first |
+| `bun run db:generate`  | Write the next migration from `worker/db/schema.ts`                                                           |
+| `bun run db:migrate`   | Apply pending migrations to the local D1 database under `.wrangler/`                                          |
+| `bun run types:worker` | Regenerate the Worker types from `wrangler.jsonc`, which typecheck runs                                       |
 
 ### `scripts/dev/`
 
@@ -123,5 +123,5 @@ Holds the toolkit settings. `config.json` marks the files below customized, so a
 - A push fails on formatting drift until `bun run format` runs, since the `pre-push` hook writes nothing. It skips content that already passed, so run `bun run check:changed --force` after a reinstall.
 - The root `check` finds `voice/` through its tracked `scripts/verify.json` and runs it as a nested root, so a second call to it in the `check` script runs the voice checks twice
 - `uv add` in `voice/` writes TOML that root oxfmt rejects, so run `bun run format` at the root after a dependency change
-- Local D1 state lives under `.wrangler/state/v3/d1`, or below `LICHTRINH_STATE_ROOT` when set, which keeps e2e, captures, and drives off the developer's database
+- Local D1 state lives under `.wrangler/state/v3/d1`, or below `LICHTRINH_STATE_ROOT`. A server answers 500 once its files are deleted, so a rebuild keeps `v3` and the seed clears rows with `--reset`.
 - `bun link` links the checkout it ran in, so a verb added on a branch stays invisible to `lichtrinh` until it merges and that checkout pulls
