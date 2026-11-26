@@ -9,6 +9,7 @@
   "scripts": {
     "dev": "WORKTREE_PORT_OFFSET=$(bash scripts/worktree-port.sh) && export WORKTREE_PORT_OFFSET && vite",
     "dev:full": "WORKTREE_PORT_OFFSET=$(bash scripts/worktree-port.sh) && export WORKTREE_PORT_OFFSET && bun scripts/dev/start.ts",
+    "dev:phone": "WORKTREE_PORT_OFFSET=$(bash scripts/worktree-port.sh) && export WORKTREE_PORT_OFFSET && bun scripts/dev/start.ts --phone",
     "build": "tsc --noEmit && vite build",
     "lint": "oxlint --max-warnings 0",
     "preview": "WORKTREE_PORT_OFFSET=$(bash scripts/worktree-port.sh) && export WORKTREE_PORT_OFFSET && vite preview",
