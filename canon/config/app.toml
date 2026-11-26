@@ -1,6 +1,9 @@
 [preview]
 writes = [".wrangler/state"]
+# The running preview holds these SQLite files open, so a rebuild keeps them
+# and the seed clears their rows instead.
+keep = [".wrangler/state/v3"]
 env = "LICHTRINH_STATE_ROOT"
-seed = ["bun", "scripts/seed.ts"]
+seed = ["bun", "scripts/seed.ts", "--reset"]
 serve = ["bun", "run", "dev"]
 port = 5173
