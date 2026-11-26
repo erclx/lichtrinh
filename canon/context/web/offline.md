@@ -1,13 +1,13 @@
 ---
 title: Offline
-description: The service worker, the plan saved on the device, and the card and waiting controls the app shows while it cannot reach the API
+description: The service worker and how an open page follows a release, the plan saved on the device, and the card and waiting controls the app shows while it cannot reach the API
 ---
 
 # Offline
 
 ## Overview
 
-Owns what keeps the last loaded plan readable with no connection, from the service worker holding the built app to the calendar cache saved on the device. The cache it saves is the one `canon/context/web/calendar-data.md` describes, and the session status it reads is in `canon/context/web/app.md`.
+Owns what keeps the last loaded plan readable with no connection, from the service worker holding the built app to the calendar cache saved on the device, and how an open page moves to a new release. The cache it saves is the one `canon/context/web/calendar-data.md` describes, and the session status it reads is in `canon/context/web/app.md`.
 
 ## Layout
 
