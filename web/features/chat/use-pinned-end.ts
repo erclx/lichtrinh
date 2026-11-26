@@ -11,10 +11,9 @@ interface PinnedEndOptions {
 }
 
 /**
- * Keeps the thread at its true end through whatever changes its size, being
- * rows, steps, cards, the composer's foot, or the screen, unless the reader
- * scrolled up. Pinned is read from scrolling alone, since a layout change
- * moving the end says nothing about where the reader wants to be.
+ * Keeps the thread at its true end through any change of size, unless the
+ * reader scrolled up, read from scrolling alone since a layout change says
+ * nothing about where the reader wants to be.
  */
 export function usePinnedEnd({ scrollsItself, covered }: PinnedEndOptions) {
   const scroller = useRef<HTMLDivElement>(null)
@@ -39,8 +38,7 @@ export function usePinnedEnd({ scrollsItself, covered }: PinnedEndOptions) {
             height: box.scrollHeight,
             view: box.clientHeight,
           }
-    // Content can grow between this scroll and its event, which then reads
-    // far from the end, so the event at the spot the hook landed is its own.
+    // Content can grow before this hook's own scroll event, so that event is skipped.
     let landed: number | null = null
 
     toEnd.current = () => {
