@@ -540,7 +540,19 @@ export interface SeedDatabase<Statement = unknown> {
 }
 
 interface LocalDatabase extends SeedDatabase {
+  prepare(query: string): {
+    bind(...values: unknown[]): unknown
+    all<Row>(): Promise<{ results: Row[] }>
+  }
   batch(statements: unknown[]): Promise<unknown>
+}
+
+async function clearRows(db: LocalDatabase) {
+  const { results } = await db
+    .prepare("SELECT name FROM sqlite_master WHERE type = 'table'")
+    .all<{ name: string }>()
+  const statements = resetRows(db, appTables(results.map(({ name }) => name)))
+  if (statements.length > 0) await db.batch(statements)
 }
 
 /** The date where every fixture trip is, whatever this machine's zone. */
@@ -555,7 +567,11 @@ export interface Calendar {
   entries: readonly FixtureEntry[]
 }
 
-async function insertAccounts(state: string, calendar: Calendar) {
+async function insertAccounts(
+  state: string,
+  calendar: Calendar,
+  reset: boolean,
+) {
   // Loaded here, so the e2e specs reading the fixtures never load wrangler.
   const { getPlatformProxy } = await import('wrangler')
   const proxy = await getPlatformProxy<{ DB: LocalDatabase }>({
@@ -566,6 +582,7 @@ async function insertAccounts(state: string, calendar: Calendar) {
     const hashes = await Promise.all(
       FIXTURE_ACCOUNTS.map(({ password }) => hashPassword(password)),
     )
+    if (reset) await clearRows(proxy.env.DB)
     await proxy.env.DB.batch(
       accountRows(proxy.env.DB, Date.now(), (_account, index) => hashes[index]),
     )
@@ -577,6 +594,40 @@ async function insertAccounts(state: string, calendar: Calendar) {
   } finally {
     await proxy.dispose()
   }
+}
+
+const PLAIN_IDENTIFIER = /^[A-Za-z_][A-Za-z0-9_]*$/
+
+/**
+ * The tables a reset clears, leaving the migration record and the ones
+ * SQLite and workerd keep for themselves.
+ */
+export function appTables(names: readonly string[]): string[] {
+  const tables = names.filter(
+    (name) =>
+      name !== 'd1_migrations' &&
+      !name.startsWith('_cf_') &&
+      !name.startsWith('sqlite_'),
+  )
+  // A table name cannot be bound, so only a plain identifier reaches the SQL.
+  const unsafe = tables.find((name) => !PLAIN_IDENTIFIER.test(name))
+  if (unsafe !== undefined) throw new Error(`Refusing to clear table ${unsafe}`)
+  return tables
+}
+
+/**
+ * Run as one batch, so a half-cleared database never serves. The deferred
+ * keys let a parent go before its children, checked once at commit.
+ */
+export function resetRows<Statement>(
+  db: SeedDatabase<Statement>,
+  tables: readonly string[],
+): Statement[] {
+  if (tables.length === 0) return []
+  return [
+    db.prepare('PRAGMA defer_foreign_keys = on').bind(),
+    ...tables.map((table) => db.prepare(`DELETE FROM "${table}"`).bind()),
+  ]
 }
 
 /**
@@ -873,8 +924,11 @@ if (import.meta.main) {
     calendar.trips.push(around.trip)
     calendar.entries.push(...around.entries)
   }
+  // `--reset` clears rows in place rather than deleting the files, since a
+  // running preview holds them open and answers 500 once they are gone.
+  const reset = process.argv.includes('--reset')
   migrate(state)
-  await insertAccounts(state, calendar)
+  await insertAccounts(state, calendar, reset)
   console.log(
     `Seeded ${FIXTURE_ACCOUNTS.map(({ username }) => username).join(', ')}, ${calendar.trips.length} trips, and ${calendar.entries.length} entries`,
   )

@@ -2,9 +2,11 @@ import { describe, expect, it } from 'vitest'
 
 import {
   accountRows,
+  appTables,
   FIXTURE_ENTRIES,
   FIXTURE_TRIPS,
   fixtureToday,
+  resetRows,
   todayFixtures,
 } from './seed'
 
@@ -103,5 +105,45 @@ describe('accountRows', () => {
       ['admin', 'invented-hash'],
       ['traveler', null],
     ])
+  })
+})
+
+describe('appTables', () => {
+  it('keeps the app tables and drops the migrations and internal ones', () => {
+    const tables = appTables([
+      'users',
+      'd1_migrations',
+      '_cf_KV',
+      'sqlite_sequence',
+      'entries',
+    ])
+
+    expect(tables).toEqual(['users', 'entries'])
+  })
+
+  it('returns no table for a database the migrations have not reached', () => {
+    expect(appTables(['_cf_KV'])).toEqual([])
+  })
+
+  it('refuses a name it cannot write as a plain identifier', () => {
+    expect(() => appTables(['users', 'bad"; DROP'])).toThrow(/bad"; DROP/)
+  })
+})
+
+describe('resetRows', () => {
+  const db = { prepare: (query: string) => ({ bind: () => query }) }
+
+  it('defers the foreign keys ahead of every delete', () => {
+    const statements = resetRows(db, ['users', 'chats'])
+
+    expect(statements).toEqual([
+      'PRAGMA defer_foreign_keys = on',
+      'DELETE FROM "users"',
+      'DELETE FROM "chats"',
+    ])
+  })
+
+  it('writes no statement when there is no table', () => {
+    expect(resetRows(db, [])).toEqual([])
   })
 })
