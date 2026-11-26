@@ -8,6 +8,7 @@ import { applyLanguage } from '@/i18n/setup'
 import { SessionProvider } from '@/session/provider'
 import { useSession } from '@/session/session-context'
 import { aUser, failure, fakeApi, json, offline } from '@/test/fake-api'
+import { isHeld } from '@/update/holds'
 
 function Status() {
   return <p>status: {useSession().status}</p>
@@ -192,5 +193,16 @@ describe('SignInPage', () => {
     expect(
       screen.getByRole('button', { name: 'Show password' }),
     ).toHaveAttribute('aria-pressed', 'true')
+  })
+
+  it('leaves a release free while empty and holds it once a field is typed in', async () => {
+    const user = userEvent.setup()
+    fakeApi({ 'GET /auth/me': () => failure('unauthenticated', 401) })
+    await renderSignIn()
+    expect(isHeld()).toBe(false)
+
+    await user.type(screen.getByLabelText('Username'), 'member')
+
+    expect(isHeld()).toBe(true)
   })
 })

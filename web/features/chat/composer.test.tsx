@@ -15,6 +15,7 @@ import {
   type FakeTrack,
   setVisibility,
 } from '@/test/media'
+import { isHeld } from '@/update/holds'
 
 interface Options {
   running?: boolean
@@ -446,6 +447,46 @@ describe('Composer with the mic', () => {
     ).toBeInTheDocument()
     expect(screen.queryByText(/Tap the mic to talk/)).toBeNull()
     expect(screen.queryByRole('list', { name: 'Sample requests' })).toBeNull()
+  })
+})
+
+describe('Composer holding a release', () => {
+  it('leaves the page free to reload while the box is empty', () => {
+    renderComposer()
+
+    expect(isHeld()).toBe(false)
+  })
+
+  it('holds the page once the box holds words', async () => {
+    const user = userEvent.setup()
+    const { box } = renderComposer()
+
+    await user.type(box, 'ca phe')
+
+    expect(isHeld()).toBe(true)
+  })
+
+  it('holds the page while recording and lets go once the clip ends empty', async () => {
+    const user = userEvent.setup()
+    fakeApi({
+      'POST /assistant/warm': () => json(null, 202),
+      [clipPath]: () => json(aTranscription('')),
+    })
+    renderComposer()
+
+    await user.click(screen.getByRole('button', { name: 'Talk' }))
+    const stop = await screen.findByRole('button', {
+      name: 'Stop and write it down',
+    })
+    expect(isHeld()).toBe(true)
+    await user.click(stop)
+
+    expect(
+      await screen.findByText(/I did not catch that/, {
+        ignore: '[role=status]',
+      }),
+    ).toBeInTheDocument()
+    expect(isHeld()).toBe(false)
   })
 })
 

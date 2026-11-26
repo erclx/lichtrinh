@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next'
 import { Button } from '@/components/ui/button'
 import { groupPassword } from '@/features/accounts/password-groups'
 import { PageHeader } from '@/shell/page-header'
+import { useHold } from '@/update/holds'
 
 interface PasswordOnceProps {
   title: string
@@ -31,6 +32,7 @@ export function PasswordOnce({
   const groups = groupPassword(password)
   // Letter by letter, since a reader guesses at a group read as a word.
   const spoken = groups.map((group) => group.split('').join(' ')).join(', ')
+  useHold(true)
 
   useEffect(() => {
     headingRef.current?.focus()

@@ -76,6 +76,11 @@ export default defineConfig({
         importScripts: ['/push-handler.js'],
         navigateFallback: 'index.html',
         navigateFallbackDenylist: [/^\/api\//],
+        // A new release takes over at once rather than waiting for every
+        // window to close, and `web/update/` picks when the page follows.
+        // The plugin sets neither under `injectRegister: false`.
+        skipWaiting: true,
+        clientsClaim: true,
       },
     }),
   ],

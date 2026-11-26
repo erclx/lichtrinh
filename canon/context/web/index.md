@@ -13,4 +13,4 @@ The browser app and its UI kit
 - [Calendar data](calendar-data.md): The app's reads and writes over trips, entries, and changes, on TanStack Query, shared by every calendar screen
 - [Chat](chat.md): The traveler's chats with the assistant in the browser app, from the streamed turn to the dock, the sheet, and the Talk bar
 - [Database](database.md): The D1 database behind the API, its Drizzle schema, migrations, and rollbacks, and the trip, entry, and history rules every write goes through
-- [Offline](offline.md): The service worker, the plan saved on the device, and the card and waiting controls the app shows while it cannot reach the API
+- [Offline](offline.md): The service worker and how an open page follows a release, the plan saved on the device, and the card and waiting controls the app shows while it cannot reach the API
