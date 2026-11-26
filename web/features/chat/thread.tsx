@@ -1,5 +1,5 @@
 import type { ChatMessage } from '@shared/chats.ts'
-import { useEffect, useRef, useState } from 'react'
+import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router'
 
@@ -21,6 +21,7 @@ import {
   unsavedSend,
 } from '@/features/chat/turn'
 import { useAssistantStatus } from '@/features/chat/use-assistant-status'
+import { usePinnedEnd } from '@/features/chat/use-pinned-end'
 import { useTurn } from '@/features/chat/use-turn'
 import {
   LiveFade,
@@ -73,12 +74,11 @@ export function Thread({ chatId, layout }: ThreadProps) {
     })
   }
   const items = threadItems(thread.data?.messages ?? [], turn)
-  const end = usePinnedEnd([
-    items.length,
-    turn?.phase,
-    turn?.steps.length,
-    turn?.reply.length,
-  ])
+  const panel = layout === 'panel'
+  const { scroller, content, foot } = usePinnedEnd({
+    scrollsItself: panel,
+    covered,
+  })
 
   const retry = (text: string | null) =>
     text === null || offline || !connected || running
@@ -97,8 +97,6 @@ export function Thread({ chatId, layout }: ThreadProps) {
             ? stepText(lastStep, t, language)
             : ''
 
-  const panel = layout === 'panel'
-
   return (
     // Clipped while covered, so words past the thread's top stay off its header.
     <div
@@ -111,75 +109,84 @@ export function Thread({ chatId, layout }: ThreadProps) {
       {covered && <LiveFade />}
       <div className={cn('relative flex flex-1 flex-col', panel && 'min-h-0')}>
         <div
+          ref={scroller}
           inert={covered}
           className={cn(
-            'flex flex-1 flex-col gap-3',
+            'flex flex-1 flex-col',
             panel ? 'min-h-0 overflow-y-auto px-4 py-3' : 'pb-3',
           )}
         >
-          {offline && connected && (
-            <OfflineCard contactName={contact.data ?? null} admin={admin} />
-          )}
-          {thread.isPending ? (
-            <p role="status" className="text-base text-muted-foreground">
-              {t('shell.loading')}
-            </p>
-          ) : thread.isError && thread.data === undefined ? (
-            <LoadFailed
-              message={t('chat.threadLoadFailed')}
-              error={thread.error}
-              onRetry={() => void thread.refetch()}
-            />
-          ) : items.length === 0 ? (
-            <p className="text-base text-muted-foreground">
-              {t('chat.threadEmpty')}
-            </p>
-          ) : (
-            <ol className="flex flex-col gap-3">
-              {items.map((item) => {
-                if (item.kind === 'sent') {
-                  return <Asked key={item.id} text={item.text} />
-                }
-                if (item.kind === 'live') {
+          <div ref={content} className="flex flex-col gap-3 pb-3">
+            {offline && connected && (
+              <OfflineCard contactName={contact.data ?? null} admin={admin} />
+            )}
+            {thread.isPending ? (
+              <p role="status" className="text-base text-muted-foreground">
+                {t('shell.loading')}
+              </p>
+            ) : thread.isError && thread.data === undefined ? (
+              <LoadFailed
+                message={t('chat.threadLoadFailed')}
+                error={thread.error}
+                onRetry={() => void thread.refetch()}
+              />
+            ) : items.length === 0 ? (
+              <p className="text-base text-muted-foreground">
+                {t('chat.threadEmpty')}
+              </p>
+            ) : (
+              <ol className="flex flex-col gap-3">
+                {items.map((item) => {
+                  if (item.kind === 'sent') {
+                    return <Asked key={item.id} text={item.text} />
+                  }
+                  if (item.kind === 'live') {
+                    return (
+                      <li key={`live-${item.turn.sent.id}`} className={reply}>
+                        <LiveReply
+                          turn={item.turn}
+                          onRetry={retry(item.retry)}
+                        />
+                      </li>
+                    )
+                  }
+                  const { message } = item
+                  if (message.role === 'user') {
+                    return <Asked key={message.id} text={message.text} />
+                  }
                   return (
-                    <li key={`live-${item.turn.sent.id}`} className={reply}>
-                      <LiveReply turn={item.turn} onRetry={retry(item.retry)} />
+                    <li key={message.id} className={reply}>
+                      <SavedReply
+                        message={message}
+                        onRetry={retry(item.retry)}
+                      />
                     </li>
                   )
-                }
-                const { message } = item
-                if (message.role === 'user') {
-                  return <Asked key={message.id} text={message.text} />
-                }
-                return (
-                  <li key={message.id} className={reply}>
-                    <SavedReply message={message} onRetry={retry(item.retry)} />
-                  </li>
-                )
-              })}
-            </ol>
-          )}
-          {turn?.phase === 'refused' &&
-            (turn.refusal === 'no_trip' ? (
-              <TripGoneCard
-                onNewChat={startChat}
-                pending={start.isPending}
-                error={start.isError ? start.error : null}
-              />
-            ) : (
-              <p role="alert" className="rounded-md bg-muted p-3 text-sm">
-                {turn.refusal === 'assistant_busy'
-                  ? t('chat.busy')
-                  : turn.refusal === 'network'
-                    ? t('errors.network')
-                    : t('errors.generic')}
-              </p>
-            ))}
-          <div ref={end} className={panel ? undefined : 'scroll-mb-28'} />
+                })}
+              </ol>
+            )}
+            {turn?.phase === 'refused' &&
+              (turn.refusal === 'no_trip' ? (
+                <TripGoneCard
+                  onNewChat={startChat}
+                  pending={start.isPending}
+                  error={start.isError ? start.error : null}
+                />
+              ) : (
+                <p role="alert" className="rounded-md bg-muted p-3 text-sm">
+                  {turn.refusal === 'assistant_busy'
+                    ? t('chat.busy')
+                    : turn.refusal === 'network'
+                      ? t('errors.network')
+                      : t('errors.generic')}
+                </p>
+              ))}
+          </div>
         </div>
         {covered && <LiveGround />}
       </div>
       <div
+        ref={foot}
         className={cn(
           panel
             ? 'border-t-[1.5px] border-border p-4'
@@ -296,30 +303,4 @@ function LiveReply({
       )}
     </>
   )
-}
-
-/**
- * Keeps the newest row in view as rows arrive, unless the person scrolled
- * up to read, which the end marker leaving view tells apart.
- */
-function usePinnedEnd(content: unknown[]) {
-  const end = useRef<HTMLDivElement>(null)
-  const pinned = useRef(true)
-  const key = JSON.stringify(content)
-
-  useEffect(() => {
-    const marker = end.current
-    if (marker === null || typeof IntersectionObserver === 'undefined') return
-    const observer = new IntersectionObserver(([entry]) => {
-      pinned.current = entry?.isIntersecting ?? true
-    })
-    observer.observe(marker)
-    return () => observer.disconnect()
-  }, [])
-
-  useEffect(() => {
-    if (pinned.current) end.current?.scrollIntoView?.({ block: 'end' })
-  }, [key])
-
-  return end
 }

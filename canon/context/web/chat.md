@@ -13,7 +13,7 @@ Owns the browser half of talking to the assistant, for an account whose `canChat
 
 ### `web/features/chat/`
 
-Holds the chat list, one thread with its composer, and the places each width draws a thread, all reading the chat routes through the `shared/chats.ts` schemas. Each offline card ends on `notify-action.tsx`, whose read `use-notices.ts` drops with the card.
+Holds the chat list, one thread with its composer, and the places each width draws a thread, all reading the chat routes through the `shared/chats.ts` schemas. Each offline card ends on `notify-action.tsx`, whose read `use-notices.ts` drops with the card. `use-pinned-end.ts` pins a thread by its size, as Safari before 27 has no scroll anchoring.
 
 - `stream.ts` reads a send's NDJSON body line by line, skipping a line it cannot read, since throwing would cancel the stream and the API reads a cancel as Stop
 - `turn.ts` folds stream events into thinking, working, replying, and the ends, and lays a turn over the saved messages until a refresh saves its part

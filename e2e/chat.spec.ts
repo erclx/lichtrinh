@@ -189,3 +189,74 @@ test('the traveler speaks a request, fixes the transcript, sends it, and types w
     await bridge.close()
   }
 })
+
+/** Whether the newest row shows whole on screen, under nothing such as the message row. */
+async function newestShowsWhole(page: Page) {
+  return page.evaluate(() => {
+    const newest = [...document.querySelectorAll('ol > li')].at(-1)
+    if (newest === undefined) throw new Error('The thread shows no rows')
+    const box = newest.getBoundingClientRect()
+    const x = box.left + box.width / 2
+    return (
+      box.top >= 0 &&
+      box.bottom <= innerHeight &&
+      [box.top + 1, box.bottom - 1].every((y) =>
+        newest.contains(document.elementFromPoint(x, y)),
+      )
+    )
+  })
+}
+
+const fromEnd = (page: Page) =>
+  page.evaluate(
+    () => document.documentElement.scrollHeight - scrollY - innerHeight,
+  )
+
+test('an opened chat lands on its newest message, and a reader scrolled up stays there', async ({
+  page,
+  baseURL,
+}) => {
+  if (traveler === undefined) throw new Error('The seed holds no traveler')
+  if (baseURL === undefined) throw new Error('The config names no base URL')
+  await page.addInitScript(() =>
+    localStorage.setItem('lichtrinh.language', 'en'),
+  )
+  await page.clock.setFixedTime(new Date(DEMO_INSTANT))
+  const signIn = await page.request.post('/api/auth/sign-in', {
+    data: { username: traveler.username, password: traveler.password },
+  })
+  expect(signIn.ok()).toBe(true)
+  await page.setViewportSize({ width: 390, height: 600 })
+
+  await openOutage(page, baseURL)
+  await page.goto('/chats/fixture-chat-today')
+  await expect(
+    page.getByRole('heading', { name: 'The assistant is offline' }),
+  ).toBeVisible()
+  await expect.poll(() => newestShowsWhole(page)).toBe(true)
+
+  const bridge = await connectFakeBridge(baseURL, { voice: true })
+  try {
+    bridge.setVoice(false)
+    await page.reload()
+    await expect(
+      page.getByRole('heading', { name: 'Voice is offline' }),
+    ).toBeVisible()
+    await expect.poll(() => newestShowsWhole(page)).toBe(true)
+
+    await page.mouse.move(195, 200)
+    await page.mouse.wheel(0, -300)
+    await expect.poll(() => fromEnd(page)).toBeGreaterThan(200)
+    await page.setViewportSize({ width: 430, height: 600 })
+    // A resize observer scrolls ahead of the next paint, so two frames cover it.
+    await page.evaluate(
+      () =>
+        new Promise((done) =>
+          requestAnimationFrame(() => requestAnimationFrame(done)),
+        ),
+    )
+    expect(await fromEnd(page)).toBeGreaterThan(64)
+  } finally {
+    await bridge.close()
+  }
+})
