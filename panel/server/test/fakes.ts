@@ -9,6 +9,7 @@ export const FAKE_CONFIG: PanelConfig = {
   port: 4180,
   ollamaUrl: 'http://127.0.0.1:11434',
   voiceUrl: 'http://127.0.0.1:8770',
+  app: null,
 }
 
 interface FakeUnit {
