@@ -7,6 +7,7 @@ import { type OfferUndo, OfferUndoContext } from '@/components/undo-context'
 import { ApiFailure } from '@/lib/api'
 import { cn } from '@/lib/utils'
 import { useOnline } from '@/offline/connection'
+import { useHold } from '@/update/holds'
 
 interface Notice {
   /** What changed, already worded, such as `Deleted “Lunch”`. */
@@ -70,6 +71,8 @@ function UndoStatus({ notice, onChange }: UndoStatusProps) {
   const [hovered, setHovered] = useState(false)
   const [focused, setFocused] = useState(false)
   const held = hovered || focused || undo.isPending
+  // Its Undo would go with a reload, and a notice lasts only seconds.
+  useHold(notice !== null)
 
   useEffect(() => {
     if (notice === null || held) return

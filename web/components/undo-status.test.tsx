@@ -8,6 +8,7 @@ import { useOfferUndo } from '@/components/undo-context'
 import { UndoProvider } from '@/components/undo-status'
 import { applyLanguage } from '@/i18n/setup'
 import { failure, fakeApi, json } from '@/test/fake-api'
+import { isHeld } from '@/update/holds'
 
 const undoneChange = {
   change: {
@@ -111,5 +112,18 @@ describe('UndoProvider', () => {
     expect(
       await screen.findByText("Can't undo, since someone changed it after."),
     ).toBeInTheDocument()
+  })
+
+  it('holds a release while the notice shows and lets go once dismissed', async () => {
+    fakeApi({})
+    const user = userEvent.setup()
+    renderWithUndo()
+    expect(isHeld()).toBe(false)
+
+    await user.click(screen.getByRole('button', { name: 'Delete' }))
+    expect(isHeld()).toBe(true)
+    await user.click(screen.getByRole('button', { name: 'Dismiss' }))
+
+    expect(isHeld()).toBe(false)
   })
 })
