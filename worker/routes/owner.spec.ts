@@ -46,16 +46,14 @@ async function addChat() {
   const { trip } = await addTrip(cookie)
   const id = crypto.randomUUID()
   const at = new Date('2031-04-11T08:00:00Z')
-  await createDb(env.DB)
-    .insert(chats)
-    .values({
-      id,
-      ownerId: user.id,
-      tripId: trip.id,
-      title: null,
-      createdAt: at,
-      updatedAt: at,
-    })
+  await createDb(env.DB).insert(chats).values({
+    id,
+    ownerId: user.id,
+    tripId: trip.id,
+    title: null,
+    createdAt: at,
+    updatedAt: at,
+  })
   return id
 }
 
