@@ -7,8 +7,6 @@ description: The trip list, one trip's overview, creating a trip, and the week a
 
 Row v01.3 builds these screens. These frames are a reference, and where that row's plan differs from a frame, the plan wins.
 
-English dates follow `Intl` in the build, as 9/20, 9/20/2031, and Mon to Sun, where the English frames draw 20/9, 20/9/2031, and Mo to Su.
-
 ## Code
 
 - `web/features/trips/trip-list.tsx`: the trips list, each card with its span, its status, and its trip-currency total
@@ -28,4 +26,4 @@ English dates follow `Intl` in the build, as 9/20, 9/20/2031, and Mon to Sun, wh
 - Desktop at 1440, tablet at 834, and phone at 390 wide, in light and dark
 - The list, an overview, and the create sheet
 - The create sheet with the Trip dates range sheet open
-- The week and month calendars
+- The week and month calendars, and the Calendar's day view

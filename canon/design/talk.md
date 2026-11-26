@@ -22,4 +22,5 @@ Row v01.6 builds these screens. These frames are a reference, and where that row
 - Desktop at 1440, tablet at 834, and phone at 390 wide, in light and dark
 - Ready, listening, listening with live words, and transcribing
 - Reviewing the transcript, and retrying
+- A refused microphone
 - Voice turned off, ready to notify, notified, and on the admin's own account

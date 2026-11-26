@@ -11,11 +11,11 @@ Each group holds accepted frames a build matches, light and dark, and its file b
 - [Budget](budget.md): A trip's estimated cost and the history of what changed it
 - [Chat](chat.md): The list of conversations and one thread with the assistant
 - [Entry](entry.md): One calendar entry, with its detail, the add and edit sheets, and the delete confirmation
-- [Foundations](foundations.md): The look, the mark, the home-screen icons, the social card, and the app structure every screen draws on
+- [Foundations](foundations.md): The mark, the home-screen icons, and the social card
 - [Onboarding](onboarding.md): Signing in, installing to the home screen, the guided tutorial, the practice trip, and the first empty calendar
 - [Owner panel](panel.md): The owner's local panel on the workspace PC, showing whether voice, the local model, and the bridge are up, with the controls that start and stop them
 - [Settings and admin](settings-admin.md): The settings page, the assistant and voice settings, and the admin's accounts page
-- [Shell](shell.md): The frame around every screen, being the desktop nav and docked chat, the tablet rail and Talk bar, and the phone tabs
+- [Shell](shell.md): The frame around every screen, being the desktop nav and docked chat, the tablet rail and Talk bar, and the phone tabs, with the admin's nav and the hidden nav
 - [States](states.md): The whole-app error screen and the offline screen
 - [Talk](talk.md): Speaking a request and checking the transcript before it is sent
 - [Today](today.md): The day view the app opens on, showing what is happening now, what comes next, and the day's estimated cost
