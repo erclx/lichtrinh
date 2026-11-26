@@ -6,6 +6,8 @@ declare global {
   // optional ones unset, which turns that way of notifying off.
   interface Env {
     BRIDGE_SECRET: string
+    // The owner panel's own secret, which an unset value turns off.
+    PANEL_SECRET?: string
     VAPID_PUBLIC_KEY?: string
     VAPID_PRIVATE_KEY?: string
     NOTICE_FROM?: string
@@ -14,6 +16,7 @@ declare global {
   namespace Cloudflare {
     interface Env {
       BRIDGE_SECRET: string
+      PANEL_SECRET?: string
       VAPID_PUBLIC_KEY?: string
       VAPID_PRIVATE_KEY?: string
       NOTICE_FROM?: string
