@@ -37,25 +37,26 @@ These run and test the app, its local database, and the generated Worker types.
 
 ### `scripts/dev/`
 
-Holds `bun run dev:full`, the owner's way to try the whole app at any time on invented data. It runs the app, voice, and the bridge as children of one process and stops all three on one Ctrl-C. The table sets it beside every other run, and only staging and production leave this machine.
+Holds `bun run dev:full`, the owner's way to try the whole app on invented data, and `bun run dev:phone`, which shares that run with the owner's iPhone. Both run the app, voice, and the bridge as children of one process and stop all three on one Ctrl-C. The table sets each beside every other run.
 
-| Run                  | Runs on                                   | Its data                                               |
-| -------------------- | ----------------------------------------- | ------------------------------------------------------ |
-| `bun run dev`        | Vite and workerd on this machine          | `.wrangler/state/`, or below `LICHTRINH_STATE_ROOT`    |
-| `bun run dev:full`   | Vite, workerd, voice, and the bridge here | `.wrangler/dev/` in the checkout, kept until `--reset` |
-| `bun run test:run`   | Vitest, with the API inside workerd       | A fresh in-memory D1 per test file                     |
-| `bun run test:e2e`   | Playwright against `bun run dev`          | `lichtrinh-e2e-<offset>/` under the temp folder, wiped |
-| `bun run screenshot` | A built preview on port 4173              | A fresh `mktemp -d` folder for each run                |
-| Staging              | Cloudflare, on each merge to `main`       | Its own remote D1 database, invented rows alone        |
-| Production           | Cloudflare, on each release               | Its own remote D1 database, the family's trips         |
+| Run                  | Runs on                                        | Its data                                               |
+| -------------------- | ---------------------------------------------- | ------------------------------------------------------ |
+| `bun run dev`        | Vite and workerd on this machine               | `.wrangler/state/`, or below `LICHTRINH_STATE_ROOT`    |
+| `bun run dev:full`   | Vite, workerd, voice, and the bridge here      | `.wrangler/dev/` in the checkout, kept until `--reset` |
+| `bun run dev:phone`  | The same, shared at the machine's tailnet name | The same `.wrangler/dev/` as `bun run dev:full`        |
+| `bun run test:run`   | Vitest, with the API inside workerd            | A fresh in-memory D1 per test file                     |
+| `bun run test:e2e`   | Playwright against `bun run dev`               | `lichtrinh-e2e-<offset>/` under the temp folder, wiped |
+| `bun run screenshot` | A built preview on port 4173                   | A fresh `mktemp -d` folder for each run                |
+| Staging              | Cloudflare, on each merge to `main`            | Its own remote D1 database, invented rows alone        |
+| Production           | Cloudflare, on each release                    | Its own remote D1 database, the family's trips         |
 
 The run seeds, checks, and stops in the ways below.
 
-- It seeds the 2031 fixtures plus a trip around today with `bun scripts/seed.ts --today`, which no test or capture passes, so their frames stay on 2031
-- A rerun keeps the database and the owner's edits in it, and `bun run dev:full --reset` removes `.wrangler/dev/` first
+- It seeds the 2031 fixtures plus a trip around today with `bun scripts/seed.ts --today`, which no test or capture passes. A rerun keeps the owner's edits, and `--reset` removes `.wrangler/dev/` first.
 - It checks `uv`, Ollama with both `lichtrinh-assistant` aliases, the speech models, a free app port, and that no `.dev.vars` exists, and starts nothing until each holds
 - The Worker and the bridge share a secret made for the run and passed through the environment, and the bridge dials `localhost` whatever `LICHTRINH_URL` the shell holds
 - Each child runs in its own process group, so Ctrl-C reaches Vite and workerd too, and any child exiting stops the rest. A voice server already on 8770 is reused and left running.
+- `--phone` shares port 443 through `tailscale.exe serve` on Windows, never Funnel, and removes the share on exit. Judge from the home-screen icon, since a Safari tab forgets the sign-in.
 
 ### `cli/`
 

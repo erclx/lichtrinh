@@ -3,10 +3,10 @@ import tailwindcss from '@tailwindcss/vite'
 import react from '@vitejs/plugin-react'
 import { readFileSync } from 'fs'
 import path from 'path'
-import { defineConfig } from 'vite'
+import { defineConfig, type ViteDevServer } from 'vite'
 import { VitePWA } from 'vite-plugin-pwa'
 
-import { manifest, stagingManifest } from './pwa-manifest.ts'
+import { manifest, previewManifest, stagingManifest } from './pwa-manifest.ts'
 
 const portOffset = Number(process.env.WORKTREE_PORT_OFFSET) || 0
 
@@ -38,6 +38,10 @@ const staging = process.env.CLOUDFLARE_ENV === 'staging'
 // A Worker-only change moves no hashed file name, so this tells builds apart.
 const commit = process.env.GITHUB_SHA
 
+// Set by `bun run dev:phone`, so the branch's home-screen icon on a phone
+// carries a name of its own.
+const phone = process.env.LICHTRINH_PHONE === '1'
+
 export default defineConfig({
   define: {
     __APP_VERSION__: JSON.stringify(appVersion),
@@ -59,6 +63,28 @@ export default defineConfig({
           /<title>[^<]*<\/title>/,
           `<title>${stagingManifest.name}</title>`,
         ),
+    },
+    // Links and answers the manifest by hand, since the PWA plugin's dev
+    // option registers a worker, and a saved copy would hide a later edit.
+    phone && {
+      name: 'preview-manifest',
+      apply: 'serve',
+      transformIndexHtml: () => [
+        {
+          tag: 'link',
+          attrs: { rel: 'manifest', href: '/manifest.webmanifest' },
+          injectTo: 'head',
+        },
+      ],
+      configureServer: (server: ViteDevServer) => {
+        server.middlewares.use(
+          '/manifest.webmanifest',
+          (_request, response) => {
+            response.setHeader('content-type', 'application/manifest+json')
+            response.end(JSON.stringify(previewManifest))
+          },
+        )
+      },
     },
     // A worker holding the built app, so a reload with no connection still
     // opens it. It never answers under `/api/`, so a cached answer cannot

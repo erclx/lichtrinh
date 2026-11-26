@@ -12,6 +12,18 @@ import { join, resolve } from 'node:path'
 
 import { readOllamaUrl } from '../../bridge/config'
 import { FIXTURE_ACCOUNTS } from '../seed'
+import {
+  checkAddress,
+  closeFailure,
+  closeShare,
+  databasePage,
+  openShare,
+  phoneBanner,
+  phoneEnv,
+  readTailnet,
+  type Tailscale,
+  tailscaleExe,
+} from './phone'
 import { findMissing, type Miss } from './prerequisites'
 import { type ServiceGroup, superviseServices } from './services'
 
@@ -20,6 +32,13 @@ export interface OneShot {
   command: readonly string[]
   cwd: string
   env: Record<string, string>
+}
+
+/** What `--phone` adds: the share program and a read of the app's database page. */
+export interface PhonePart {
+  tailscale: Tailscale
+  /** The status a sessionless query to the page answers, or undefined when nothing does. */
+  databasePage: (appUrl: string) => Promise<number | undefined>
 }
 
 /** Everything the run reads or starts, passed in so a test sets each one. */
@@ -41,6 +60,8 @@ export interface DevRun {
   onInterrupt: (handler: () => void) => void
   appWaitMs: number
   pollMs: number
+  /** Shares the app with the owner's phone once the stack is up. */
+  phone?: PhonePart
 }
 
 const VOICE_HEALTH = 'http://127.0.0.1:8770/health'
@@ -61,6 +82,17 @@ export async function runDev(run: DevRun): Promise<number> {
       need: `a free port ${run.appPort}`,
       fix: 'Stop whatever serves it, such as a bun run dev in this checkout.',
     })
+  }
+  let host: string | undefined
+  if (run.phone !== undefined) {
+    const tailnet = await readTailnet(run.phone.tailscale)
+    if ('host' in tailnet) {
+      host = tailnet.host
+      const taken = await checkAddress(run.phone.tailscale, host, run.appPort)
+      if (taken !== undefined) missing.push(taken)
+    } else {
+      missing.push(tailnet)
+    }
   }
   if (interrupted) return INTERRUPTED
   if (missing.length > 0) {
@@ -89,6 +121,7 @@ export async function runDev(run: DevRun): Promise<number> {
       LICHTRINH_STATE_ROOT: stateRoot,
       BRIDGE_SECRET: run.secret,
       CLOUDFLARE_INCLUDE_PROCESS_ENV: 'true',
+      ...(host === undefined ? {} : phoneEnv(host)),
     },
   })
   const up = await untilAnswers(run, appUrl)
@@ -102,6 +135,18 @@ export async function runDev(run: DevRun): Promise<number> {
     const end = await run.services.done
     if (end.reason === 'stopped') return interrupted ? INTERRUPTED : 1
     return reportExit(run, end.name, end.code)
+  }
+  if (run.phone !== undefined) {
+    // The page runs SQL for anyone, so a page still open stops the run.
+    const page = await run.phone.databasePage(appUrl)
+    if (page !== 404) {
+      run.write(
+        `The database page answered ${page ?? 'nothing'} rather than 404, so the run shared nothing and stopped.\n`,
+      )
+      run.services.stop()
+      await run.services.done
+      return 1
+    }
   }
 
   if (await run.answers(VOICE_HEALTH)) {
@@ -121,11 +166,40 @@ export async function runDev(run: DevRun): Promise<number> {
     cwd: run.checkout,
     env: { LICHTRINH_URL: appUrl, BRIDGE_SECRET: run.secret },
   })
-  run.write(banner(appUrl))
+
+  // Marked before the open, since a Ctrl-C during it can still leave a share.
+  let shared = false
+  let failed = false
+  if (run.phone !== undefined && host !== undefined && !interrupted) {
+    shared = true
+    const failure = await openShare(run.phone.tailscale, host, run.appPort)
+    if (failure !== undefined) {
+      run.write(`${failure}\nThe run stopped.\n`)
+      failed = true
+      run.services.stop()
+    }
+  }
+  if (!interrupted && !failed) {
+    run.write(banner(appUrl))
+    if (shared && host !== undefined) run.write(phoneBanner(host))
+  }
 
   const end = await run.services.done
-  if (end.reason === 'stopped') return 0
-  return reportExit(run, end.name, end.code)
+  let code = 0
+  if (failed) code = 1
+  else if (end.reason === 'exited') code = reportExit(run, end.name, end.code)
+  if (run.phone !== undefined && shared && host !== undefined) {
+    const closed = await closeShare(run.phone.tailscale, host, run.appPort)
+    if (closed === 'failed') {
+      run.write(closeFailure())
+      if (code === 0) code = 1
+    } else if (closed === 'left') {
+      run.write(
+        'The tailnet address now serves something this run did not make, so the run left it.\n',
+      )
+    }
+  }
+  return code
 }
 
 async function untilAnswers(
@@ -259,5 +333,8 @@ if (import.meta.main) {
     },
     appWaitMs: 90_000,
     pollMs: 500,
+    phone: process.argv.includes('--phone')
+      ? { tailscale: tailscaleExe, databasePage }
+      : undefined,
   })
 }
