@@ -9,6 +9,8 @@ The first row to build each screen builds its error and offline states. These fr
 
 ## Code
 
+- `web/session/gate.tsx`: the page that cannot connect
+- `web/components/save-error.tsx`: the save error
 - `web/offline/offline-card.tsx`: the card over every page with no connection
 - `web/features/chat/talk-bar.tsx`: the dimmed Talk bar
 - `web/features/chat/thread.tsx`, `web/features/chat/composer.tsx`, and `web/features/chat/change-card.tsx`: the chat with no connection, with no offline card and Undo waiting
@@ -17,3 +19,4 @@ The first row to build each screen builds its error and offline states. These fr
 
 - Desktop at 1440, tablet at 834, and phone at 390 wide, in light and dark
 - An error, offline with the last loaded plan, and offline in a chat
+- The page that cannot connect, and the save error

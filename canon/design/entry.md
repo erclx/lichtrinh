@@ -13,7 +13,7 @@ Row v01.3 builds these screens. These frames are a reference, and where that row
 - `web/features/entries/entry-form.tsx`: the add and edit form, with Kind optional and the cost in the trip currency
 - `web/components/delete-sheet.tsx`: the delete confirmation, opened from the detail, the edit form, and the swiped row
 - `web/components/kind-icons.tsx`: the five drawn kind icons
-- `web/components/save-error.tsx`: the save error from `states/`, on the card fill rather than the frame's pink
+- `web/components/save-error.tsx`: the save error from `states/`, on the card fill
 - `web/components/undo-status.tsx`: the status naming each save or delete with its Undo
 - `web/components/sheet-list.tsx`: the Starts and How long choices, opened as a sheet list
 - `web/features/entries/lengths.ts`: the start times, the six lengths, and an entry's own length as a seventh
