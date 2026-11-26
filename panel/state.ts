@@ -1,4 +1,5 @@
 import { assistantModel } from '@shared/assistant.ts'
+import { ownerMessage, ownerTurns } from '@shared/owner.ts'
 import { z } from 'zod'
 
 import { SERVICE_IDS } from './services.ts'
@@ -59,6 +60,26 @@ export const gpuState = z.strictObject({
 })
 export type GpuState = z.infer<typeof gpuState>
 
+/** The family's turns today, counted from this machine's midnight. */
+export const appActivity = ownerTurns.omit({ since: true })
+export type AppActivity = z.infer<typeof appActivity>
+
+/**
+ * What the family's app says. `unset` is a panel given no address or
+ * secret, and `unreachable` one whose last read failed, which keeps no rows.
+ */
+export const appView = z.discriminatedUnion('reach', [
+  z.strictObject({ reach: z.literal('unset') }),
+  z.strictObject({ reach: z.literal('unreachable') }),
+  z.strictObject({
+    reach: z.literal('read'),
+    activity: appActivity,
+    /** Newest first. */
+    messages: z.array(ownerMessage),
+  }),
+])
+export type AppView = z.infer<typeof appView>
+
 /** What the status server answers and the page parses. */
 export const panelState = z.strictObject({
   readAt: z.iso.datetime(),
@@ -66,6 +87,7 @@ export const panelState = z.strictObject({
   services: z.array(serviceState),
   /** Null when the card cannot be read. */
   gpu: gpuState.nullable(),
+  app: appView,
 })
 export type PanelState = z.infer<typeof panelState>
 

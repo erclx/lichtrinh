@@ -46,6 +46,7 @@ function state(
       service('staging', statuses.staging ?? 'stopped'),
     ],
     gpu: null,
+    app: { reach: 'unset' },
   }
 }
 

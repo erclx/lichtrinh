@@ -43,6 +43,7 @@ function state(
       usedMiB: 26_521,
       models: [{ alias: 'lichtrinh-assistant', vramMiB: 22_630 }],
     },
+    app: { reach: 'unset' },
   }
 }
 

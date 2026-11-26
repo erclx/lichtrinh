@@ -1,9 +1,19 @@
+import type { AssistantModel } from '@shared/assistant.ts'
+import { DEFAULT_ASSISTANT_MODEL } from '@shared/assistant.ts'
+
 import type { ServiceId } from '../services.ts'
 import { SERVICES } from '../services.ts'
-import type { GpuState, LogLine, PanelState, ServiceState } from '../state.ts'
+import type {
+  AppView,
+  GpuState,
+  LogLine,
+  PanelState,
+  ServiceState,
+} from '../state.ts'
 import type { CardMemory } from './adapters/gpu.ts'
 import type { ConnectionEvent } from './adapters/journal.ts'
 import type { LoadedModel } from './adapters/ollama.ts'
+import type { AppRead } from './adapters/owner.ts'
 import type { UnitState } from './adapters/systemd.ts'
 
 /** What the panel itself knows of the last Load it asked for. */
@@ -19,6 +29,8 @@ export interface Readings {
   connections: Record<'bridge' | 'staging', ConnectionEvent[]>
   logs: Record<ServiceId, LogLine[]>
   card: CardMemory | null
+  /** Null where the panel has no address or secret for the app. */
+  app: AppRead | null
 }
 
 /** The status fields, ahead of the service's id and its log. */
@@ -39,6 +51,25 @@ export function buildState(readings: Readings, now: Date): PanelState {
       logs: readings.logs[id],
     })),
     gpu: gpuState(readings),
+    app: appView(readings.app),
+  }
+}
+
+/** The alias Load puts on the card, being the admin's pick once the app says it. */
+export function loadModelOf(app: AppRead | null): AssistantModel {
+  return app?.reach === 'read'
+    ? app.summary.assistant.model
+    : DEFAULT_ASSISTANT_MODEL
+}
+
+function appView(app: AppRead | null): AppView {
+  if (app === null) return { reach: 'unset' }
+  if (app.reach === 'unreachable') return app
+  const { count, failed, lastAt } = app.summary.turns
+  return {
+    reach: 'read',
+    activity: { count, failed, lastAt },
+    messages: app.summary.messages,
   }
 }
 
@@ -50,7 +81,21 @@ function statusOf(
 ): Status {
   if (id === 'model') return modelStatus(readings)
   if (id === 'voice') return voiceStatus(unit, readings.voiceAnswers, now)
-  return bridgeStatus(unit, readings.connections[id], now)
+  const journal = bridgeStatus(unit, readings.connections[id], now)
+  // The panel reads production's app alone, so only its bridge is checked.
+  return id === 'bridge' ? appOverrides(journal, readings.app) : journal
+}
+
+/**
+ * A bridge whose journal says connected, while the app read after that
+ * says no bridge holds its socket, has lost the app the journal never saw go.
+ */
+function appOverrides(journal: Status, app: AppRead | null): Status {
+  if (journal.status !== 'up' || app?.reach !== 'read') return journal
+  if (app.summary.assistant.online) return journal
+  const readyAt = journal.since === null ? null : new Date(journal.since)
+  if (readyAt !== null && app.at <= readyAt) return journal
+  return status('failed', 'not_answering', app.at)
 }
 
 /** What systemd alone says, or null for a unit whose process runs. */
