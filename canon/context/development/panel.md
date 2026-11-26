@@ -27,7 +27,7 @@ Holds what `lichtrinh panel` writes and runs on the machine. The owner installs 
 The units and the verbs hold to these:
 
 - `lichtrinh.target` holds voice and the bridge. The staging bridge and the panel sit outside it, and no unit carries an install section, so nothing starts at sign-in.
-- A bridge unit sources its settings file through `bash`, since systemd ignores the `export` lines there. Staging reads `bridge-staging.env` and the family's copy reads `bridge.env`.
+- Each unit sources its settings file through `bash`, since systemd ignores its `export` lines. Staging reads `bridge-staging.env`, the family's copy `bridge.env`, and the panel `panel.env` if present.
 - `install` refuses a linked worktree, a missing tool, and one host in both settings files, where the relay would replace each bridge with the other without end
 - `open` keeps a session of its own until the panel unit stops, since WSL stops a distribution no session holds. A later `open` finds its lock held and shows the window alone.
 
@@ -36,7 +36,7 @@ The units and the verbs hold to these:
 The Bun process the panel unit runs on `127.0.0.1:4180`. It refuses a foreign `Host` on every route and any write the page itself did not send.
 
 - `adapters/` holds one outside tool per file, so a changed output format opens one file
-- A bridge reads as connected on its last `ready` in the running invocation, and as dropped 30 seconds after it lost the app, so an earlier run's `ready` never counts
+- A bridge reads as connected on its last `ready` in the running invocation, and as dropped 30 seconds after it lost the app or once an app read after that `ready` finds no socket
 - A start clears systemd's crash limit first, since a unit past three starts in five minutes refuses one. A failed or cut read fails the state, and never reads as stopped.
 - Logs are read three days back and then followed, since `journalctl` scans each health read it drops. Ollama's lines pass an allow list, since a debug level there logs prompts.
 - Load answers before the model is on the card, and Stop all or Unload drops a load still running
@@ -47,6 +47,7 @@ The page, built by its own Vite config and drawn on the app's kit and stylesheet
 
 - A failed service takes a row of its own with its log lines open, and staging never changes the verdict
 - `index.css` names the kit's folder as a class source, since a build rooted here scans nothing else
+- Activity and Messages draw only with `LICHTRINH_URL` and `PANEL_SECRET` set. The server reads production's owner route at most every 30 seconds and keeps no rows after a failed read.
 
 ### `e2e/panel/`
 

@@ -24,7 +24,7 @@ Holds the Worker entry and the Hono app mounted on `/api`. The root `wrangler.js
 
 Holds sign-in and the guard every route sits behind. The app runs the body limit, then `csrf()`, then a check that answers `415 unsupported_media_type` to any unsafe-method body other than JSON or an empty one, then the guard. The clip and live routes pass `audio/webm` and `audio/mp4` too, and every other route still refuses them.
 
-- `guard.ts` lets a signed-out caller reach health, sign-in, and the bridge's `GET /api/bridge/connect` alone, so a new route, an unknown path included, answers `401 unauthenticated`
+- `guard.ts` lets a signed-out caller reach health, sign-in, `GET /api/bridge/connect`, and `GET /api/owner/summary` alone, so a new route, an unknown path included, answers `401 unauthenticated`
 - `guard.ts` puts `user` and `sessionId` on the Hono context. `requireAdmin` answers `403 forbidden` on `/api/admin/*`, and `requireChat` does so for an account whose `canChat` is off.
 - `session.ts` issues a 180-day `__Host-session` cookie, stores only the SHA-256 of its token, and slides the expiry at most once a day
 - `attempts.ts` refuses past 10 failures per username or 50 per `CF-Connecting-IP` in 15 minutes. Only the edge sets that header, so a local spec counting failures passes its own.
@@ -38,7 +38,7 @@ Holds the chat store, the calendar tools, and the `AssistantRelay` Durable Objec
 - A turn streams NDJSON chat events to the send's response and saves the reply on `final`. A dropped socket, a cancel, or the 120-second backstop saves it `failed` or `stopped` with the changes it made.
 - `tools.ts` parses each call against `shared/assistant-tools.ts` and writes with the version the turn's prompt showed, so an entry a person edited mid-turn answers `edit_conflict` to the model
 - `chats.ts` binds a new chat to the trip under way, else the next, else the latest. A reply names the message it answers in `reply_to`, so a retried send answers the saved reply.
-- The bridge proves itself with `BRIDGE_SECRET` as a bearer token, compared in constant time. It lives in Wrangler secrets and `.dev.vars`, and `worker/test/env.d.ts` declares its type for CI.
+- The bridge proves itself with `BRIDGE_SECRET` and the owner panel with `PANEL_SECRET`, each a bearer token compared in constant time. `PANEL_SECRET` never enters `.dev.vars`.
 
 ### `worker/voice/`
 
@@ -70,7 +70,7 @@ Holds the schemas the app, the API, and the assistant's tools all import as `@sh
 
 The Worker's two smaller folders each carry one job.
 
-- `worker/routes/`: one Hono router per area, being health, auth, users, backup, settings, rates, trips, entries, changes, chats, voice, notices, and the assistant with its bridge socket
+- `worker/routes/`: one Hono router per area, being health, auth, users, backup, settings, rates, trips, entries, changes, chats, voice, notices, owner, and the assistant with its bridge socket
 - `worker/routes/backup.ts` answers the file `shared/backup.ts` versions. `readBackup` in `worker/calendar/backup.ts` makes two queries, since the free plan caps a request at 50.
 - `worker/routes/users.ts` edits an account in one `UPDATE` that counts admins itself, since a separate count lets two demotions both pass
 - `worker/test/`: the migrating setup, the test-only binding types, and builders for invented records, requests, and a scripted fake bridge. `bare()` sends the Origin `csrf()` needs on a bodiless POST.
