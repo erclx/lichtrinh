@@ -12,7 +12,7 @@ paths:
 ## Hash
 
 - Hash every password through `shared/password-hash.ts` with PBKDF2-SHA256, never Argon2id, scrypt, or bcrypt, over `security-server.md`. Revisit when the Worker leaves the free plan's 10 ms CPU cap.
-- Keep `PBKDF2_ITERATIONS` at a count a deployed sign-in spends under 10 ms of CPU on. At 100,000 a staging sign-in spent 25 to 29 ms, and 25,000 is scaled from that and not yet measured.
+- Keep `PBKDF2_ITERATIONS` at a count a deployed sign-in spends under 10 ms of CPU on. It is 10,000, estimated at 7 to 8 ms and not yet measured, scaled from the staging sign-ins at 25 to 29 ms for 100,000 and 10 to 11 ms for 25,000.
 - Take the cost from a staging sign-in, never from a local run, which reads far too low.
 
 ## Passwords

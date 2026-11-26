@@ -28,6 +28,12 @@ describe('hashPassword', () => {
     expect(stored.startsWith(`pbkdf2-sha256$${PBKDF2_ITERATIONS}$`)).toBe(true)
   })
 
+  it('writes 10,000 rounds, the count the free CPU cap was sized for', async () => {
+    const stored = await hashPassword('abcdefghjkmn', SALT)
+
+    expect(stored.startsWith('pbkdf2-sha256$10000$')).toBe(true)
+  })
+
   it('round-trips through parse to the key the password derives', async () => {
     const stored = await hashPassword('abcdefghjkmn', SALT)
 
