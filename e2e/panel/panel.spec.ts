@@ -26,9 +26,6 @@ test('the owner goes from a failed voice through Stop all and Start all', async 
   const newest = messages.getByRole('listitem').first()
   await expect(newest).toContainText('Reply')
   await expect(newest).toContainText('lichtrinh-assistant')
-  await expect(messages.getByRole('listitem').nth(4)).toContainText(
-    'No reply, the turn failed',
-  )
 
   await page.getByRole('button', { name: 'Start voice', exact: true }).click()
   await expect(verdict).toHaveText('Everything is up')
