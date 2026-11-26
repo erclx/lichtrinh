@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { Outlet, useMatch } from 'react-router'
+import { Outlet, useLocation, useMatch } from 'react-router'
 
 import { ChatDock } from '@/features/chat/chat-dock'
 import { TalkBar } from '@/features/chat/talk-bar'
@@ -10,6 +10,7 @@ import { useSession } from '@/session/session-context'
 import { visibleDestinations } from '@/shell/destinations'
 import { Rail, Sidebar, Tabs } from '@/shell/nav'
 import { TopBar } from '@/shell/top-bar'
+import { takeRelease } from '@/update/take-release'
 
 const navHiddenKey = 'lichtrinh.navHidden'
 const chatClosedKey = 'lichtrinh.chatClosed'
@@ -53,11 +54,18 @@ export function AppShell() {
   const roomy = useMediaQuery('(min-width: 480px)')
   const onChats = useMatch('/chats/*') !== null
   const onThread = useMatch('/chats/:chatId') !== null
+  const { pathname } = useLocation()
 
   // The chat pages hold the thread, so the dock and bar stand aside there.
   const chat = user?.canChat === true && !onChats
   const dockOpen = chat && wide && !chatClosed
   const sheetShown = chat && roomy && !wide && sheetOpen
+
+  // A new screen is a moment nobody is mid-read, so a page a touch kept on
+  // the old release follows the new one here.
+  useEffect(() => {
+    void takeRelease()
+  }, [pathname])
 
   useEffect(() => {
     if (!focusAfterToggle.current) return
