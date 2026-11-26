@@ -103,6 +103,30 @@ describe('the desktop nav toggle', () => {
     ).not.toBeInTheDocument()
   })
 
+  it('puts the hide icon before the first place in the menu', async () => {
+    fakeApi({ 'GET /auth/me': () => json(aUser()) })
+    renderAt('/')
+
+    const hide = await screen.findByRole('button', { name: 'Hide sidebar' })
+    const first = screen.getAllByRole('link', { name: 'Today' })[0]
+    expect(
+      hide.compareDocumentPosition(first) & Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy()
+  })
+
+  it('returns focus to the hide icon after showing the menu again', async () => {
+    const user = userEvent.setup()
+    fakeApi({ 'GET /auth/me': () => json(aUser()) })
+    renderAt('/')
+
+    await user.click(
+      await screen.findByRole('button', { name: 'Hide sidebar' }),
+    )
+    await user.click(screen.getByRole('button', { name: 'Show sidebar' }))
+
+    expect(screen.getByRole('button', { name: 'Hide sidebar' })).toHaveFocus()
+  })
+
   it('restores a hidden nav from storage', async () => {
     localStorage.setItem('lichtrinh.navHidden', 'true')
     fakeApi({ 'GET /auth/me': () => json(aUser()) })

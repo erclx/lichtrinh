@@ -27,11 +27,23 @@ export function Sidebar({ destinations, onHide, hideRef }: SidebarProps) {
       aria-label={t('nav.label')}
       className="sticky top-0 hidden h-svh w-62 shrink-0 flex-col gap-2 border-r-[1.5px] border-border p-3 lg:flex"
     >
-      <div className="flex min-h-14 items-center gap-2.5 px-2 pb-3">
+      <div className="flex min-h-target items-center gap-2.5 pl-2 pb-3">
         <BrandMark className="size-[34px] shrink-0" />
         <span className="font-heading text-lg font-extrabold whitespace-nowrap">
           {t('app.name')}
         </span>
+        <button
+          ref={hideRef}
+          type="button"
+          onClick={onHide}
+          aria-label={t('nav.hide')}
+          className={cn(
+            'ml-auto flex size-target shrink-0 items-center justify-center rounded-full bg-muted',
+            focus,
+          )}
+        >
+          <SidebarIcon className="size-6" />
+        </button>
       </div>
       {destinations.map(({ path, labelKey, icon: Icon }) => (
         <NavLink
@@ -48,19 +60,6 @@ export function Sidebar({ destinations, onHide, hideRef }: SidebarProps) {
           {t(labelKey)}
         </NavLink>
       ))}
-      <div className="flex-1" />
-      <button
-        ref={hideRef}
-        type="button"
-        onClick={onHide}
-        className={cn(
-          'flex min-h-target items-center justify-center gap-2 rounded-[18px] bg-muted text-sm font-extrabold',
-          focus,
-        )}
-      >
-        <SidebarIcon className="size-6" />
-        {t('nav.hide')}
-      </button>
     </nav>
   )
 }

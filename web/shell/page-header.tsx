@@ -10,10 +10,17 @@ interface PageHeaderProps {
   backTo?: string
   /** A trailing control on the back row, such as Accounts' New account. */
   action?: ReactNode
+  /** A control on the title row, beside the title, such as Today's Add. */
+  titleAction?: ReactNode
 }
 
 /** The header every page renders above its content, as the frames draw it. */
-export function PageHeader({ title, backTo, action }: PageHeaderProps) {
+export function PageHeader({
+  title,
+  backTo,
+  action,
+  titleAction,
+}: PageHeaderProps) {
   const { t } = useTranslation()
 
   return (
@@ -32,7 +39,14 @@ export function PageHeader({ title, backTo, action }: PageHeaderProps) {
           {action !== undefined && <div className="ml-auto">{action}</div>}
         </div>
       )}
-      <h1 className="font-heading text-2xl font-extrabold">{title}</h1>
+      {titleAction === undefined ? (
+        <h1 className="font-heading text-2xl font-extrabold">{title}</h1>
+      ) : (
+        <div className="flex items-center justify-between gap-2">
+          <h1 className="font-heading text-2xl font-extrabold">{title}</h1>
+          <div className="shrink-0">{titleAction}</div>
+        </div>
+      )}
     </div>
   )
 }
