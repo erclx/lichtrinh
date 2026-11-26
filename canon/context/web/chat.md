@@ -13,7 +13,7 @@ Owns the browser half of talking to the assistant, for an account whose `canChat
 
 ### `web/features/chat/`
 
-Holds the chat list, one thread with its composer, and the places each width draws a thread, all reading the chat routes through the `shared/chats.ts` schemas. Each offline card ends on `notify-action.tsx`, whose read `use-notices.ts` drops with the card.
+Holds the chat list, one thread with its composer, and the places each width draws a thread, all reading the chat routes through the `shared/chats.ts` schemas. Each offline card ends on `notify-action.tsx`, whose read `use-notices.ts` drops with the card. `use-pinned-end.ts` pins a thread by its size, as Safari before 27 has no scroll anchoring.
 
 - `stream.ts` reads a send's NDJSON body line by line, skipping a line it cannot read, since throwing would cancel the stream and the API reads a cancel as Stop
 - `turn.ts` folds stream events into thinking, working, replying, and the ends, and lays a turn over the saved messages until a refresh saves its part
@@ -33,7 +33,6 @@ Holds the mic in the composer, from a tap to the words landing in the box for th
 
 ## Gotchas
 
-- `use-pinned-end.ts` follows the thread's size and its foot's through a resize observer rather than the rows, since the offline card and the voice-off card land after the last row and Safari before 27 has no scroll anchoring to hold the end. Pinned is read from the reader's scrolling alone, so a layout change never unpins.
 - A Stop or a drop carries no saved reply, so the thread asks again every second until the reply saves, then drops back to 30 seconds
 - The e2e server reads `BRIDGE_SECRET` from its environment, and a `.dev.vars` holding one overrides it, so `e2e/chat.spec.ts` fails from such a checkout
 - A device showing the other language still speaks and is answered in the account's, since the Worker reads the account and nothing here sends a language
