@@ -15,6 +15,7 @@ import {
   turnReducer,
 } from '@/features/chat/turn'
 import { ApiFailure } from '@/lib/api'
+import { hold } from '@/update/holds'
 
 type Action = TurnAction | { type: 'start'; sent: Turn['sent'] }
 
@@ -39,6 +40,17 @@ export function useTurn(chatId: string) {
   /** Resolves false when turned away. `voice` rides a transcript's send. */
   async function send(text: string, voice?: VoiceSend): Promise<boolean> {
     if (turn !== null && isRunning(turn)) return false
+    // Taken here rather than in an effect, since the turn outlives its page
+    // and a reload would drop the reader the API reads as Stop.
+    const release = hold()
+    try {
+      return await run(text, voice)
+    } finally {
+      release()
+    }
+  }
+
+  async function run(text: string, voice?: VoiceSend): Promise<boolean> {
     const abort = new AbortController()
     controller.current = abort
     const sent = { id: crypto.randomUUID(), text }
