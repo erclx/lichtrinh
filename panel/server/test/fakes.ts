@@ -1,5 +1,8 @@
 import { randomUUID } from 'node:crypto'
 
+import type { AssistantModel } from '@shared/assistant.ts'
+import type { OwnerMessage, OwnerSummary } from '@shared/owner.ts'
+
 import { serviceOf, SERVICES, TARGET } from '../../services.ts'
 import type { PanelConfig } from '../config.ts'
 import type { Tools } from '../machine.ts'
@@ -9,6 +12,10 @@ export const FAKE_CONFIG: PanelConfig = {
   port: 4180,
   ollamaUrl: 'http://127.0.0.1:11434',
   voiceUrl: 'http://127.0.0.1:8770',
+  app: {
+    url: 'https://lichtrinh.example.com',
+    secret: 'invented-panel-secret',
+  },
 }
 
 interface FakeUnit {
@@ -34,6 +41,54 @@ const KEEP_MS = 12 * 60_000
 
 const MODEL_ALIAS = 'lichtrinh-assistant'
 
+/** Three invented turns, one failed, as minutes before now. */
+const CONVERSATION: readonly (Omit<OwnerMessage, 'at' | 'model'> & {
+  minutesAgo: number
+})[] = [
+  {
+    id: 'fake-reply-3',
+    minutesAgo: 3,
+    role: 'assistant',
+    text: 'Xong. Tôi đã thêm ăn phở sáng mai lúc 7 giờ.',
+    status: 'complete',
+  },
+  {
+    id: 'fake-message-3',
+    minutesAgo: 3,
+    role: 'user',
+    text: 'thêm ăn phở sáng mai lúc 7 giờ',
+    status: 'complete',
+  },
+  {
+    id: 'fake-reply-2',
+    minutesAgo: 22,
+    role: 'assistant',
+    text: 'Tôi đã dời chuyến đi thuyền sang 17:30.',
+    status: 'complete',
+  },
+  {
+    id: 'fake-message-2',
+    minutesAgo: 22,
+    role: 'user',
+    text: 'doi chuyen di thuyen sang 5 ruoi',
+    status: 'complete',
+  },
+  {
+    id: 'fake-reply-1',
+    minutesAgo: 166,
+    role: 'assistant',
+    text: '',
+    status: 'failed',
+  },
+  {
+    id: 'fake-message-1',
+    minutesAgo: 166,
+    role: 'user',
+    text: 'mai co gi',
+    status: 'complete',
+  },
+]
+
 export const SCENARIOS = [
   'failed',
   'up',
@@ -56,6 +111,8 @@ export function createFakeMachine(now: () => Date) {
   const refused = new Set<string>()
   let modelUntil: Date | null = null
   let ollamaUp = true
+  let appUp = true
+  let adminModel: AssistantModel = MODEL_ALIAS
 
   const unitOf = (name: string): FakeUnit => {
     const unit = units.get(name) ?? {
@@ -194,6 +251,8 @@ export function createFakeMachine(now: () => Date) {
     refused.clear()
     modelUntil = null
     ollamaUp = true
+    appUp = true
+    adminModel = MODEL_ALIAS
     scenarios[scenario]()
   }
 
@@ -280,9 +339,33 @@ export function createFakeMachine(now: () => Date) {
     return Response.json({ models })
   }
 
+  /** The family's app, whose relay holds a socket while the bridge runs. */
+  const app = (init?: RequestInit): Response => {
+    const bearer = new Headers(init?.headers).get('authorization')
+    if (bearer !== `Bearer ${FAKE_CONFIG.app?.secret}`) {
+      return Response.json({}, { status: 401 })
+    }
+    const lastAt = minutesAgo(3).toISOString()
+    const summary: OwnerSummary = {
+      assistant: {
+        online: unitOf(bridgeUnit).active === 'active',
+        lastAnsweredAt: lastAt,
+        model: adminModel,
+      },
+      turns: { since: lastAt, count: 12, failed: 1, lastAt },
+      messages: CONVERSATION.map(({ minutesAgo: minutes, ...message }) => ({
+        ...message,
+        at: minutesAgo(minutes).toISOString(),
+        model: message.role === 'assistant' ? adminModel : null,
+      })),
+    }
+    return Response.json(summary)
+  }
+
   const fetcher = (async (input: string, init?: RequestInit) => {
     const url = new URL(input)
     commands.push(`${init?.method ?? 'GET'} ${url.pathname}`)
+    if (url.origin === FAKE_CONFIG.app?.url && appUp) return app(init)
     if (url.origin === FAKE_CONFIG.ollamaUrl && ollamaUp) {
       return ollama(url.pathname, JSON.parse(String(init?.body ?? 'null')))
     }
@@ -306,6 +389,14 @@ export function createFakeMachine(now: () => Date) {
     refuse: (name: string) => refused.add(name),
     stopOllama: () => {
       ollamaUp = false
+    },
+    /** Makes the family's app unreachable from this machine. */
+    stopApp: () => {
+      appUp = false
+    },
+    /** Sets the alias the admin picked in the app. */
+    pickModel: (model: AssistantModel) => {
+      adminModel = model
     },
   }
 }

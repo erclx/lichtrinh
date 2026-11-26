@@ -74,6 +74,7 @@ export default mergeConfig(
               miniflare: {
                 bindings: {
                   BRIDGE_SECRET: 'test-bridge-secret',
+                  PANEL_SECRET: 'test-panel-secret',
                   NOTICE_FROM: 'notices@example.com',
                   ...(await vapidTestKeys()),
                   TEST_MIGRATIONS: await readD1Migrations(

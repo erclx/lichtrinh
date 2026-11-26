@@ -162,7 +162,7 @@ describe('GET /api/state', () => {
     },
   )
 
-  it('asks voice and Ollama once over several reads', async () => {
+  it('asks voice, Ollama, and the app once over several reads', async () => {
     const { get, fake } = panel('up')
 
     await get('/api/state')
@@ -170,7 +170,50 @@ describe('GET /api/state', () => {
 
     expect(
       fake.commands.filter((command) => command.startsWith('GET ')),
-    ).toEqual(['GET /health', 'GET /api/ps'])
+    ).toEqual(['GET /health', 'GET /api/ps', 'GET /api/owner/summary'])
+  })
+
+  it('carries the app’s turns and its messages, newest first', async () => {
+    const response = await panel('up').get('/api/state')
+
+    const { app } = panelState.parse(await response.json())
+    expect(app).toMatchObject({
+      reach: 'read',
+      activity: { count: 12, failed: 1, lastAt: '2031-11-22T14:21:00.000Z' },
+    })
+    expect(app.reach === 'read' && app.messages.map(({ id }) => id)).toEqual([
+      'fake-reply-3',
+      'fake-message-3',
+      'fake-reply-2',
+      'fake-message-2',
+      'fake-reply-1',
+      'fake-message-1',
+    ])
+  })
+
+  it('reads the app unreachable with no rows while it does not answer', async () => {
+    const { get, fake } = panel('up')
+    fake.stopApp()
+
+    const { app } = panelState.parse(await (await get('/api/state')).json())
+
+    expect(app).toEqual({ reach: 'unreachable' })
+  })
+
+  it('runs without the app where none is set', async () => {
+    const fake = createFakeMachine(() => NOW)
+    fake.enter('up')
+    const app = createApp({
+      machine: createMachine(fake.tools, { ...FAKE_CONFIG, app: null }),
+      port: FAKE_CONFIG.port,
+    })
+
+    const response = await app.request('/api/state', { headers: OWN })
+
+    expect(panelState.parse(await response.json()).app).toEqual({
+      reach: 'unset',
+    })
+    expect(fake.commands).not.toContain('GET /api/owner/summary')
   })
 
   it('answers an unexpected fault in the envelope, with no detail', async () => {
@@ -385,6 +428,25 @@ describe('loading the model', () => {
     expect(after).toMatchObject({ status: 'failed', cause: 'load_failed' })
     expect(ollama.loads).toHaveLength(2)
     expect((await modelStatus(get('/api/state')))?.status).toBe('starting')
+  })
+
+  it('loads the alias the admin picked, once the app has said it', async () => {
+    const loaded: unknown[] = []
+    let answer: typeof fetch = fetch
+    const fetcher = ((url: string, init?: RequestInit) => {
+      if (url.endsWith('/api/generate')) {
+        loaded.push(JSON.parse(String(init?.body)).model)
+      }
+      return answer(url, init)
+    }) as typeof fetch
+    const { post, get, fake } = panel('stopped', { fetch: fetcher })
+    answer = fake.tools.fetch
+    fake.pickModel('lichtrinh-assistant-gemma')
+
+    await get('/api/state')
+    await post('/api/services/model/load')
+
+    expect(loaded).toEqual(['lichtrinh-assistant-gemma'])
   })
 
   it('drops a load still running on Stop all', async () => {

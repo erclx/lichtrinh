@@ -12,11 +12,13 @@ export interface AuthEnv {
 }
 
 // The only routes a signed-out caller reaches, so a new route is protected
-// by default. The bridge socket carries a secret its own route checks.
+// by default. The bridge and the owner panel each carry a secret their own
+// route checks, named by whole path so no sibling route opens with them.
 const SIGNED_OUT_ROUTES = new Set([
   'GET /api/health',
   'POST /api/auth/sign-in',
   'GET /api/bridge/connect',
+  'GET /api/owner/summary',
 ])
 
 export const requireSession = createMiddleware<AuthEnv>(async (c, next) => {

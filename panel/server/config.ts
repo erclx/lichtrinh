@@ -2,13 +2,24 @@ import { PANEL_PORT } from '../services.ts'
 
 const LOOPBACK = new Set(['localhost', '127.0.0.1', '[::1]'])
 
+/** Where the family's app answers, and the secret its owner route takes. */
+export interface AppLink {
+  url: string
+  secret: string
+}
+
 export interface PanelConfig {
   port: number
   ollamaUrl: string
   voiceUrl: string
+  /** Null where neither is set, so the panel runs without Messages. */
+  app: AppLink | null
 }
 
-/** The panel's settings. Throws on a bad port or an address off this machine. */
+/**
+ * The panel's settings. Throws on a bad port, a service address off this
+ * machine, an app address in plain http off it, or half of the app's pair.
+ */
 export function readConfig(
   env: Record<string, string | undefined>,
 ): PanelConfig {
@@ -28,7 +39,24 @@ export function readConfig(
       env.VOICE_URL,
       'http://127.0.0.1:8770',
     ),
+    app: appLink(env.LICHTRINH_URL, env.PANEL_SECRET),
   }
+}
+
+function appLink(
+  url: string | undefined,
+  secret: string | undefined,
+): AppLink | null {
+  if (!url && !secret) return null
+  if (!url || !secret) {
+    throw new Error('Set LICHTRINH_URL and PANEL_SECRET together')
+  }
+  const parsed = new URL(url)
+  // The secret rides every read, so it crosses no network in the clear.
+  if (parsed.protocol !== 'https:' && !LOOPBACK.has(parsed.hostname)) {
+    throw new Error('LICHTRINH_URL must use https off this machine')
+  }
+  return { url: parsed.origin, secret }
 }
 
 function onThisMachine(

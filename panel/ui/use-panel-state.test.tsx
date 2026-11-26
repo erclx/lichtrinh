@@ -11,6 +11,7 @@ const STATE: PanelState = {
   readAt: '2031-11-22T14:24:00.000Z',
   services: [],
   gpu: null,
+  app: { reach: 'unset' },
 }
 const RESTART: Press = { on: 'service', id: 'bridge', action: 'restart' }
 

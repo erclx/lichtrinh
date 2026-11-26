@@ -1,5 +1,3 @@
-import { DEFAULT_ASSISTANT_MODEL } from '@shared/assistant.ts'
-
 import type { ServiceId } from '../services.ts'
 import { serviceOf, SERVICES, TARGET } from '../services.ts'
 import type { AllAction, LogLine, PanelState, ServiceAction } from '../state.ts'
@@ -11,6 +9,8 @@ import {
   loadModel,
   unloadModel,
 } from './adapters/ollama.ts'
+import type { AppRead } from './adapters/owner.ts'
+import { createOwnerReader } from './adapters/owner.ts'
 import {
   restartUnits,
   showUnits,
@@ -21,7 +21,7 @@ import { createVoiceReader } from './adapters/voice.ts'
 import type { PanelConfig } from './config.ts'
 import type { Run } from './run.ts'
 import type { LoadProgress } from './state.ts'
-import { buildState } from './state.ts'
+import { buildState, loadModelOf } from './state.ts'
 
 /** The outside world, handed in so tests and the e2e server fake it. */
 export interface Tools {
@@ -54,6 +54,11 @@ export function createMachine(tools: Tools, config: PanelConfig): Machine {
   const readVoice = createVoiceReader(fetcher, config.voiceUrl, now)
   const loaded = createModelReader(fetcher, config.ollamaUrl, now)
   const journal = createJournalReader(run, now)
+  const readApp =
+    config.app === null
+      ? () => Promise.resolve(null)
+      : createOwnerReader(fetcher, config.app, now)
+  let app: AppRead | null = null
   let load: LoadProgress = 'idle'
   let pending: AbortController | undefined
 
@@ -71,7 +76,7 @@ export function createMachine(tools: Tools, config: PanelConfig): Machine {
     void loadModel(
       fetcher,
       config.ollamaUrl,
-      DEFAULT_ASSISTANT_MODEL,
+      loadModelOf(app),
       mine.signal,
     ).then(
       () => settle('idle'),
@@ -97,14 +102,18 @@ export function createMachine(tools: Tools, config: PanelConfig): Machine {
     const runSince = (id: ServiceId) => unit(serviceOf(id).unit).activeSince
     // A model on its way up may land at any read.
     if (load === 'loading') loaded.changed()
-    const [answers, models, card, bridge, staging, logs] = await Promise.all([
-      readVoice(voice.active === 'active' ? voice.invocationId : null),
-      loaded.read(),
-      readCard(),
-      journal.connectionEvents('bridge', runSince('bridge')),
-      journal.connectionEvents('staging', runSince('staging')),
-      readLogs(journal.recentLines),
-    ])
+    const [answers, models, card, bridge, staging, logs, appRead] =
+      await Promise.all([
+        readVoice(voice.active === 'active' ? voice.invocationId : null),
+        loaded.read(),
+        readCard(),
+        journal.connectionEvents('bridge', runSince('bridge')),
+        journal.connectionEvents('staging', runSince('staging')),
+        readLogs(journal.recentLines),
+        readApp(),
+      ])
+    // Load takes the admin's pick from the last read that reached the app.
+    if (appRead?.reach === 'read') app = appRead
     return buildState(
       {
         unit,
@@ -114,6 +123,7 @@ export function createMachine(tools: Tools, config: PanelConfig): Machine {
         connections: { bridge, staging },
         logs,
         card,
+        app: appRead,
       },
       now(),
     )

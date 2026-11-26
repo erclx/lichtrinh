@@ -1,10 +1,12 @@
+import type { AssistantModel } from '@shared/assistant.ts'
 import { describe, expect, it } from 'vitest'
 
 import type { ServiceId } from '../services.ts'
 import { panelState } from '../state.ts'
 import type { ConnectionEvent } from './adapters/journal.ts'
+import type { AppRead } from './adapters/owner.ts'
 import type { UnitState } from './adapters/systemd.ts'
-import { buildState, type Readings } from './state.ts'
+import { buildState, loadModelOf, type Readings } from './state.ts'
 
 const NOW = new Date('2031-11-22T14:24:00Z')
 const ago = (seconds: number) => new Date(NOW.getTime() - seconds * 1000)
@@ -57,6 +59,7 @@ function readings(
     connections: { bridge: [], staging: [] },
     logs: { voice: [], model: [], bridge: [], staging: [] },
     card: null,
+    app: null,
     ...fields,
   }
 }
@@ -312,5 +315,130 @@ describe('the graphics card', () => {
 
   it('is null when the card cannot be read', () => {
     expect(buildState(readings(), NOW).gpu).toBeNull()
+  })
+})
+
+/** What the app said at `seconds` ago, with its bridge socket held or not. */
+function appRead(
+  seconds: number,
+  {
+    online = true,
+    model = 'lichtrinh-assistant',
+  }: { online?: boolean; model?: AssistantModel } = {},
+): AppRead {
+  return {
+    reach: 'read',
+    at: ago(seconds),
+    summary: {
+      assistant: { online, lastAnsweredAt: null, model },
+      turns: {
+        since: '2031-11-22T00:00:00.000Z',
+        count: 12,
+        failed: 1,
+        lastAt: '2031-11-22T14:21:00.000Z',
+      },
+      messages: [
+        {
+          id: 'm1',
+          at: '2031-11-22T14:21:00.000Z',
+          role: 'user',
+          text: 'mai co gi',
+          status: 'complete',
+          model: null,
+        },
+      ],
+    },
+  }
+}
+
+describe('the app', () => {
+  it('reads unset where the panel has no address for it', () => {
+    expect(buildState(readings(), NOW).app).toEqual({ reach: 'unset' })
+  })
+
+  it('reads unreachable with no rows', () => {
+    const from = readings({}, { app: { reach: 'unreachable' } })
+
+    expect(buildState(from, NOW).app).toEqual({ reach: 'unreachable' })
+  })
+
+  it('carries today’s turns and the messages, in the shape the page parses', () => {
+    const state = buildState(readings({}, { app: appRead(5) }), NOW)
+
+    expect(panelState.parse(state).app).toEqual({
+      reach: 'read',
+      activity: { count: 12, failed: 1, lastAt: '2031-11-22T14:21:00.000Z' },
+      messages: [expect.objectContaining({ id: 'm1', text: 'mai co gi' })],
+    })
+  })
+})
+
+describe('the bridge as the app sees it', () => {
+  const connected = { [BRIDGE]: unit('active') }
+  const ready = { bridge: [event('ready', 60)], staging: [] }
+
+  it('reads Dropped when the app, read after the ready, holds no socket', () => {
+    const from = readings(connected, {
+      connections: ready,
+      app: appRead(5, { online: false }),
+    })
+
+    expect(service('bridge', from)).toMatchObject({
+      status: 'failed',
+      cause: 'not_answering',
+      since: ago(5).toISOString(),
+    })
+  })
+
+  it('keeps the journal’s word over an app read from before the ready', () => {
+    const from = readings(connected, {
+      connections: ready,
+      app: appRead(90, { online: false }),
+    })
+
+    expect(service('bridge', from).status).toBe('up')
+  })
+
+  it.each([
+    ['holds the socket', appRead(5)],
+    ['cannot be reached', { reach: 'unreachable' } as const],
+    ['is not set up', null],
+  ])('keeps the journal’s word while the app %s', (_, app) => {
+    const from = readings(connected, { connections: ready, app })
+
+    expect(service('bridge', from).status).toBe('up')
+  })
+
+  it('leaves the staging bridge to its journal', () => {
+    const from = readings(
+      { [STAGING]: unit('active') },
+      {
+        connections: { bridge: [], staging: [event('ready', 60)] },
+        app: appRead(5, { online: false }),
+      },
+    )
+
+    expect(service('staging', from).status).toBe('up')
+  })
+
+  it('leaves a stopped bridge stopped', () => {
+    const from = readings({}, { app: appRead(5, { online: false }) })
+
+    expect(service('bridge', from).status).toBe('stopped')
+  })
+})
+
+describe('loadModelOf', () => {
+  it('takes the admin’s pick once the app said it', () => {
+    expect(
+      loadModelOf(appRead(5, { model: 'lichtrinh-assistant-gemma' })),
+    ).toBe('lichtrinh-assistant-gemma')
+  })
+
+  it.each([
+    ['unreachable', { reach: 'unreachable' } as const],
+    ['unset', null],
+  ])('takes the default while the app is %s', (_, app) => {
+    expect(loadModelOf(app)).toBe('lichtrinh-assistant')
   })
 })

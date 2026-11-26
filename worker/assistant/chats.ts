@@ -2,6 +2,7 @@ import type { AssistantModel } from '@shared/assistant.ts'
 import { assistantModel } from '@shared/assistant.ts'
 import type { Chat, ChatMessage, MessageStatus } from '@shared/chats.ts'
 import { LAST_MESSAGE_LENGTH } from '@shared/chats.ts'
+import type { OwnerMessage, OwnerTurns } from '@shared/owner.ts'
 import { nowInZone } from '@shared/trip-time.ts'
 import type { Trip } from '@shared/trips.ts'
 import { and, asc, desc, eq, getTableColumns, sql } from 'drizzle-orm'
@@ -281,4 +282,51 @@ export async function lastAnsweredAt(db: Db): Promise<Date | null> {
     .limit(1)
     .get()
   return row?.at ?? null
+}
+
+/**
+ * The newest messages across every chat, newest first, with no chat or
+ * account named. Rowid breaks a tie, so a reply sorts above its message.
+ */
+export async function latestMessages(
+  db: Db,
+  limit: number,
+): Promise<OwnerMessage[]> {
+  const rows = await db
+    .select({
+      id: chatMessages.id,
+      at: chatMessages.createdAt,
+      role: chatMessages.role,
+      text: chatMessages.text,
+      status: chatMessages.status,
+      model: chatMessages.model,
+    })
+    .from(chatMessages)
+    .orderBy(desc(chatMessages.createdAt), sql`rowid desc`)
+    .limit(limit)
+  return rows.map((row) => ({
+    ...row,
+    at: row.at.toISOString(),
+    model: row.model === null ? null : assistantModel.parse(row.model),
+  }))
+}
+
+/** The replies saved at or after `since`, and when the newest ever landed. */
+export async function turnsSince(db: Db, since: Date): Promise<OwnerTurns> {
+  const after = sql`${chatMessages.createdAt} >= ${since.getTime()}`
+  const row = await db
+    .select({
+      count: sql<number>`coalesce(sum(case when ${after} then 1 else 0 end), 0)`,
+      failed: sql<number>`coalesce(sum(case when ${after} and ${chatMessages.status} = 'failed' then 1 else 0 end), 0)`,
+      lastAt: sql<number | null>`max(${chatMessages.createdAt})`,
+    })
+    .from(chatMessages)
+    .where(eq(chatMessages.role, 'assistant'))
+    .get()
+  return {
+    since: since.toISOString(),
+    count: row?.count ?? 0,
+    failed: row?.failed ?? 0,
+    lastAt: row?.lastAt == null ? null : new Date(row.lastAt).toISOString(),
+  }
 }

@@ -24,6 +24,8 @@ export function logOutcome(
     changes?: number
     trips?: number
     entries?: number
+    /** How many chat messages a read answered, never their text. */
+    messages?: number
     audioMs?: number
     ms?: number
   } = {},
