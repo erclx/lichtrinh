@@ -2,9 +2,9 @@ import type { AssistantSettings, AssistantStatus } from '@shared/assistant.ts'
 import { assistantSettings } from '@shared/assistant.ts'
 import { Hono } from 'hono'
 
-import { lastAnsweredAt } from '../assistant/chats.ts'
 import { ASSISTANT_MODEL_KEY, readModel } from '../assistant/model.ts'
 import { relayOf } from '../assistant/relay.ts'
+import { readAssistantStatus } from '../assistant/status.ts'
 import type { AuthEnv } from '../auth/guard.ts'
 import { requireChat } from '../auth/guard.ts'
 import { carriesSecret } from '../auth/secret.ts'
@@ -17,22 +17,10 @@ import { readVoiceModel, voiceModelFor } from '../voice/model.ts'
 
 export const assistantRoutes = new Hono<AuthEnv>()
   .get('/assistant/status', async (c) => {
-    const db = createDb(c.env.DB)
-    const relay = relayOf(c.env)
-    const [online, answeredAt, model, voiceOnline, voiceModel] =
-      await Promise.all([
-        relay.online(),
-        lastAnsweredAt(db),
-        readModel(db),
-        relay.voiceOnline(),
-        readVoiceModel(db),
-      ])
-    const body: AssistantStatus = {
-      online,
-      lastAnsweredAt: answeredAt?.toISOString() ?? null,
-      model,
-      voice: { online: voiceOnline, model: voiceModel },
-    }
+    const body: AssistantStatus = await readAssistantStatus(
+      c.env,
+      createDb(c.env.DB),
+    )
     return c.json(body)
   })
   // Warms the speech model beside the assistant's, since a press of the
