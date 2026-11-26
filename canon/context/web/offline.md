@@ -29,7 +29,7 @@ Builds the service worker through `vite-plugin-pwa`, which `web/main.tsx` regist
 - The same call takes the home-screen manifest from `pwa-manifest.ts`, staging's under `CLOUDFLARE_ENV=staging`, which a build links and precaches and the dev server never serves
 - The built worker imports `web/public/push-handler.js` by name, outside the precache, so it meets payloads of another version and shows something for each
 - It sets `skipWaiting` and `clientsClaim` by hand, since the plugin leaves both unset under `injectRegister: false`, so a new release takes over without every window closing
-- The dev server and Playwright's e2e run register no worker, so Push reads unsupported there, so `e2e/offline.spec.ts` cuts the API and reloads
+- The dev server and its specs register no worker, so Push reads unsupported and `e2e/offline.spec.ts` cuts the API. Only `e2e/update.spec.ts` runs one, on its release server.
 
 ### `web/update/`
 
