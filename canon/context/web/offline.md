@@ -28,4 +28,23 @@ Builds the service worker through `vite-plugin-pwa`, which `web/main.tsx` regist
 - It precaches the built app and answers every navigation with `index.html`, leaving `/api/` to the network so no cached answer outlives a sign-out
 - The same call takes the home-screen manifest from `pwa-manifest.ts`, staging's under `CLOUDFLARE_ENV=staging`, which a build links and precaches and the dev server never serves
 - The built worker imports `web/public/push-handler.js` by name, outside the precache, so it meets payloads of another version and shows something for each
-- The dev server and Playwright's e2e run register no worker, so Push reads unsupported there, so `e2e/offline.spec.ts` cuts the API and reloads, and the worker's own reload is checked on a build
+- It sets `skipWaiting` and `clientsClaim` by hand, since the plugin leaves both unset under `injectRegister: false`, so a new release takes over without every window closing
+- The dev server and Playwright's e2e run register no worker, so Push reads unsupported there, so `e2e/offline.spec.ts` cuts the API and reloads
+
+### `web/update/`
+
+Moves an open page onto a release once its worker takes over, at a moment nothing is lost.
+
+- `follow-releases.ts` registers the worker from `web/main.tsx`, in production alone, and passes an empty `onNeedReload`, so the plugin never reloads every window itself
+- It asks for an update on every show, since a resumed app asks for none until a load, and reads each takeover from `controllerchange`, since the plugin stops listening after one
+- `take-release.ts` reloads only when the `index.html` the worker saves names another entry script than the page runs, so a missed activation still moves and one reload settles it
+- An untouched page moves at the takeover, a tapped one on its next show or on the next screen, which `web/shell/app-shell.tsx` reports
+
+### What holds a reload
+
+A reload waits while it would lose something, in this window or another.
+
+- `web/update/holds.ts` keeps the page while any form is on screen, while a form spreading `safeWhenEmpty` holds text, and while a `hold()` or `useHold` stands
+- The composer and sign-in are the forms marked safe. A recording, a turn from send to the end of its stream, a password shown once, and an undo notice each hold.
+- A page left on the old release runs under the new worker with its files gone from the precache, which holds only while every route loads eagerly. A lazily loaded route would break it.
+- `e2e/update.spec.ts` checks each moment over two releases that `e2e/release-server.ts` builds without the Cloudflare plugin, since that plugin points `.wrangler/deploy/config.json` at its last build
