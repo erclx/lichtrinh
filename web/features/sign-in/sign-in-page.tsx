@@ -8,6 +8,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { ApiFailure } from '@/lib/api'
 import { useSession } from '@/session/session-context'
+import { safeWhenEmpty } from '@/update/holds'
 
 type Problem = 'wrong' | 'paused' | 'network' | 'generic'
 
@@ -112,7 +113,12 @@ export function SignInPage() {
           </div>
         )}
 
-        <form noValidate onSubmit={onSubmit} className="flex flex-col gap-4">
+        <form
+          noValidate
+          onSubmit={onSubmit}
+          className="flex flex-col gap-4"
+          {...safeWhenEmpty}
+        >
           <div className="flex flex-col gap-2">
             <Label htmlFor={`${ids}-username`}>{t('signIn.username')}</Label>
             <Input
