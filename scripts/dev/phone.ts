@@ -157,7 +157,7 @@ export async function openShare(
   }
   const after = readAddress(await readServe(tailscale), host, port)
   if (after?.holder !== 'ours' || after.funnel) {
-    return 'The share did not read back as this run’s alone.'
+    return `The share did not read back as this run’s alone. ${closeFailure().trim()}`
   }
   return undefined
 }

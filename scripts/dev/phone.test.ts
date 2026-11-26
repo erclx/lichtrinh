@@ -8,6 +8,7 @@ import {
 } from './fixtures/fake-tailscale'
 import {
   checkAddress,
+  closeFailure,
   closeShare,
   openShare,
   phoneBanner,
@@ -213,7 +214,10 @@ describe('openShare', () => {
       replies: { open: { code: 0, stdout: '', stderr: '' } },
     })
 
-    expect(await openShare(fake.tailscale, HOST, PORT)).toBeDefined()
+    const failure = await openShare(fake.tailscale, HOST, PORT)
+
+    expect(failure).toContain('did not read back')
+    expect(failure).toContain(closeFailure().trim())
   })
 })
 
