@@ -116,7 +116,7 @@ export function Thread({ chatId, layout }: ThreadProps) {
             panel ? 'min-h-0 overflow-y-auto px-4 py-3' : 'pb-3',
           )}
         >
-          <div ref={content} className="flex flex-col gap-3">
+          <div ref={content} className="flex flex-col gap-3 pb-3">
             {offline && connected && (
               <OfflineCard contactName={contact.data ?? null} admin={admin} />
             )}
