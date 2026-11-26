@@ -1,3 +1,5 @@
+import type { OwnerMessage } from '@shared/owner.ts'
+
 import type { ServiceId } from '../services.ts'
 import { serviceOf } from '../services.ts'
 import type {
@@ -321,6 +323,39 @@ export function isStrong(line: LogLine): boolean {
 export function logTime(at: string, now: Date): string {
   return `${dayPrefix(new Date(at), now)}${time(new Date(at), true)}`
 }
+
+/** A message's or a turn's time, with its day once that is not today. */
+export function shortTime(at: string, now: Date): string {
+  return `${dayPrefix(new Date(at), now)}${time(new Date(at), false)}`
+}
+
+/** The last turn's time, or that the family has not chatted yet. */
+export function lastTurn(lastAt: string | null, now: Date): string {
+  return lastAt === null ? 'None yet' : shortTime(lastAt, now)
+}
+
+export function messageKind({ role }: OwnerMessage): string {
+  return role === 'assistant' ? 'Reply' : 'Message'
+}
+
+/** What a reply that did not finish says beside or in place of its text. */
+export function endNote(message: OwnerMessage): string | null {
+  const blank = message.text.trim() === ''
+  switch (message.status) {
+    case 'complete':
+      return null
+    case 'failed':
+      return blank ? 'No reply, the turn failed' : 'The turn failed partway'
+    case 'stopped':
+      return blank ? 'No reply, it was stopped' : 'Stopped partway'
+  }
+}
+
+export const NO_MESSAGES =
+  'No messages yet. They show here once the family chats with the assistant.'
+
+export const APP_UNREACHABLE =
+  'The app cannot be reached from this PC, so its messages and activity are hidden. They come back once it answers.'
 
 /** The header's clock, such as `Sat 22 Nov 2031, 14:24`. */
 export function clock(now: Date): string {

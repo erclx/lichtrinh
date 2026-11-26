@@ -4,9 +4,11 @@ import { BrandMark } from '@/components/brand-mark'
 import { cn } from '@/lib/utils'
 
 import type { PanelState } from '../state.ts'
+import { Activity } from './activity.tsx'
 import type { Press } from './copy.ts'
 import { clock, failureLine, stopAllWarning, verdict } from './copy.ts'
 import { GpuCard } from './gpu-card.tsx'
+import { Messages } from './messages.tsx'
 import { ServiceTile } from './service-tile.tsx'
 import { StopAllDialog } from './stop-all-dialog.tsx'
 import { Verdict } from './verdict.tsx'
@@ -39,6 +41,7 @@ export function PanelPage({
   const page = useRef<HTMLDivElement>(null)
   const lastPress = useRef<Press | null>(null)
   const now = new Date(state.readAt)
+  const { app } = state
   const failed = state.services.filter((service) => service.status === 'failed')
   const rest = state.services.filter((service) => service.status !== 'failed')
   const allPending = pending.some((press) => press.on === 'all')
@@ -141,13 +144,24 @@ export function PanelPage({
             ))}
           </div>
         </section>
-        <section
-          aria-labelledby="card"
-          className="flex flex-col gap-2 lg:w-[calc(50%-6px)]"
-        >
-          <SectionHeading id="card">Graphics card</SectionHeading>
-          <GpuCard gpu={state.gpu} />
-        </section>
+        <div className="grid gap-5.5 lg:grid-cols-2 lg:gap-3">
+          <section aria-labelledby="card" className="flex flex-col gap-2">
+            <SectionHeading id="card">Graphics card</SectionHeading>
+            <GpuCard gpu={state.gpu} />
+          </section>
+          {app.reach === 'read' && (
+            <section aria-labelledby="activity" className="flex flex-col gap-2">
+              <SectionHeading id="activity">Activity</SectionHeading>
+              <Activity activity={app.activity} now={now} />
+            </section>
+          )}
+        </div>
+        {app.reach !== 'unset' && (
+          <section aria-labelledby="messages" className="flex flex-col gap-2">
+            <SectionHeading id="messages">Messages</SectionHeading>
+            <Messages app={app} now={now} />
+          </section>
+        )}
       </main>
       <StopAllDialog
         open={confirming}

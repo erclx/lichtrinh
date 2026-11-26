@@ -1,12 +1,18 @@
+import type { OwnerMessage } from '@shared/owner.ts'
+
 import type { PanelState, ServiceState, ServiceStatus } from '../state.ts'
 import {
   clock,
   detail,
+  endNote,
   failureLine,
   isDown,
   isStrong,
+  lastTurn,
   logTime,
+  messageKind,
   serviceButtons,
+  shortTime,
   statusWord,
   stopAllWarning,
   verdict,
@@ -311,5 +317,63 @@ describe('the words around them', () => {
 
   it('prints the PC clock', () => {
     expect(clock(NOW)).toBe('Sat 22 Nov 2031, 14:24')
+  })
+})
+
+function message(fields: Partial<OwnerMessage> = {}): OwnerMessage {
+  return {
+    id: 'm1',
+    at: at(14, 21),
+    role: 'assistant',
+    text: 'Xong.',
+    status: 'complete',
+    model: 'lichtrinh-assistant',
+    ...fields,
+  }
+}
+
+describe('the Messages words', () => {
+  it.each([
+    ['a finished reply', message(), null],
+    [
+      'a failed reply with no text',
+      message({ status: 'failed', text: '' }),
+      'No reply, the turn failed',
+    ],
+    [
+      'a failed reply with some text',
+      message({ status: 'failed' }),
+      'The turn failed partway',
+    ],
+    [
+      'a stopped reply with no text',
+      message({ status: 'stopped', text: ' ' }),
+      'No reply, it was stopped',
+    ],
+    [
+      'a stopped reply with some text',
+      message({ status: 'stopped' }),
+      'Stopped partway',
+    ],
+  ])('notes %s as %s', (_, shown, expected) => {
+    expect(endNote(shown)).toBe(expected)
+  })
+
+  it.each([
+    ['assistant', 'Reply'],
+    ['user', 'Message'],
+  ] as const)('calls a row from the %s a %s', (role, expected) => {
+    expect(messageKind(message({ role }))).toBe(expected)
+  })
+
+  it('says a time today without its day, and an older one with it', () => {
+    expect(shortTime(at(11, 38), NOW)).toBe('11:38')
+    expect(shortTime(at(22, 5, 21), NOW)).toBe('Yesterday 22:05')
+    expect(shortTime(at(9, 0, 19), NOW)).toBe('19 Nov 09:00')
+  })
+
+  it('says no last turn before the first', () => {
+    expect(lastTurn(null, NOW)).toBe('None yet')
+    expect(lastTurn(at(14, 21), NOW)).toBe('14:21')
   })
 })

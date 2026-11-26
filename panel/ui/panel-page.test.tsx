@@ -312,3 +312,46 @@ it('says the panel has no fresh read, and when what shows was read', () => {
     'The panel cannot read this PC, so this is from Sat 22 Nov 2031, 14:24.',
   )
 })
+
+describe('the app sections', () => {
+  const read: PanelState['app'] = {
+    reach: 'read',
+    activity: { count: 12, failed: 1, lastAt: NOW.toISOString() },
+    messages: [
+      {
+        id: 'm1',
+        at: NOW.toISOString(),
+        role: 'user',
+        text: 'mai co gi',
+        status: 'complete',
+        model: null,
+      },
+    ],
+  }
+
+  it('draw nothing of the app where the panel has no address for it', () => {
+    page(state())
+
+    expect(screen.queryByRole('region', { name: 'Activity' })).toBeNull()
+    expect(screen.queryByRole('region', { name: 'Messages' })).toBeNull()
+  })
+
+  it('draw today’s turns and the messages once the app is read', () => {
+    page({ ...state(), app: read })
+
+    const activity = within(screen.getByRole('region', { name: 'Activity' }))
+    expect(activity.getByText('Turns today').nextSibling).toHaveTextContent(
+      '12',
+    )
+    const messages = within(screen.getByRole('region', { name: 'Messages' }))
+    expect(messages.getByText('mai co gi')).toBeVisible()
+  })
+
+  it('draw the unreachable line and no activity while the app is out of reach', () => {
+    page({ ...state(), app: { reach: 'unreachable' } })
+
+    expect(screen.queryByRole('region', { name: 'Activity' })).toBeNull()
+    const messages = within(screen.getByRole('region', { name: 'Messages' }))
+    expect(messages.getByText(/cannot be reached/)).toBeVisible()
+  })
+})
