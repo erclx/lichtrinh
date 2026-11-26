@@ -20,6 +20,7 @@ import {
   VoiceOffCard,
 } from '@/features/chat/voice/voice-notice'
 import { cn } from '@/lib/utils'
+import { safeWhenEmpty, useHold } from '@/update/holds'
 
 interface ComposerProps {
   /** A turn is running, so Stop replaces Send and Enter sends nothing. */
@@ -87,6 +88,8 @@ export function Composer({
   })
   const recording = isRecording(talk.state)
   const blocked = offline || !connected
+  // A clip lives in no field, so a reload would drop it unseen.
+  useHold(recording)
 
   useEffect(() => {
     if (talk.state.phase === 'review') box.current?.focus()
@@ -177,7 +180,11 @@ export function Composer({
           ))}
         </ul>
       )}
-      <form onSubmit={onSubmit} className="flex items-end gap-2.5">
+      <form
+        onSubmit={onSubmit}
+        className="flex items-end gap-2.5"
+        {...safeWhenEmpty}
+      >
         {recording ? (
           <ListeningBar
             state={talk.state}
