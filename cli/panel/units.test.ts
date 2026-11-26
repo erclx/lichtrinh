@@ -1,5 +1,5 @@
 import { spawnSync } from 'node:child_process'
-import { mkdtempSync, rmSync, writeFileSync } from 'node:fs'
+import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 
@@ -76,7 +76,13 @@ describe('renderUnits', () => {
 
   it('builds the page before the panel serves it', () => {
     expect(units[PANEL]).toContain(
-      'ExecStartPre=/usr/bin/env bun run panel:build\nExecStart=/usr/bin/env bun panel/server/index.ts\n',
+      'ExecStartPre=/usr/bin/env bun run panel:build\nExecStart=',
+    )
+  })
+
+  it('runs the panel on its own settings file where one exists', () => {
+    expect(units[PANEL]).toContain(
+      `ExecStart=/bin/bash -c '[ ! -f "%h/.config/lichtrinh/panel.env" ] || source "%h/.config/lichtrinh/panel.env" && exec bun panel/server/index.ts'\n`,
     )
   })
 
@@ -96,6 +102,46 @@ describe('renderUnits', () => {
     expect(shared[VOICE]).toContain(
       'PATH=/usr/bin:/usr/local/bin:/bin:/usr/lib/wsl/lib"',
     )
+  })
+})
+
+/** Runs the panel's start line in bash, with a stand-in for the server. */
+function startPanel(home: string) {
+  const line = /^ExecStart=\/bin\/bash -c '(.*)'$/m.exec(units[PANEL])?.[1]
+  if (line === undefined) throw new Error('The panel has no bash start line')
+  const script = line
+    .replaceAll('%h', home)
+    .replace('exec bun panel/server/index.ts', 'echo "url=$LICHTRINH_URL"')
+  return spawnSync('/bin/bash', ['-c', script], {
+    encoding: 'utf8',
+    env: { PATH: process.env.PATH },
+  })
+}
+
+describe('the panel start line', () => {
+  it('starts with no settings file, and without the app', () => {
+    const home = mkdtempSync(join(tmpdir(), 'lichtrinh-home-'))
+
+    const { status, stdout } = startPanel(home)
+    rmSync(home, { recursive: true })
+
+    expect(status).toBe(0)
+    expect(stdout).toBe('url=\n')
+  })
+
+  it('hands the server what its settings file exports', () => {
+    const home = mkdtempSync(join(tmpdir(), 'lichtrinh-home-'))
+    mkdirSync(join(home, '.config/lichtrinh'), { recursive: true })
+    writeFileSync(
+      join(home, '.config/lichtrinh/panel.env'),
+      'export LICHTRINH_URL=https://lichtrinh.example.com\n',
+    )
+
+    const { status, stdout } = startPanel(home)
+    rmSync(home, { recursive: true })
+
+    expect(status).toBe(0)
+    expect(stdout).toBe('url=https://lichtrinh.example.com\n')
   })
 })
 

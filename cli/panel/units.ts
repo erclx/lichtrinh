@@ -30,7 +30,8 @@ const SYSTEM_FOLDERS = [
 
 /**
  * The unit files by name. None carries an install section, so nothing starts
- * at sign-in, and none carries a secret, since a bridge sources its own file.
+ * at sign-in, and none carries a secret, since a bridge and the panel each
+ * source their own file.
  */
 export function renderUnits(settings: UnitSettings): Record<string, string> {
   const members = SERVICES.filter((service) => service.inTarget)
@@ -58,7 +59,7 @@ Wants=${members.map((service) => service.unit).join(' ')}
       description: 'Lichtrinh owner panel',
       inTarget: false,
       before: '/usr/bin/env bun run panel:build',
-      start: '/usr/bin/env bun panel/server/index.ts',
+      start: panelFrom('panel.env'),
     }),
   }
 }
@@ -66,6 +67,15 @@ Wants=${members.map((service) => service.unit).join(' ')}
 /** The settings files are shell, whose `export` lines systemd ignores. */
 function bridgeFrom(file: string) {
   return `/bin/bash -c 'source "%h/.config/lichtrinh/${file}" && exec bun cli/index.ts bridge run'`
+}
+
+/**
+ * The panel runs without its file, and then without Messages. Bash reads
+ * `a || b && c` as `(a || b) && c`, so the source runs in the shell it execs.
+ */
+function panelFrom(file: string) {
+  const path = `"%h/.config/lichtrinh/${file}"`
+  return `/bin/bash -c '[ ! -f ${path} ] || source ${path} && exec bun panel/server/index.ts'`
 }
 
 interface ServiceUnit {
