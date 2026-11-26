@@ -1,0 +1,1160 @@
+<!doctype html>
+<html lang="en" data-lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>today/next-trip 390</title>
+    <link rel="stylesheet" href="../assets/pick-02-redraw-widths/app/app.css" />
+    <style>
+      .copy {
+        display: contents;
+      }
+      html[data-lang='en'] .copy.vi,
+      html[data-lang='vi'] .copy.en {
+        display: none;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="copy en" lang="en">
+      <div id="root">
+        <div
+          class="flex min-h-svh flex-col bg-background text-foreground min-[480px]:flex-row"
+        >
+          <nav
+            aria-label="Main"
+            class="sticky top-0 hidden h-svh w-62 shrink-0 flex-col gap-2 border-r-[1.5px] border-border p-3 lg:flex"
+          >
+            <div class="flex min-h-14 items-center gap-2.5 px-2 pb-3">
+              <svg
+                viewBox="0 0 64 64"
+                fill="none"
+                aria-hidden="true"
+                class="size-[34px] shrink-0"
+              >
+                <rect
+                  x="8"
+                  y="12"
+                  width="48"
+                  height="46"
+                  rx="14"
+                  fill="#ffffff"
+                  stroke="currentColor"
+                  stroke-width="4"
+                ></rect>
+                <path
+                  d="M10 27h44v-3a10 10 0 0 0-10-10H20a10 10 0 0 0-10 10z"
+                  fill="#dcd8ff"
+                ></path>
+                <path
+                  d="M8 27h48"
+                  stroke="currentColor"
+                  stroke-width="4"
+                ></path>
+                <rect
+                  x="19.5"
+                  y="5"
+                  width="6"
+                  height="14"
+                  rx="3"
+                  fill="currentColor"
+                ></rect>
+                <rect
+                  x="38.5"
+                  y="5"
+                  width="6"
+                  height="14"
+                  rx="3"
+                  fill="currentColor"
+                ></rect>
+                <rect
+                  x="15"
+                  y="32"
+                  width="34"
+                  height="5.4"
+                  rx="2.7"
+                  fill="#ffd9bf"
+                  stroke="currentColor"
+                  stroke-width="2"
+                ></rect>
+                <rect
+                  x="15"
+                  y="40"
+                  width="26"
+                  height="5.4"
+                  rx="2.7"
+                  fill="#ffcfe1"
+                  stroke="currentColor"
+                  stroke-width="2"
+                ></rect>
+                <rect
+                  x="15"
+                  y="48"
+                  width="30"
+                  height="5.4"
+                  rx="2.7"
+                  fill="#c9f1dd"
+                  stroke="currentColor"
+                  stroke-width="2"
+                ></rect></svg
+              ><span
+                class="font-heading text-lg font-extrabold whitespace-nowrap"
+                >Lịch trình</span
+              ><button
+                type="button"
+                aria-label="Hide sidebar"
+                class="ml-auto inline-flex size-target shrink-0 items-center justify-center rounded-full outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
+                style="margin-right: -8px"
+              >
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2.2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  aria-hidden="true"
+                  class="size-6"
+                >
+                  <rect x="3" y="4" width="18" height="16" rx="3"></rect>
+                  <path d="M9.5 4v16"></path>
+                </svg>
+              </button>
+            </div>
+            <a
+              aria-current="page"
+              class="flex min-h-target items-center gap-3.5 rounded-[22px] px-4.5 text-base font-extrabold text-muted-foreground hover:text-foreground aria-[current=page]:bg-primary aria-[current=page]:text-primary-foreground outline-none focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:ring-inset active"
+              href="#"
+              data-discover="true"
+              ><svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2.2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                aria-hidden="true"
+                class="size-6.5 shrink-0"
+              >
+                <circle cx="12" cy="12" r="4.5"></circle>
+                <path
+                  d="M12 2.5v2M12 19.5v2M2.5 12h2M19.5 12h2M5.3 5.3l1.4 1.4M17.3 17.3l1.4 1.4M5.3 18.7l1.4-1.4M17.3 6.7l1.4-1.4"
+                ></path></svg
+              >Today</a
+            ><a
+              class="flex min-h-target items-center gap-3.5 rounded-[22px] px-4.5 text-base font-extrabold text-muted-foreground hover:text-foreground aria-[current=page]:bg-primary aria-[current=page]:text-primary-foreground outline-none focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:ring-inset"
+              href="#"
+              data-discover="true"
+              ><svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2.2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                aria-hidden="true"
+                class="size-6.5 shrink-0"
+              >
+                <rect x="4" y="7" width="16" height="13" rx="3"></rect>
+                <path
+                  d="M9 7V5.5A1.5 1.5 0 0 1 10.5 4h3A1.5 1.5 0 0 1 15 5.5V7M4 12h16"
+                ></path></svg
+              >Trips</a
+            ><a
+              class="flex min-h-target items-center gap-3.5 rounded-[22px] px-4.5 text-base font-extrabold text-muted-foreground hover:text-foreground aria-[current=page]:bg-primary aria-[current=page]:text-primary-foreground outline-none focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:ring-inset"
+              href="#"
+              data-discover="true"
+              ><svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2.2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                aria-hidden="true"
+                class="size-6.5 shrink-0"
+              >
+                <rect x="3.5" y="5" width="17" height="15" rx="3.5"></rect>
+                <path d="M3.5 10h17M8 3v4M16 3v4"></path></svg
+              >Calendar</a
+            ><!--hide-->
+          </nav>
+          <nav
+            aria-label="Main"
+            class="sticky top-0 hidden h-svh w-28 shrink-0 flex-col items-stretch gap-2 border-r-[1.5px] border-border px-2 py-3 min-[480px]:flex lg:hidden"
+          >
+            <div class="flex min-h-14 items-center justify-center pb-3">
+              <svg
+                viewBox="0 0 64 64"
+                fill="none"
+                aria-hidden="true"
+                class="size-[34px]"
+              >
+                <rect
+                  x="8"
+                  y="12"
+                  width="48"
+                  height="46"
+                  rx="14"
+                  fill="#ffffff"
+                  stroke="currentColor"
+                  stroke-width="4"
+                ></rect>
+                <path
+                  d="M10 27h44v-3a10 10 0 0 0-10-10H20a10 10 0 0 0-10 10z"
+                  fill="#dcd8ff"
+                ></path>
+                <path
+                  d="M8 27h48"
+                  stroke="currentColor"
+                  stroke-width="4"
+                ></path>
+                <rect
+                  x="19.5"
+                  y="5"
+                  width="6"
+                  height="14"
+                  rx="3"
+                  fill="currentColor"
+                ></rect>
+                <rect
+                  x="38.5"
+                  y="5"
+                  width="6"
+                  height="14"
+                  rx="3"
+                  fill="currentColor"
+                ></rect>
+                <rect
+                  x="15"
+                  y="32"
+                  width="34"
+                  height="5.4"
+                  rx="2.7"
+                  fill="#ffd9bf"
+                  stroke="currentColor"
+                  stroke-width="2"
+                ></rect>
+                <rect
+                  x="15"
+                  y="40"
+                  width="26"
+                  height="5.4"
+                  rx="2.7"
+                  fill="#ffcfe1"
+                  stroke="currentColor"
+                  stroke-width="2"
+                ></rect>
+                <rect
+                  x="15"
+                  y="48"
+                  width="30"
+                  height="5.4"
+                  rx="2.7"
+                  fill="#c9f1dd"
+                  stroke="currentColor"
+                  stroke-width="2"
+                ></rect>
+              </svg>
+            </div>
+            <a
+              aria-current="page"
+              class="flex min-h-19 flex-col items-center justify-center gap-1 rounded-[22px] px-1 py-2 text-center text-sm leading-tight font-extrabold text-muted-foreground hover:text-foreground aria-[current=page]:bg-primary aria-[current=page]:text-primary-foreground outline-none focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:ring-inset active"
+              href="#"
+              data-discover="true"
+              ><svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2.2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                aria-hidden="true"
+                class="size-7 shrink-0"
+              >
+                <circle cx="12" cy="12" r="4.5"></circle>
+                <path
+                  d="M12 2.5v2M12 19.5v2M2.5 12h2M19.5 12h2M5.3 5.3l1.4 1.4M17.3 17.3l1.4 1.4M5.3 18.7l1.4-1.4M17.3 6.7l1.4-1.4"
+                ></path></svg
+              >Today</a
+            ><a
+              class="flex min-h-19 flex-col items-center justify-center gap-1 rounded-[22px] px-1 py-2 text-center text-sm leading-tight font-extrabold text-muted-foreground hover:text-foreground aria-[current=page]:bg-primary aria-[current=page]:text-primary-foreground outline-none focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:ring-inset"
+              href="#"
+              data-discover="true"
+              ><svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2.2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                aria-hidden="true"
+                class="size-7 shrink-0"
+              >
+                <rect x="4" y="7" width="16" height="13" rx="3"></rect>
+                <path
+                  d="M9 7V5.5A1.5 1.5 0 0 1 10.5 4h3A1.5 1.5 0 0 1 15 5.5V7M4 12h16"
+                ></path></svg
+              >Trips</a
+            ><a
+              class="flex min-h-19 flex-col items-center justify-center gap-1 rounded-[22px] px-1 py-2 text-center text-sm leading-tight font-extrabold text-muted-foreground hover:text-foreground aria-[current=page]:bg-primary aria-[current=page]:text-primary-foreground outline-none focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:ring-inset"
+              href="#"
+              data-discover="true"
+              ><svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2.2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                aria-hidden="true"
+                class="size-7 shrink-0"
+              >
+                <rect x="3.5" y="5" width="17" height="15" rx="3.5"></rect>
+                <path d="M3.5 10h17M8 3v4M16 3v4"></path></svg
+              >Calendar</a
+            >
+          </nav>
+          <div class="flex min-w-0 flex-1 flex-col">
+            <header
+              class="flex items-center gap-2 px-4 py-2.5 min-[480px]:px-8 lg:px-10"
+            >
+              <div class="flex min-w-0 items-center gap-2.5 lg:hidden">
+                <svg
+                  viewBox="0 0 64 64"
+                  fill="none"
+                  aria-hidden="true"
+                  class="size-[34px] shrink-0 min-[480px]:hidden"
+                >
+                  <rect
+                    x="8"
+                    y="12"
+                    width="48"
+                    height="46"
+                    rx="14"
+                    fill="#ffffff"
+                    stroke="currentColor"
+                    stroke-width="4"
+                  ></rect>
+                  <path
+                    d="M10 27h44v-3a10 10 0 0 0-10-10H20a10 10 0 0 0-10 10z"
+                    fill="#dcd8ff"
+                  ></path>
+                  <path
+                    d="M8 27h48"
+                    stroke="currentColor"
+                    stroke-width="4"
+                  ></path>
+                  <rect
+                    x="19.5"
+                    y="5"
+                    width="6"
+                    height="14"
+                    rx="3"
+                    fill="currentColor"
+                  ></rect>
+                  <rect
+                    x="38.5"
+                    y="5"
+                    width="6"
+                    height="14"
+                    rx="3"
+                    fill="currentColor"
+                  ></rect>
+                  <rect
+                    x="15"
+                    y="32"
+                    width="34"
+                    height="5.4"
+                    rx="2.7"
+                    fill="#ffd9bf"
+                    stroke="currentColor"
+                    stroke-width="2"
+                  ></rect>
+                  <rect
+                    x="15"
+                    y="40"
+                    width="26"
+                    height="5.4"
+                    rx="2.7"
+                    fill="#ffcfe1"
+                    stroke="currentColor"
+                    stroke-width="2"
+                  ></rect>
+                  <rect
+                    x="15"
+                    y="48"
+                    width="30"
+                    height="5.4"
+                    rx="2.7"
+                    fill="#c9f1dd"
+                    stroke="currentColor"
+                    stroke-width="2"
+                  ></rect></svg
+                ><span
+                  class="hidden font-heading text-lg font-extrabold whitespace-nowrap min-[360px]:inline"
+                  >Lịch trình</span
+                >
+              </div>
+              <div class="ml-auto flex shrink-0 items-center gap-2">
+                <div
+                  role="group"
+                  aria-label="Language / Ngôn ngữ"
+                  class="flex rounded-full bg-muted p-1"
+                >
+                  <button
+                    type="button"
+                    tabindex="0"
+                    data-slot="button"
+                    lang="vi"
+                    aria-pressed="false"
+                    aria-label="VI Tiếng Việt"
+                    class="group/button inline-flex shrink-0 items-center justify-center border border-transparent bg-clip-padding whitespace-nowrap transition-all outline-none select-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 active:not-aria-[haspopup]:translate-y-px disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20 dark:aria-invalid:border-destructive/50 dark:aria-invalid:ring-destructive/40 [&amp;_svg]:pointer-events-none [&amp;_svg]:shrink-0 hover:text-foreground aria-expanded:bg-muted aria-expanded:text-foreground h-target gap-2 rounded-full font-extrabold has-data-[icon=inline-end]:pr-5 has-data-[icon=inline-start]:pl-5 [&amp;_svg:not([class*='size-'])]:size-6 min-w-16 px-4 text-lg text-muted-foreground hover:bg-transparent not-aria-pressed:hover:text-foreground aria-pressed:bg-primary aria-pressed:text-primary-foreground aria-pressed:hover:bg-primary dark:hover:bg-transparent"
+                  >
+                    VI</button
+                  ><button
+                    type="button"
+                    tabindex="0"
+                    data-slot="button"
+                    lang="en"
+                    aria-pressed="true"
+                    aria-label="EN English"
+                    class="group/button inline-flex shrink-0 items-center justify-center border border-transparent bg-clip-padding whitespace-nowrap transition-all outline-none select-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 active:not-aria-[haspopup]:translate-y-px disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20 dark:aria-invalid:border-destructive/50 dark:aria-invalid:ring-destructive/40 [&amp;_svg]:pointer-events-none [&amp;_svg]:shrink-0 hover:text-foreground aria-expanded:bg-muted aria-expanded:text-foreground h-target gap-2 rounded-full font-extrabold has-data-[icon=inline-end]:pr-5 has-data-[icon=inline-start]:pl-5 [&amp;_svg:not([class*='size-'])]:size-6 min-w-16 px-4 text-lg text-muted-foreground hover:bg-transparent not-aria-pressed:hover:text-foreground aria-pressed:bg-primary aria-pressed:text-primary-foreground aria-pressed:hover:bg-primary dark:hover:bg-transparent"
+                  >
+                    EN
+                  </button>
+                </div>
+                <a
+                  aria-label="Settings"
+                  class="inline-flex size-target items-center justify-center rounded-full bg-muted aria-[current=page]:bg-primary aria-[current=page]:text-primary-foreground outline-none focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+                  href="#"
+                  data-discover="true"
+                  ><svg
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2.2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    aria-hidden="true"
+                    class="size-6.5"
+                  >
+                    <circle cx="12" cy="12" r="3"></circle>
+                    <path
+                      d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"
+                    ></path></svg
+                ></a>
+              </div>
+            </header>
+            <main class="flex-1 px-4 pb-6 min-[480px]:px-8 lg:px-10">
+              <div class="mx-auto w-full max-w-[760px]">
+                <div class="flex flex-col gap-1 pt-2 pb-3">
+                  <h1 class="font-heading text-2xl font-extrabold">Today</h1>
+                </div>
+                <section
+                  class="flex flex-col gap-2 rounded-2xl border-[1.5px] border-border bg-card p-5 text-card-foreground"
+                >
+                  <p class="text-sm font-extrabold text-muted-foreground">
+                    Next trip · In 22 days
+                  </p>
+                  <h2 class="font-heading text-xl font-extrabold break-words">
+                    Summer on Đảo Lam
+                  </h2>
+                  <p class="text-base text-muted-foreground">
+                    Jul 2 – 9, 2031 · 8 days
+                  </p>
+                  <a
+                    class="group/button inline-flex shrink-0 items-center justify-center border border-transparent bg-clip-padding whitespace-nowrap transition-all outline-none select-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 active:not-aria-[haspopup]:translate-y-px disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20 dark:aria-invalid:border-destructive/50 dark:aria-invalid:ring-destructive/40 [&amp;_svg]:pointer-events-none [&amp;_svg]:shrink-0 bg-primary text-primary-foreground hover:bg-primary/80 h-target gap-2 rounded-full px-6 text-base font-extrabold has-data-[icon=inline-end]:pr-5 has-data-[icon=inline-start]:pl-5 [&amp;_svg:not([class*='size-'])]:size-6 mt-2 w-full"
+                    href="#"
+                    data-discover="true"
+                    >Open the trip</a
+                  >
+                </section>
+              </div>
+            </main>
+            <div
+              class="sticky bottom-[max(98px,calc(84px+env(safe-area-inset-bottom)))] z-10 bg-background px-4 pt-2 pb-3 min-[480px]:bottom-0 min-[480px]:px-8 min-[480px]:pb-[max(16px,env(safe-area-inset-bottom))] lg:px-10"
+            >
+              <div class="mx-auto flex w-full max-w-[760px] flex-col gap-2">
+                <button
+                  type="button"
+                  aria-disabled="false"
+                  class="flex min-h-target w-full items-center justify-center gap-3 rounded-full bg-primary px-6 text-lg font-extrabold text-primary-foreground outline-none focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+                >
+                  <svg
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2.2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    aria-hidden="true"
+                    class="size-7 shrink-0"
+                  >
+                    <path
+                      d="M5 4.5h14a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2h-8l-4.5 3.5v-3.5H5a2 2 0 0 1-2-2v-9a2 2 0 0 1 2-2z"
+                    ></path>
+                    <path d="M8 11h.01M12 11h.01M16 11h.01"></path></svg
+                  >Talk to the assistant
+                </button>
+              </div>
+            </div>
+          </div>
+          <nav
+            aria-label="Main"
+            class="sticky bottom-0 flex gap-2 bg-background px-3 pt-2 pb-[max(14px,env(safe-area-inset-bottom))] min-[480px]:hidden"
+          >
+            <a
+              aria-current="page"
+              class="flex h-19 min-w-0 flex-1 flex-col items-center justify-center gap-1 rounded-[22px] text-sm leading-tight font-extrabold text-muted-foreground aria-[current=page]:bg-primary aria-[current=page]:text-primary-foreground outline-none focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:ring-inset active"
+              href="#"
+              data-discover="true"
+              ><svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2.2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                aria-hidden="true"
+                class="size-7 shrink-0"
+              >
+                <circle cx="12" cy="12" r="4.5"></circle>
+                <path
+                  d="M12 2.5v2M12 19.5v2M2.5 12h2M19.5 12h2M5.3 5.3l1.4 1.4M17.3 17.3l1.4 1.4M5.3 18.7l1.4-1.4M17.3 6.7l1.4-1.4"
+                ></path></svg
+              ><span class="max-w-full truncate px-1">Today</span></a
+            ><a
+              class="flex h-19 min-w-0 flex-1 flex-col items-center justify-center gap-1 rounded-[22px] text-sm leading-tight font-extrabold text-muted-foreground aria-[current=page]:bg-primary aria-[current=page]:text-primary-foreground outline-none focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:ring-inset"
+              href="#"
+              data-discover="true"
+              ><svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2.2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                aria-hidden="true"
+                class="size-7 shrink-0"
+              >
+                <rect x="4" y="7" width="16" height="13" rx="3"></rect>
+                <path
+                  d="M9 7V5.5A1.5 1.5 0 0 1 10.5 4h3A1.5 1.5 0 0 1 15 5.5V7M4 12h16"
+                ></path></svg
+              ><span class="max-w-full truncate px-1">Trips</span></a
+            ><a
+              class="flex h-19 min-w-0 flex-1 flex-col items-center justify-center gap-1 rounded-[22px] text-sm leading-tight font-extrabold text-muted-foreground aria-[current=page]:bg-primary aria-[current=page]:text-primary-foreground outline-none focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:ring-inset"
+              href="#"
+              data-discover="true"
+              ><svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2.2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                aria-hidden="true"
+                class="size-7 shrink-0"
+              >
+                <rect x="3.5" y="5" width="17" height="15" rx="3.5"></rect>
+                <path d="M3.5 10h17M8 3v4M16 3v4"></path></svg
+              ><span class="max-w-full truncate px-1">Calendar</span></a
+            >
+          </nav>
+        </div>
+        <div
+          role="status"
+          class="pointer-events-none fixed inset-x-4 bottom-[calc(max(98px,calc(84px+env(safe-area-inset-bottom)))+92px)] z-40 flex justify-center min-[480px]:inset-x-auto min-[480px]:right-6 min-[480px]:bottom-[calc(max(16px,env(safe-area-inset-bottom))+80px)]"
+        ></div>
+      </div>
+    </div>
+    <div class="copy vi" lang="vi">
+      <div id="root-vi">
+        <div
+          class="flex min-h-svh flex-col bg-background text-foreground min-[480px]:flex-row"
+        >
+          <nav
+            aria-label="Chính"
+            class="sticky top-0 hidden h-svh w-62 shrink-0 flex-col gap-2 border-r-[1.5px] border-border p-3 lg:flex"
+          >
+            <div class="flex min-h-14 items-center gap-2.5 px-2 pb-3">
+              <svg
+                viewBox="0 0 64 64"
+                fill="none"
+                aria-hidden="true"
+                class="size-[34px] shrink-0"
+              >
+                <rect
+                  x="8"
+                  y="12"
+                  width="48"
+                  height="46"
+                  rx="14"
+                  fill="#ffffff"
+                  stroke="currentColor"
+                  stroke-width="4"
+                ></rect>
+                <path
+                  d="M10 27h44v-3a10 10 0 0 0-10-10H20a10 10 0 0 0-10 10z"
+                  fill="#dcd8ff"
+                ></path>
+                <path
+                  d="M8 27h48"
+                  stroke="currentColor"
+                  stroke-width="4"
+                ></path>
+                <rect
+                  x="19.5"
+                  y="5"
+                  width="6"
+                  height="14"
+                  rx="3"
+                  fill="currentColor"
+                ></rect>
+                <rect
+                  x="38.5"
+                  y="5"
+                  width="6"
+                  height="14"
+                  rx="3"
+                  fill="currentColor"
+                ></rect>
+                <rect
+                  x="15"
+                  y="32"
+                  width="34"
+                  height="5.4"
+                  rx="2.7"
+                  fill="#ffd9bf"
+                  stroke="currentColor"
+                  stroke-width="2"
+                ></rect>
+                <rect
+                  x="15"
+                  y="40"
+                  width="26"
+                  height="5.4"
+                  rx="2.7"
+                  fill="#ffcfe1"
+                  stroke="currentColor"
+                  stroke-width="2"
+                ></rect>
+                <rect
+                  x="15"
+                  y="48"
+                  width="30"
+                  height="5.4"
+                  rx="2.7"
+                  fill="#c9f1dd"
+                  stroke="currentColor"
+                  stroke-width="2"
+                ></rect></svg
+              ><span
+                class="font-heading text-lg font-extrabold whitespace-nowrap"
+                >Lịch trình</span
+              ><button
+                type="button"
+                aria-label="Ẩn thanh bên"
+                class="ml-auto inline-flex size-target shrink-0 items-center justify-center rounded-full outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
+                style="margin-right: -8px"
+              >
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2.2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  aria-hidden="true"
+                  class="size-6"
+                >
+                  <rect x="3" y="4" width="18" height="16" rx="3"></rect>
+                  <path d="M9.5 4v16"></path>
+                </svg>
+              </button>
+            </div>
+            <a
+              aria-current="page"
+              class="flex min-h-target items-center gap-3.5 rounded-[22px] px-4.5 text-base font-extrabold text-muted-foreground hover:text-foreground aria-[current=page]:bg-primary aria-[current=page]:text-primary-foreground outline-none focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:ring-inset active"
+              href="#"
+              data-discover="true"
+              ><svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2.2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                aria-hidden="true"
+                class="size-6.5 shrink-0"
+              >
+                <circle cx="12" cy="12" r="4.5"></circle>
+                <path
+                  d="M12 2.5v2M12 19.5v2M2.5 12h2M19.5 12h2M5.3 5.3l1.4 1.4M17.3 17.3l1.4 1.4M5.3 18.7l1.4-1.4M17.3 6.7l1.4-1.4"
+                ></path></svg
+              >Hôm nay</a
+            ><a
+              class="flex min-h-target items-center gap-3.5 rounded-[22px] px-4.5 text-base font-extrabold text-muted-foreground hover:text-foreground aria-[current=page]:bg-primary aria-[current=page]:text-primary-foreground outline-none focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:ring-inset"
+              href="#"
+              data-discover="true"
+              ><svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2.2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                aria-hidden="true"
+                class="size-6.5 shrink-0"
+              >
+                <rect x="4" y="7" width="16" height="13" rx="3"></rect>
+                <path
+                  d="M9 7V5.5A1.5 1.5 0 0 1 10.5 4h3A1.5 1.5 0 0 1 15 5.5V7M4 12h16"
+                ></path></svg
+              >Chuyến đi</a
+            ><a
+              class="flex min-h-target items-center gap-3.5 rounded-[22px] px-4.5 text-base font-extrabold text-muted-foreground hover:text-foreground aria-[current=page]:bg-primary aria-[current=page]:text-primary-foreground outline-none focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:ring-inset"
+              href="#"
+              data-discover="true"
+              ><svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2.2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                aria-hidden="true"
+                class="size-6.5 shrink-0"
+              >
+                <rect x="3.5" y="5" width="17" height="15" rx="3.5"></rect>
+                <path d="M3.5 10h17M8 3v4M16 3v4"></path></svg
+              >Lịch</a
+            ><!--hide-->
+          </nav>
+          <nav
+            aria-label="Chính"
+            class="sticky top-0 hidden h-svh w-28 shrink-0 flex-col items-stretch gap-2 border-r-[1.5px] border-border px-2 py-3 min-[480px]:flex lg:hidden"
+          >
+            <div class="flex min-h-14 items-center justify-center pb-3">
+              <svg
+                viewBox="0 0 64 64"
+                fill="none"
+                aria-hidden="true"
+                class="size-[34px]"
+              >
+                <rect
+                  x="8"
+                  y="12"
+                  width="48"
+                  height="46"
+                  rx="14"
+                  fill="#ffffff"
+                  stroke="currentColor"
+                  stroke-width="4"
+                ></rect>
+                <path
+                  d="M10 27h44v-3a10 10 0 0 0-10-10H20a10 10 0 0 0-10 10z"
+                  fill="#dcd8ff"
+                ></path>
+                <path
+                  d="M8 27h48"
+                  stroke="currentColor"
+                  stroke-width="4"
+                ></path>
+                <rect
+                  x="19.5"
+                  y="5"
+                  width="6"
+                  height="14"
+                  rx="3"
+                  fill="currentColor"
+                ></rect>
+                <rect
+                  x="38.5"
+                  y="5"
+                  width="6"
+                  height="14"
+                  rx="3"
+                  fill="currentColor"
+                ></rect>
+                <rect
+                  x="15"
+                  y="32"
+                  width="34"
+                  height="5.4"
+                  rx="2.7"
+                  fill="#ffd9bf"
+                  stroke="currentColor"
+                  stroke-width="2"
+                ></rect>
+                <rect
+                  x="15"
+                  y="40"
+                  width="26"
+                  height="5.4"
+                  rx="2.7"
+                  fill="#ffcfe1"
+                  stroke="currentColor"
+                  stroke-width="2"
+                ></rect>
+                <rect
+                  x="15"
+                  y="48"
+                  width="30"
+                  height="5.4"
+                  rx="2.7"
+                  fill="#c9f1dd"
+                  stroke="currentColor"
+                  stroke-width="2"
+                ></rect>
+              </svg>
+            </div>
+            <a
+              aria-current="page"
+              class="flex min-h-19 flex-col items-center justify-center gap-1 rounded-[22px] px-1 py-2 text-center text-sm leading-tight font-extrabold text-muted-foreground hover:text-foreground aria-[current=page]:bg-primary aria-[current=page]:text-primary-foreground outline-none focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:ring-inset active"
+              href="#"
+              data-discover="true"
+              ><svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2.2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                aria-hidden="true"
+                class="size-7 shrink-0"
+              >
+                <circle cx="12" cy="12" r="4.5"></circle>
+                <path
+                  d="M12 2.5v2M12 19.5v2M2.5 12h2M19.5 12h2M5.3 5.3l1.4 1.4M17.3 17.3l1.4 1.4M5.3 18.7l1.4-1.4M17.3 6.7l1.4-1.4"
+                ></path></svg
+              >Hôm nay</a
+            ><a
+              class="flex min-h-19 flex-col items-center justify-center gap-1 rounded-[22px] px-1 py-2 text-center text-sm leading-tight font-extrabold text-muted-foreground hover:text-foreground aria-[current=page]:bg-primary aria-[current=page]:text-primary-foreground outline-none focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:ring-inset"
+              href="#"
+              data-discover="true"
+              ><svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2.2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                aria-hidden="true"
+                class="size-7 shrink-0"
+              >
+                <rect x="4" y="7" width="16" height="13" rx="3"></rect>
+                <path
+                  d="M9 7V5.5A1.5 1.5 0 0 1 10.5 4h3A1.5 1.5 0 0 1 15 5.5V7M4 12h16"
+                ></path></svg
+              >Chuyến đi</a
+            ><a
+              class="flex min-h-19 flex-col items-center justify-center gap-1 rounded-[22px] px-1 py-2 text-center text-sm leading-tight font-extrabold text-muted-foreground hover:text-foreground aria-[current=page]:bg-primary aria-[current=page]:text-primary-foreground outline-none focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:ring-inset"
+              href="#"
+              data-discover="true"
+              ><svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2.2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                aria-hidden="true"
+                class="size-7 shrink-0"
+              >
+                <rect x="3.5" y="5" width="17" height="15" rx="3.5"></rect>
+                <path d="M3.5 10h17M8 3v4M16 3v4"></path></svg
+              >Lịch</a
+            >
+          </nav>
+          <div class="flex min-w-0 flex-1 flex-col">
+            <header
+              class="flex items-center gap-2 px-4 py-2.5 min-[480px]:px-8 lg:px-10"
+            >
+              <div class="flex min-w-0 items-center gap-2.5 lg:hidden">
+                <svg
+                  viewBox="0 0 64 64"
+                  fill="none"
+                  aria-hidden="true"
+                  class="size-[34px] shrink-0 min-[480px]:hidden"
+                >
+                  <rect
+                    x="8"
+                    y="12"
+                    width="48"
+                    height="46"
+                    rx="14"
+                    fill="#ffffff"
+                    stroke="currentColor"
+                    stroke-width="4"
+                  ></rect>
+                  <path
+                    d="M10 27h44v-3a10 10 0 0 0-10-10H20a10 10 0 0 0-10 10z"
+                    fill="#dcd8ff"
+                  ></path>
+                  <path
+                    d="M8 27h48"
+                    stroke="currentColor"
+                    stroke-width="4"
+                  ></path>
+                  <rect
+                    x="19.5"
+                    y="5"
+                    width="6"
+                    height="14"
+                    rx="3"
+                    fill="currentColor"
+                  ></rect>
+                  <rect
+                    x="38.5"
+                    y="5"
+                    width="6"
+                    height="14"
+                    rx="3"
+                    fill="currentColor"
+                  ></rect>
+                  <rect
+                    x="15"
+                    y="32"
+                    width="34"
+                    height="5.4"
+                    rx="2.7"
+                    fill="#ffd9bf"
+                    stroke="currentColor"
+                    stroke-width="2"
+                  ></rect>
+                  <rect
+                    x="15"
+                    y="40"
+                    width="26"
+                    height="5.4"
+                    rx="2.7"
+                    fill="#ffcfe1"
+                    stroke="currentColor"
+                    stroke-width="2"
+                  ></rect>
+                  <rect
+                    x="15"
+                    y="48"
+                    width="30"
+                    height="5.4"
+                    rx="2.7"
+                    fill="#c9f1dd"
+                    stroke="currentColor"
+                    stroke-width="2"
+                  ></rect></svg
+                ><span
+                  class="hidden font-heading text-lg font-extrabold whitespace-nowrap min-[360px]:inline"
+                  >Lịch trình</span
+                >
+              </div>
+              <div class="ml-auto flex shrink-0 items-center gap-2">
+                <div
+                  role="group"
+                  aria-label="Language / Ngôn ngữ"
+                  class="flex rounded-full bg-muted p-1"
+                >
+                  <button
+                    type="button"
+                    tabindex="0"
+                    data-slot="button"
+                    lang="vi"
+                    aria-pressed="true"
+                    aria-label="VI Tiếng Việt"
+                    class="group/button inline-flex shrink-0 items-center justify-center border border-transparent bg-clip-padding whitespace-nowrap transition-all outline-none select-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 active:not-aria-[haspopup]:translate-y-px disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20 dark:aria-invalid:border-destructive/50 dark:aria-invalid:ring-destructive/40 [&amp;_svg]:pointer-events-none [&amp;_svg]:shrink-0 hover:text-foreground aria-expanded:bg-muted aria-expanded:text-foreground h-target gap-2 rounded-full font-extrabold has-data-[icon=inline-end]:pr-5 has-data-[icon=inline-start]:pl-5 [&amp;_svg:not([class*='size-'])]:size-6 min-w-16 px-4 text-lg text-muted-foreground hover:bg-transparent not-aria-pressed:hover:text-foreground aria-pressed:bg-primary aria-pressed:text-primary-foreground aria-pressed:hover:bg-primary dark:hover:bg-transparent"
+                  >
+                    VI</button
+                  ><button
+                    type="button"
+                    tabindex="0"
+                    data-slot="button"
+                    lang="en"
+                    aria-pressed="false"
+                    aria-label="EN English"
+                    class="group/button inline-flex shrink-0 items-center justify-center border border-transparent bg-clip-padding whitespace-nowrap transition-all outline-none select-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 active:not-aria-[haspopup]:translate-y-px disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20 dark:aria-invalid:border-destructive/50 dark:aria-invalid:ring-destructive/40 [&amp;_svg]:pointer-events-none [&amp;_svg]:shrink-0 hover:text-foreground aria-expanded:bg-muted aria-expanded:text-foreground h-target gap-2 rounded-full font-extrabold has-data-[icon=inline-end]:pr-5 has-data-[icon=inline-start]:pl-5 [&amp;_svg:not([class*='size-'])]:size-6 min-w-16 px-4 text-lg text-muted-foreground hover:bg-transparent not-aria-pressed:hover:text-foreground aria-pressed:bg-primary aria-pressed:text-primary-foreground aria-pressed:hover:bg-primary dark:hover:bg-transparent"
+                  >
+                    EN
+                  </button>
+                </div>
+                <a
+                  aria-label="Cài đặt"
+                  class="inline-flex size-target items-center justify-center rounded-full bg-muted aria-[current=page]:bg-primary aria-[current=page]:text-primary-foreground outline-none focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+                  href="#"
+                  data-discover="true"
+                  ><svg
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2.2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    aria-hidden="true"
+                    class="size-6.5"
+                  >
+                    <circle cx="12" cy="12" r="3"></circle>
+                    <path
+                      d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"
+                    ></path></svg
+                ></a>
+              </div>
+            </header>
+            <main class="flex-1 px-4 pb-6 min-[480px]:px-8 lg:px-10">
+              <div class="mx-auto w-full max-w-[760px]">
+                <div class="flex flex-col gap-1 pt-2 pb-3">
+                  <h1 class="font-heading text-2xl font-extrabold">Hôm nay</h1>
+                </div>
+                <section
+                  class="flex flex-col gap-2 rounded-2xl border-[1.5px] border-border bg-card p-5 text-card-foreground"
+                >
+                  <p class="text-sm font-extrabold text-muted-foreground">
+                    Chuyến sắp tới · Còn 22 ngày
+                  </p>
+                  <h2 class="font-heading text-xl font-extrabold break-words">
+                    Mùa hè ở Đảo Lam
+                  </h2>
+                  <p class="text-base text-muted-foreground">
+                    2 – 9 thg 7, 2031 · 8 ngày
+                  </p>
+                  <a
+                    class="group/button inline-flex shrink-0 items-center justify-center border border-transparent bg-clip-padding whitespace-nowrap transition-all outline-none select-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 active:not-aria-[haspopup]:translate-y-px disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20 dark:aria-invalid:border-destructive/50 dark:aria-invalid:ring-destructive/40 [&amp;_svg]:pointer-events-none [&amp;_svg]:shrink-0 bg-primary text-primary-foreground hover:bg-primary/80 h-target gap-2 rounded-full px-6 text-base font-extrabold has-data-[icon=inline-end]:pr-5 has-data-[icon=inline-start]:pl-5 [&amp;_svg:not([class*='size-'])]:size-6 mt-2 w-full"
+                    href="#"
+                    data-discover="true"
+                    >Mở chuyến đi</a
+                  >
+                </section>
+              </div>
+            </main>
+            <div
+              class="sticky bottom-[max(98px,calc(84px+env(safe-area-inset-bottom)))] z-10 bg-background px-4 pt-2 pb-3 min-[480px]:bottom-0 min-[480px]:px-8 min-[480px]:pb-[max(16px,env(safe-area-inset-bottom))] lg:px-10"
+            >
+              <div class="mx-auto flex w-full max-w-[760px] flex-col gap-2">
+                <button
+                  type="button"
+                  aria-disabled="false"
+                  class="flex min-h-target w-full items-center justify-center gap-3 rounded-full bg-primary px-6 text-lg font-extrabold text-primary-foreground outline-none focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+                >
+                  <svg
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2.2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    aria-hidden="true"
+                    class="size-7 shrink-0"
+                  >
+                    <path
+                      d="M5 4.5h14a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2h-8l-4.5 3.5v-3.5H5a2 2 0 0 1-2-2v-9a2 2 0 0 1 2-2z"
+                    ></path>
+                    <path d="M8 11h.01M12 11h.01M16 11h.01"></path></svg
+                  >Nói chuyện với trợ lý
+                </button>
+              </div>
+            </div>
+          </div>
+          <nav
+            aria-label="Chính"
+            class="sticky bottom-0 flex gap-2 bg-background px-3 pt-2 pb-[max(14px,env(safe-area-inset-bottom))] min-[480px]:hidden"
+          >
+            <a
+              aria-current="page"
+              class="flex h-19 min-w-0 flex-1 flex-col items-center justify-center gap-1 rounded-[22px] text-sm leading-tight font-extrabold text-muted-foreground aria-[current=page]:bg-primary aria-[current=page]:text-primary-foreground outline-none focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:ring-inset active"
+              href="#"
+              data-discover="true"
+              ><svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2.2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                aria-hidden="true"
+                class="size-7 shrink-0"
+              >
+                <circle cx="12" cy="12" r="4.5"></circle>
+                <path
+                  d="M12 2.5v2M12 19.5v2M2.5 12h2M19.5 12h2M5.3 5.3l1.4 1.4M17.3 17.3l1.4 1.4M5.3 18.7l1.4-1.4M17.3 6.7l1.4-1.4"
+                ></path></svg
+              ><span class="max-w-full truncate px-1">Hôm nay</span></a
+            ><a
+              class="flex h-19 min-w-0 flex-1 flex-col items-center justify-center gap-1 rounded-[22px] text-sm leading-tight font-extrabold text-muted-foreground aria-[current=page]:bg-primary aria-[current=page]:text-primary-foreground outline-none focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:ring-inset"
+              href="#"
+              data-discover="true"
+              ><svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2.2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                aria-hidden="true"
+                class="size-7 shrink-0"
+              >
+                <rect x="4" y="7" width="16" height="13" rx="3"></rect>
+                <path
+                  d="M9 7V5.5A1.5 1.5 0 0 1 10.5 4h3A1.5 1.5 0 0 1 15 5.5V7M4 12h16"
+                ></path></svg
+              ><span class="max-w-full truncate px-1">Chuyến đi</span></a
+            ><a
+              class="flex h-19 min-w-0 flex-1 flex-col items-center justify-center gap-1 rounded-[22px] text-sm leading-tight font-extrabold text-muted-foreground aria-[current=page]:bg-primary aria-[current=page]:text-primary-foreground outline-none focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:ring-inset"
+              href="#"
+              data-discover="true"
+              ><svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2.2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                aria-hidden="true"
+                class="size-7 shrink-0"
+              >
+                <rect x="3.5" y="5" width="17" height="15" rx="3.5"></rect>
+                <path d="M3.5 10h17M8 3v4M16 3v4"></path></svg
+              ><span class="max-w-full truncate px-1">Lịch</span></a
+            >
+          </nav>
+        </div>
+        <div
+          role="status"
+          class="pointer-events-none fixed inset-x-4 bottom-[calc(max(98px,calc(84px+env(safe-area-inset-bottom)))+92px)] z-40 flex justify-center min-[480px]:inset-x-auto min-[480px]:right-6 min-[480px]:bottom-[calc(max(16px,env(safe-area-inset-bottom))+80px)]"
+        ></div>
+      </div>
+    </div>
+    <script>
+      document.addEventListener('click', function (event) {
+        var button = event.target.closest('button[lang]')
+        if (!button) return
+        document.documentElement.dataset.lang = button.lang
+        document.documentElement.lang = button.lang
+      })
+
+      function settle() {
+        document
+          .querySelectorAll('[role=radio][aria-checked=true]')
+          .forEach(function (chosen) {
+            var box = chosen.closest('[role=radiogroup]')
+            while (box && box.scrollHeight <= box.clientHeight + 1)
+              box = box.parentElement
+            if (
+              box &&
+              box !== document.documentElement &&
+              box !== document.body
+            )
+              box.scrollTop = chosen.offsetTop - box.clientHeight / 2
+          })
+        document
+          .querySelectorAll('nav [aria-current=date]')
+          .forEach(function (day) {
+            var strip = day.closest('ul')
+            if (strip)
+              strip.scrollLeft =
+                day.offsetLeft - strip.clientWidth / 2 + day.offsetWidth / 2
+          })
+      }
+      settle()
+      document.addEventListener('click', settle)
+    </script>
+  </body>
+</html>
