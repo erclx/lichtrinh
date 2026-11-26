@@ -33,10 +33,9 @@ function entryOf(root: ParentNode): string | null {
 }
 
 /**
- * Reloads the page onto the release its worker now saves, unless that would
- * lose something. It compares the saved `index.html` with the page's own
- * entry rather than waiting on an activation event a page can miss, and a
- * reload reads that same saved copy, so one reload settles it.
+ * Reloads onto the release the worker now saves unless something holds the
+ * page. It reads the saved `index.html` rather than an activation a page can
+ * miss, and a reload serves that same copy, so one reload settles it.
  */
 export async function takeRelease(page: OpenPage = browserPage) {
   if (isHeld() || !page.controlled()) return

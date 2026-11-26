@@ -125,8 +125,7 @@ export async function startReleaseServer(
       return
     }
     const { dir } = current
-    // As the host's single page mode does, only a navigation falls back to
-    // `index.html`, so a file the swap removed answers 404.
+    // Only a navigation falls back to `index.html`, as on the static host.
     const navigation = incoming.headers['sec-fetch-mode'] === 'navigate'
     void (async () => {
       const found = await fileIn(dir, url.pathname)

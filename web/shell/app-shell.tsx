@@ -61,8 +61,7 @@ export function AppShell() {
   const dockOpen = chat && wide && !chatClosed
   const sheetShown = chat && roomy && !wide && sheetOpen
 
-  // A new screen is a moment nobody is mid-read, so a page a touch kept on
-  // the old release follows the new one here.
+  // A new screen cuts off no reading, so a tapped page follows a release here.
   useEffect(() => {
     void takeRelease()
   }, [pathname])

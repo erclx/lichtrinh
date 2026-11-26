@@ -40,8 +40,7 @@ export function useTurn(chatId: string) {
   /** Resolves false when turned away. `voice` rides a transcript's send. */
   async function send(text: string, voice?: VoiceSend): Promise<boolean> {
     if (turn !== null && isRunning(turn)) return false
-    // Taken here rather than in an effect, since the turn outlives its page
-    // and a reload would drop the reader the API reads as Stop.
+    // Held here, not in an effect, since the turn outlives its page.
     const release = hold()
     try {
       return await run(text, voice)
