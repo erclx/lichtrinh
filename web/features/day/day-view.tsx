@@ -69,6 +69,27 @@ export function DayView({
     </>
   )
 
+  const add = online ? (
+    <Link
+      to={addTo}
+      aria-label={t('day.addOn', { date: longDate })}
+      className={cn(buttonVariants(), addClass)}
+    >
+      {addLabel}
+    </Link>
+  ) : (
+    // Offline Add waits, and the card's sentence says why.
+    <Button
+      disabled
+      focusableWhenDisabled
+      aria-label={t('day.addOn', { date: longDate })}
+      aria-describedby={offlineReasonId}
+      className={cn(addClass, waitingClass)}
+    >
+      {addLabel}
+    </Button>
+  )
+
   // The strip scrolls sideways on phone, so the open day starts in view.
   useEffect(() => {
     selectedRef.current?.scrollIntoView?.({
@@ -82,28 +103,8 @@ export function DayView({
       <PageHeader
         title={longDate}
         backTo={isHome ? undefined : tripPath}
-        action={
-          online ? (
-            <Link
-              to={addTo}
-              aria-label={t('day.addOn', { date: longDate })}
-              className={cn(buttonVariants(), addClass)}
-            >
-              {addLabel}
-            </Link>
-          ) : (
-            // Offline Add waits, and the card's sentence says why.
-            <Button
-              disabled
-              focusableWhenDisabled
-              aria-label={t('day.addOn', { date: longDate })}
-              aria-describedby={offlineReasonId}
-              className={cn(addClass, waitingClass)}
-            >
-              {addLabel}
-            </Button>
-          )
-        }
+        titleAction={isHome ? add : undefined}
+        action={isHome ? undefined : add}
       />
 
       <RefreshFailed show={stale} />
@@ -141,7 +142,7 @@ export function DayView({
           {days.map((day) => {
             const selected = day === date
             return (
-              <li key={day} className="shrink-0">
+              <li key={day} className="shrink-0 min-[480px]:flex-[1_0_64px]">
                 <Link
                   ref={selected ? selectedRef : undefined}
                   to={`${tripPath}/days/${day}`}
@@ -155,7 +156,7 @@ export function DayView({
                   }
                   aria-label={formatLongDate(day, language)}
                   className={cn(
-                    'relative flex h-[72px] w-16 flex-col items-center justify-center rounded-lg border-[1.5px] border-border bg-secondary text-secondary-foreground outline-none focus-visible:ring-3 focus-visible:ring-ring/50',
+                    'relative flex h-[72px] w-full min-w-16 flex-col items-center justify-center rounded-lg border-[1.5px] border-border bg-secondary text-secondary-foreground outline-none focus-visible:ring-3 focus-visible:ring-ring/50',
                     selected &&
                       'border-primary bg-primary text-primary-foreground',
                   )}
