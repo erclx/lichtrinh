@@ -7,6 +7,7 @@ import { ASSISTANT_MODEL_KEY, readModel } from '../assistant/model.ts'
 import { relayOf } from '../assistant/relay.ts'
 import type { AuthEnv } from '../auth/guard.ts'
 import { requireChat } from '../auth/guard.ts'
+import { carriesSecret } from '../auth/secret.ts'
 import { createDb } from '../db/client.ts'
 import { settings } from '../db/schema.ts'
 import { fail, parseBody, refuse } from '../envelope.ts'
@@ -70,10 +71,7 @@ export const assistantRoutes = new Hono<AuthEnv>()
   // through signed out and the secret is checked here instead.
   .get('/bridge/connect', async (c) => {
     if (
-      !(await carriesBridgeSecret(
-        c.req.header('authorization'),
-        c.env.BRIDGE_SECRET,
-      ))
+      !(await carriesSecret(c.req.header('authorization'), c.env.BRIDGE_SECRET))
     ) {
       return c.json(fail('unauthenticated', 'Wrong bridge secret'), 401)
     }
@@ -84,25 +82,3 @@ export const assistantRoutes = new Hono<AuthEnv>()
       headers: { upgrade: 'websocket' },
     })
   })
-
-const encoder = new TextEncoder()
-
-/**
- * Whether an `Authorization` header carries the bridge secret as a bearer
- * token. Both sides are hashed first, so the constant-time compare always
- * sees equal lengths. An unset secret matches nothing.
- */
-async function carriesBridgeSecret(
-  header: string | undefined,
-  secret: string | undefined,
-): Promise<boolean> {
-  if (secret === undefined || secret === '') return false
-  const token = /^Bearer (.+)$/.exec(header ?? '')?.[1]
-  if (token === undefined) return false
-  const [given, expected] = await Promise.all([digest(token), digest(secret)])
-  return crypto.subtle.timingSafeEqual(given, expected)
-}
-
-function digest(text: string) {
-  return crypto.subtle.digest('SHA-256', encoder.encode(text))
-}
