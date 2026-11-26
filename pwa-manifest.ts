@@ -42,3 +42,10 @@ export const stagingManifest = {
   name: 'Lịch trình (staging)',
   short_name: 'Staging',
 } satisfies Partial<ManifestOptions>
+
+/** The copy a development run shares with a phone, named apart from both. */
+export const previewManifest = {
+  ...manifest,
+  name: 'Lịch trình (preview)',
+  short_name: 'Preview',
+} satisfies Partial<ManifestOptions>
