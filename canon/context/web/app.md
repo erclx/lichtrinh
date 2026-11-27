@@ -13,7 +13,7 @@ Owns the browser app the traveler and the family open, from `index.html` and `we
 
 ### `web/`
 
-Holds the React entry and the route table. `main.tsx` loads `web/i18n/setup.ts` and mounts `App` from `app.tsx`, and `index.css` holds the color roles, the font, the type steps, the 64px `--spacing-target`, and the radius roles `canon/DESIGN.md` describes.
+Holds the React entry and the route table. `main.tsx` loads `web/i18n/setup.ts` and mounts `App` from `app.tsx`, and `index.css` holds the color roles, the font, and the type steps, `--spacing-target`, spacing unit, and radius roles `canon/DESIGN.md` describes, scaled from a 1rem root that follows the iPhone's Text Size, gutters kept in px.
 
 - `app.tsx` renders `SessionProvider`, then the query cache from `canon/context/web/calendar-data.md`, then `UndoProvider`, around a data router built once from `router.tsx`
 - `router.tsx` is the one route table, the session gate over the shell over every page, gathering each feature's `routes.tsx` by glob, so a page is added there and never here
