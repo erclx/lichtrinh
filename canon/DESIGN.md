@@ -11,7 +11,7 @@ Values live in `web/index.css`, light on `:root` and dark on `:root[data-theme='
 
 ## Overview
 
-Calm, large, and plain for an older traveler reading on an iPhone. Near-black controls sit on a pale ground, the type is big, and soft pastels only ever say what kind of thing an entry is. Every screen exists in light and dark and follows the device unless a person picks one in Settings.
+Calm, compact, and plain for an older traveler reading on an iPhone. Near-black controls sit on a pale ground, the type follows the phone's Text Size, and soft pastels only ever say what kind of thing an entry is. Every screen exists in light and dark and follows the device unless a person picks one in Settings.
 
 ## Colors
 
@@ -54,32 +54,34 @@ Calm, large, and plain for an older traveler reading on an iPhone. Near-black co
 ## Typography
 
 - Nunito sets everything, and weight separates the roles, with titles and control labels at 800.
-- The scale has five steps, body text sits on the base step, and nothing renders below the smallest.
-- One scale holds at every width, since landscape iPad takes the desktop layout and would otherwise shrink the traveler's type.
+- Body text is 1rem, which follows the iPhone's Text Size setting, and every type step, space, target, and radius scales from it.
+- One five-step scale holds at every width, body text sits on the base step, and nothing renders below the smallest.
 
 ## Spacing
 
 - Every control's hit area reaches `--spacing-target`, and a control drawn smaller pads out to it, as the header's language and settings controls do on phone.
-- A day cell in a month is the one exception, at 46 to 58px, since seven columns cannot fit wider on a phone.
+- A day cell in a month is the one exception, at about 35 to 44px, since seven columns cannot fit wider on a phone.
 
 ## Layout
 
 - Phone is under 480 wide, tablet runs from 480 to 1023, and desktop starts at 1024, landscape iPad included.
-- The middle column keeps a 40px gutter from each sidebar on desktop and 32px on tablet, whose nav keeps a label under each icon.
+- Gutters stay in px whatever the Text Size, being 16 on phone, 32 on tablet, whose nav labels each icon, and 40 on desktop.
 - Every app screen has an accepted frame at each draw width, and a frame at one width alone shows something that width alone has.
 
 Draw widths: 390, 834, 1440
 
 ## Shapes
 
-- Every one-line control is a pill, being the language toggle, the Add control, chips, and the Talk bar.
+- Every one-line control takes the field radius, being the toggles, Add, and the Talk bar, while icon buttons, avatars, and dots stay round.
+- Chips and badges take the smaller chip radius, so they read as labels rather than as pills.
 
-| Role  | Property       | When used                                   |
-| ----- | -------------- | ------------------------------------------- |
-| field | `--radius-lg`  | inputs, week-strip days, and small tiles    |
-| card  | `--radius-xl`  | cards, entry rows, and two-line buttons     |
-| sheet | `--radius-2xl` | sheets, dialogs, and the happening-now card |
-| pill  | `rounded-full` | every one-line control                      |
+| Role  | Property       | When used                                                   |
+| ----- | -------------- | ----------------------------------------------------------- |
+| field | `--radius-lg`  | inputs, one-line controls, week-strip days, and small tiles |
+| chip  | `--radius-xs`  | chips and badges                                            |
+| card  | `--radius-xl`  | cards, entry rows, and two-line buttons                     |
+| sheet | `--radius-2xl` | sheets, dialogs, and the happening-now card                 |
+| round | `rounded-full` | icon buttons, avatars, and dots                             |
 
 ## Motion
 
@@ -92,5 +94,5 @@ Draw widths: 390, 834, 1440
 ## Mark
 
 - The mark is a calendar page with three pastel agenda bars, served as `web/public/favicon.svg` and drawn in the app by `web/components/brand-mark.tsx`.
-- Its outline and rings follow the text color, while the page and the bars keep their fills in both themes.
+- Its outline and rings follow the text color, its page and band take the card and rest fills, and the three bars keep their pastels.
 - It sits beside the wordmark in the phone header and desktop nav, and alone atop the tablet rail, whose top bar shows the bare wordmark.
