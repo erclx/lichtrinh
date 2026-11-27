@@ -1,4 +1,4 @@
-import { mkdirSync, writeFileSync } from 'node:fs'
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { dirname, join } from 'node:path'
 
 import type { Command } from 'commander'
@@ -9,6 +9,7 @@ import {
   PANEL_UNIT,
   TARGET,
 } from '../../panel/services'
+import { icoFromPngs } from '../panel/icon'
 import { isLinkedWorktree, type PanelMachine } from '../panel/machine'
 import { sharedHost } from '../panel/settings-files'
 import { isPlainDistro, shortcutCommand } from '../panel/shortcut'
@@ -16,6 +17,8 @@ import { renderUnits, UNITS } from '../panel/units'
 import type { CliIo, RunInCheckout } from '../program'
 
 const TOOLS = ['bun', 'uv', 'node'] as const
+// The app's own sizes up to the 256 px an icon holds, so none is scaled.
+const ICON_SIZES = [16, 32, 48] as const
 
 const systemctl = (...args: string[]) => ['systemctl', '--user', ...args]
 
@@ -67,13 +70,23 @@ export function registerPanel(
           `error: ${missing.map(({ tool }) => tool).join(' and ')} not found, and the units need each by its folder`,
         )
       }
+      const pngs = ICON_SIZES.map((size) =>
+        join(checkout, 'web/public', `icon-${size}x${size}.png`),
+      )
+      const absent = pngs.filter((path) => !existsSync(path))
+      if (absent.length > 0) {
+        command.error(
+          `error: the shortcut's icon needs ${absent.join(' and ')}, which this checkout lacks`,
+        )
+      }
 
       writeUnits(
         machine,
         renderUnits({ root: checkout, toolFolders: paths.map(dirname) }),
       )
       if ((await run(systemctl('daemon-reload'))) !== 0) return
-      const shortcut = shortcutCommand({ distro, root: checkout, bun })
+      const icon = icoFromPngs(pngs.map((path) => readFileSync(path)))
+      const shortcut = shortcutCommand({ distro, root: checkout, bun, icon })
       if ((await run(shortcut)) !== 0) return
       io.stdout('Double-click Lichtrinh on the desktop to start the panel.\n')
     })

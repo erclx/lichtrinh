@@ -3,6 +3,8 @@ export interface ShortcutSettings {
   root: string
   /** Bun by its own path, since the session a shortcut opens may not find it. */
   bun: string
+  /** The `.ico` the shortcut shows, in place of the launcher's own. */
+  icon: Uint8Array
 }
 
 /**
@@ -19,17 +21,26 @@ export function shortcutCommand(settings: ShortcutSettings): string[] {
   ]
 }
 
-/** Windows names its own folders, so a profile path with a space stays whole. */
+/**
+ * Windows names its own folders, so a profile path with a space stays whole.
+ * The icon is copied out of the distribution, since the desktop reads it
+ * while WSL is stopped, when a path inside it shows nothing.
+ */
 export function shortcutScript(settings: ShortcutSettings): string {
   return [
     "$ErrorActionPreference = 'Stop'",
     "$ProgressPreference = 'SilentlyContinue'",
+    "$folder = Join-Path $env:LOCALAPPDATA 'Lichtrinh'",
+    '[void] (New-Item -ItemType Directory -Force -Path $folder)',
+    "$icon = Join-Path $folder 'lichtrinh.ico'",
+    `[IO.File]::WriteAllBytes($icon, [Convert]::FromBase64String('${Buffer.from(settings.icon).toString('base64')}'))`,
     "$desktop = [Environment]::GetFolderPath('Desktop')",
     "$path = Join-Path $desktop 'Lichtrinh.lnk'",
     '$link = (New-Object -ComObject WScript.Shell).CreateShortcut($path)',
     "$link.TargetPath = Join-Path $env:ProgramFiles 'WSL\\wslg.exe'",
     `$link.Arguments = ${powershell(shortcutArguments(settings))}`,
     '$link.WorkingDirectory = $env:USERPROFILE',
+    '$link.IconLocation = "$icon,0"',
     "$link.Description = 'Start the trip assistant on this PC and open its panel'",
     '$link.Save()',
     'Write-Output "Wrote $path"',

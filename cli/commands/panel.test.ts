@@ -1,5 +1,6 @@
 import { spawnSync } from 'node:child_process'
 import {
+  cpSync,
   existsSync,
   mkdirSync,
   mkdtempSync,
@@ -9,7 +10,7 @@ import {
   writeFileSync,
 } from 'node:fs'
 import { tmpdir } from 'node:os'
-import { join } from 'node:path'
+import { join, resolve } from 'node:path'
 
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 
@@ -19,10 +20,18 @@ import { type ProgramContext, runCli, type Task } from '../program'
 let home: string
 let root: string
 
+const APP_ICONS = resolve(import.meta.dirname, '../../web/public')
+const ICON_SIZES = [16, 32, 48]
+
 beforeEach(() => {
   home = mkdtempSync(join(tmpdir(), 'lichtrinh-home-'))
   root = mkdtempSync(join(tmpdir(), 'lichtrinh-checkout-'))
   mkdirSync(join(root, '.git'))
+  mkdirSync(join(root, 'web/public'), { recursive: true })
+  for (const size of ICON_SIZES) {
+    const name = `icon-${size}x${size}.png`
+    cpSync(join(APP_ICONS, name), join(root, 'web/public', name))
+  }
 })
 afterEach(() => {
   rmSync(home, { recursive: true })
@@ -155,6 +164,35 @@ describe('lichtrinh panel install', () => {
     expect(exitCode).toBe(1)
     expect(run.output()).toContain('uv and node not found')
     expect(run.commands()).toEqual([])
+  })
+
+  it("gives the shortcut the app's icon at each size it ships", async () => {
+    const run = fakeRunner()
+
+    await runCli(['panel', 'install'], run.context)
+
+    const script = Buffer.from(
+      run.commands()[1]?.split(' ').at(-1) ?? '',
+      'base64',
+    ).toString('utf16le')
+    const icon = Buffer.from(
+      /FromBase64String\('([^']+)'\)/.exec(script)?.[1] ?? '',
+      'base64',
+    )
+    expect(icon.readUInt16LE(4)).toBe(3)
+    expect([icon[6], icon[22], icon[38]]).toEqual([16, 32, 48])
+  })
+
+  it('refuses a checkout missing an icon, writing nothing', async () => {
+    rmSync(join(root, 'web/public/icon-32x32.png'))
+    const run = fakeRunner()
+
+    const exitCode = await runCli(['panel', 'install'], run.context)
+
+    expect(exitCode).toBe(1)
+    expect(run.output()).toContain('icon-32x32.png')
+    expect(run.commands()).toEqual([])
+    expect(existsSync(unitFolder())).toBe(false)
   })
 
   it('refuses outside WSL', async () => {
