@@ -441,12 +441,12 @@ describe('loading the model', () => {
     }) as typeof fetch
     const { post, get, fake } = panel('stopped', { fetch: fetcher })
     answer = fake.tools.fetch
-    fake.pickModel('lichtrinh-assistant-gemma')
+    fake.pickModel('lichtrinh-assistant')
 
     await get('/api/state')
     await post('/api/services/model/load')
 
-    expect(loaded).toEqual(['lichtrinh-assistant-gemma'])
+    expect(loaded).toEqual(['lichtrinh-assistant'])
   })
 
   it('drops a load still running on Stop all', async () => {

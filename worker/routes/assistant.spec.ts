@@ -76,12 +76,12 @@ describe('GET /api/assistant/status', () => {
     const { cookie, user } = await signedIn({ role: 'admin' })
     await createDb(env.DB).insert(settings).values({
       key: 'assistant_model',
-      value: 'lichtrinh-assistant-gemma',
+      value: 'lichtrinh-assistant',
       updatedAt: new Date(),
       updatedBy: user.id,
     })
 
-    expect((await readStatus(cookie)).model).toBe('lichtrinh-assistant-gemma')
+    expect((await readStatus(cookie)).model).toBe('lichtrinh-assistant')
 
     await createDb(env.DB).delete(settings)
   })
@@ -218,11 +218,11 @@ describe('PUT /api/admin/assistant', () => {
   it('answers the model it saved', async () => {
     const { cookie } = await signedIn({ role: 'admin' })
 
-    const res = await putModel(cookie, 'lichtrinh-assistant-gemma')
+    const res = await putModel(cookie, 'lichtrinh-assistant')
 
     expect(res.status).toBe(200)
     expect(assistantSettings.parse(await res.json())).toEqual({
-      model: 'lichtrinh-assistant-gemma',
+      model: 'lichtrinh-assistant',
     })
   })
 
@@ -230,11 +230,9 @@ describe('PUT /api/admin/assistant', () => {
     const admin = await signedIn({ role: 'admin' })
     const member = await signedIn()
 
-    await putModel(admin.cookie, 'lichtrinh-assistant-gemma')
+    await putModel(admin.cookie, 'lichtrinh-assistant')
 
-    expect((await readStatus(member.cookie)).model).toBe(
-      'lichtrinh-assistant-gemma',
-    )
+    expect((await readStatus(member.cookie)).model).toBe('lichtrinh-assistant')
   })
 
   it('replaces a model saved earlier', async () => {
@@ -249,13 +247,13 @@ describe('PUT /api/admin/assistant', () => {
   it('warms the saved model on the next warm', async () => {
     const { cookie } = await signedIn({ role: 'admin', canChat: true })
     const bridge = await bridgeOnline()
-    await putModel(cookie, 'lichtrinh-assistant-gemma')
+    await putModel(cookie, 'lichtrinh-assistant')
 
     await app.request('/api/assistant/warm', bare('POST', cookie), env)
 
     expect(await bridge.next()).toEqual({
       type: 'warm',
-      model: 'lichtrinh-assistant-gemma',
+      model: 'lichtrinh-assistant',
     })
   })
 
