@@ -28,7 +28,8 @@ The units and the verbs hold to these:
 
 - `lichtrinh.target` holds voice and the bridge. The staging bridge and the panel sit outside it, and no unit carries an install section, so nothing starts at sign-in.
 - Each unit sources its settings file through `bash`, since systemd ignores its `export` lines. Staging reads `bridge-staging.env`, the family's copy `bridge.env`, and the panel `panel.env` if present.
-- `install` refuses a linked worktree, a missing tool, and one host in both settings files, where the relay would replace each bridge with the other without end
+- `install` refuses a linked worktree, a missing tool, a missing icon PNG, a distribution name past letters, digits, dots, dashes, and underscores, and one host in both settings files
+- The shortcut writes its icon to `%LOCALAPPDATA%\Lichtrinh\`, built from the app's 16, 32, and 48 px PNGs, since an icon inside the distribution shows nothing while WSL is stopped
 - `open` keeps a session of its own until the panel unit stops, since WSL stops a distribution no session holds. A later `open` finds its lock held and shows the window alone.
 
 ### `panel/server/`

@@ -48,7 +48,8 @@ voice/clips/
 *.opus
 
 # Editors
-.vscode/
+.vscode/*
+!.vscode/tasks.json
 .idea
 .DS_Store
 *.sw?

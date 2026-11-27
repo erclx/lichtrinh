@@ -1,4 +1,4 @@
-import { mkdirSync, writeFileSync } from 'node:fs'
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { dirname, join } from 'node:path'
 
 import type { Command } from 'commander'
@@ -9,13 +9,16 @@ import {
   PANEL_UNIT,
   TARGET,
 } from '../../panel/services'
+import { icoFromPngs } from '../panel/icon'
 import { isLinkedWorktree, type PanelMachine } from '../panel/machine'
 import { sharedHost } from '../panel/settings-files'
-import { shortcutCommand } from '../panel/shortcut'
+import { isPlainDistro, shortcutCommand } from '../panel/shortcut'
 import { renderUnits, UNITS } from '../panel/units'
 import type { CliIo, RunInCheckout } from '../program'
 
 const TOOLS = ['bun', 'uv', 'node'] as const
+// The app's own sizes up to the 256 px an icon holds, so none is scaled.
+const ICON_SIZES = [16, 32, 48] as const
 
 const systemctl = (...args: string[]) => ['systemctl', '--user', ...args]
 
@@ -53,6 +56,11 @@ export function registerPanel(
           'error: the shortcut opens WSL, so install from inside it',
         )
       }
+      if (!isPlainDistro(distro)) {
+        command.error(
+          `error: the shortcut cannot name the distribution ${distro}, since the WSL launcher takes letters, digits, dots, dashes, and underscores alone.`,
+        )
+      }
       const found = TOOLS.map((tool) => ({ tool, path: machine.find(tool) }))
       const paths = found.flatMap(({ path }) => path ?? [])
       const [bun] = paths
@@ -62,13 +70,23 @@ export function registerPanel(
           `error: ${missing.map(({ tool }) => tool).join(' and ')} not found, and the units need each by its folder`,
         )
       }
+      const pngs = ICON_SIZES.map((size) =>
+        join(checkout, 'web/public', `icon-${size}x${size}.png`),
+      )
+      const absent = pngs.filter((path) => !existsSync(path))
+      if (absent.length > 0) {
+        command.error(
+          `error: the shortcut's icon needs ${absent.join(' and ')}, which this checkout lacks`,
+        )
+      }
 
       writeUnits(
         machine,
         renderUnits({ root: checkout, toolFolders: paths.map(dirname) }),
       )
       if ((await run(systemctl('daemon-reload'))) !== 0) return
-      const shortcut = shortcutCommand({ distro, root: checkout, bun })
+      const icon = icoFromPngs(pngs.map((path) => readFileSync(path)))
+      const shortcut = shortcutCommand({ distro, root: checkout, bun, icon })
       if ((await run(shortcut)) !== 0) return
       io.stdout('Double-click Lichtrinh on the desktop to start the panel.\n')
     })
@@ -117,7 +135,11 @@ function writeUnits(
   }
 }
 
-/** Windows reads the script out of the distribution by its network path. */
+/**
+ * Windows reads the script out of the distribution by its network path. The
+ * address is the panel's own, since Windows tries `localhost` as `::1` first
+ * and waits out a timeout on each poll before it reaches the panel.
+ */
 function windowCommand({ distro }: PanelMachine, root: string): string[] {
   const script = join(root, 'cli/panel/open-window.ps1')
   return [
@@ -128,7 +150,7 @@ function windowCommand({ distro }: PanelMachine, root: string): string[] {
     '-File',
     `\\\\wsl.localhost\\${distro ?? ''}${script.replaceAll('/', '\\')}`,
     '-Url',
-    `http://localhost:${PANEL_PORT}`,
+    `http://127.0.0.1:${PANEL_PORT}`,
     '-Title',
     PANEL_TITLE,
   ]
