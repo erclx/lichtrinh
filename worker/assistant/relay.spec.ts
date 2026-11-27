@@ -90,7 +90,7 @@ describe('a whole turn through the relay', () => {
     expect(res.headers.get('content-type')).toBe('application/x-ndjson')
     expect(turn).toMatchObject({
       turnId: messageId,
-      model: 'lichtrinh-assistant',
+      model: 'lichtrinh-assistant-gemma',
     })
     expect(turn.messages.at(-1)).toEqual({
       role: 'user',
@@ -109,7 +109,7 @@ describe('a whole turn through the relay', () => {
       role: 'assistant',
       text: 'Added.',
       status: 'complete',
-      model: 'lichtrinh-assistant',
+      model: 'lichtrinh-assistant-gemma',
     })
     expect(done.message.changes).toHaveLength(1)
     expect(done.message.changes[0]).toMatchObject({

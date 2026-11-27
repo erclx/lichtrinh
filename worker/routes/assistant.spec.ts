@@ -51,7 +51,7 @@ describe('GET /api/assistant/status', () => {
     expect(await readStatus(cookie)).toEqual({
       online: false,
       lastAnsweredAt: null,
-      model: 'lichtrinh-assistant',
+      model: 'lichtrinh-assistant-gemma',
       voice: { online: false, model: 'qwen3-asr-1.7b' },
     })
   })
@@ -95,7 +95,7 @@ describe('GET /api/assistant/status', () => {
       updatedBy: user.id,
     })
 
-    expect((await readStatus(cookie)).model).toBe('lichtrinh-assistant')
+    expect((await readStatus(cookie)).model).toBe('lichtrinh-assistant-gemma')
 
     await createDb(env.DB).delete(settings)
   })
@@ -171,7 +171,7 @@ describe('POST /api/assistant/warm', () => {
     expect(res.status).toBe(202)
     expect(await bridge.next()).toEqual({
       type: 'warm',
-      model: 'lichtrinh-assistant',
+      model: 'lichtrinh-assistant-gemma',
     })
   })
 
@@ -282,17 +282,17 @@ describe('PUT /api/admin/assistant', () => {
 
     expect(res.status).toBe(400)
     expect(await errorCode(res)).toBe('validation_failed')
-    expect((await readStatus(cookie)).model).toBe('lichtrinh-assistant')
+    expect((await readStatus(cookie)).model).toBe('lichtrinh-assistant-gemma')
   })
 
   it('refuses a member with forbidden', async () => {
     const { cookie } = await signedIn()
 
-    const res = await putModel(cookie, 'lichtrinh-assistant-gemma')
+    const res = await putModel(cookie, 'lichtrinh-assistant')
 
     expect(res.status).toBe(403)
     expect(await errorCode(res)).toBe('forbidden')
-    expect((await readStatus(cookie)).model).toBe('lichtrinh-assistant')
+    expect((await readStatus(cookie)).model).toBe('lichtrinh-assistant-gemma')
   })
 })
 
