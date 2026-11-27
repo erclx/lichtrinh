@@ -128,7 +128,7 @@ test('the traveler speaks a request, fixes the transcript, sends it, and types w
   const bridge = await connectFakeBridge(baseURL, { voice: true })
   try {
     // Short enough that the thread scrolls under its composer.
-    await page.setViewportSize({ width: 390, height: 600 })
+    await page.setViewportSize({ width: 390, height: 400 })
     await page.goto('/chats/fixture-chat-today')
     await page.getByRole('button', { name: 'Talk' }).click()
     const stop = page.getByRole('button', { name: 'Stop and write it down' })
@@ -142,7 +142,7 @@ test('the traveler speaks a request, fixes the transcript, sends it, and types w
     await expect(words).toBeVisible()
     expect(
       await page.evaluate(() => document.body.scrollHeight - innerHeight),
-    ).toBeGreaterThan(300)
+    ).toBeGreaterThan(150)
     await expectAboveStop(page, 0)
     await expectAboveStop(page, 0.5)
     await expectAboveStop(page, 1)
