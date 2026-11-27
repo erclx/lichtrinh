@@ -4,6 +4,7 @@ import type { TurnMessage } from './bridge-frames.ts'
 import type { ChatRole } from './chats.ts'
 import { minorDigits } from './currency.ts'
 import type { Entry } from './entries.ts'
+import type { Rate } from './rates.ts'
 import { nowInZone, shiftClock } from './trip-time.ts'
 import type { Trip } from './trips.ts'
 
@@ -56,6 +57,8 @@ export interface PromptInput {
   history: { role: ChatRole; text: string }[]
   text: string
   at: Date
+  // The admin's stored rates. Left out, the prompt says none is set.
+  rates?: readonly Pick<Rate, 'from' | 'to' | 'rate'>[]
 }
 
 /**
@@ -74,7 +77,7 @@ export function buildPrompt(input: PromptInput): TurnMessage[] {
   ]
 }
 
-function systemText({ language, trip, entries, at }: PromptInput) {
+function systemText({ language, trip, entries, at, rates = [] }: PromptInput) {
   const digits = minorDigits(trip.currency)
   const now = nowInZone(at, trip.timeZone)
   const clock = `${String(Math.floor(now.minute / 60)).padStart(2, '0')}:${String(now.minute % 60).padStart(2, '0')}`
@@ -91,10 +94,31 @@ function systemText({ language, trip, entries, at }: PromptInput) {
     RULES,
     '',
     `Trip: ${trip.name}, ${trip.startsOn} to ${trip.endsOn}, time zone ${trip.timeZone}, costs in ${trip.currency}`,
+    ...homeLine(trip, rates),
     `Trip days: ${tripDays(trip).join(', ')}`,
     `Now in the trip time zone: ${now.date} ${weekday(now.date)} ${clock}`,
     ...listed,
   ].join('\n')
+}
+
+// The pair prints as the admin typed it, never inverted, since the inverse
+// of a rate such as 25500 is a long decimal the model copies wrong.
+function homeLine(trip: Trip, rates: NonNullable<PromptInput['rates']>) {
+  const home = trip.homeCurrency
+  if (home === trip.currency) return []
+  const stored = rates.find(
+    (each) =>
+      (each.from === trip.currency && each.to === home) ||
+      (each.from === home && each.to === trip.currency),
+  )
+  if (stored === undefined) {
+    return [
+      `Home currency ${home}, no rate set by the admin, so give no home total`,
+    ]
+  }
+  return [
+    `Home currency ${home}, rate set by the admin: 1 ${stored.from} = ${stored.rate} ${stored.to}, so home totals are approximate`,
+  ]
 }
 
 function tripDays(trip: Trip) {

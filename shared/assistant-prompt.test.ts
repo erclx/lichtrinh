@@ -80,6 +80,38 @@ describe('buildPrompt, the turn context', () => {
     )
   })
 
+  it('names the stored rate from the trip currency to home', () => {
+    const rates = [{ from: 'USD', to: 'VND', rate: '25500' }]
+
+    expect(system(buildPrompt(input({ rates })))).toContain(
+      'Home currency VND, rate set by the admin: 1 USD = 25500 VND, so home totals are approximate',
+    )
+  })
+
+  it('names a rate stored the other way round as the admin typed it', () => {
+    const rates = [{ from: 'VND', to: 'USD', rate: '0.0000392' }]
+
+    expect(system(buildPrompt(input({ rates })))).toContain(
+      'rate set by the admin: 1 VND = 0.0000392 USD,',
+    )
+  })
+
+  it('says no rate is set when no stored pair matches the trip', () => {
+    const rates = [{ from: 'EUR', to: 'VND', rate: '27000' }]
+
+    expect(system(buildPrompt(input({ rates })))).toContain(
+      'Home currency VND, no rate set by the admin, so give no home total',
+    )
+  })
+
+  it('names no home currency when the trip already costs in it', () => {
+    const sameCurrency = { ...trip, homeCurrency: 'USD' }
+
+    expect(
+      system(buildPrompt(input({ trip: sameCurrency, rates: [] }))),
+    ).not.toContain('Home currency')
+  })
+
   it('says so when the trip has no entries yet', () => {
     expect(system(buildPrompt(input({ entries: [] })))).toContain(
       'Entries: none yet',
