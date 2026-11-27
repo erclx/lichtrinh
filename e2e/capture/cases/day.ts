@@ -6,10 +6,9 @@ import { atDemoInstant, lightAndDark, TRIP_PATH } from '../page-setup'
 
 const route = `${TRIP_PATH}/days/${DEMO_DAY.date}`
 
-// Body at 23px is the iPhone's largest standard Text Size, which the root
-// stands in for here, so the 320 reflow check fails on a sideways scroll or
-// a clipped control at the size the traveler can reach without the
-// accessibility sizes.
+// A 23px root stands in for the iPhone's largest standard Text Size, so the
+// 320 reflow check fails on a sideways scroll or a clipped control at the
+// largest body the traveler reaches outside the accessibility sizes.
 async function atLargestText(page: Page) {
   await page.addInitScript(() => {
     document.addEventListener('DOMContentLoaded', () => {

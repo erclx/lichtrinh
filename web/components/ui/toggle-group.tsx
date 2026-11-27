@@ -39,8 +39,7 @@ function ToggleGroup({
       data-spacing={spacing}
       data-orientation={orientation}
       style={{ '--gap': spacing } as React.CSSProperties}
-      // The track sits one p-1 out from its items' field radius, so the two
-      // corners stay concentric.
+      // One p-1 out from the items' field radius, so the corners stay concentric.
       className={cn(
         'group/toggle-group flex w-full flex-row items-center gap-[--spacing(var(--gap))] rounded-[calc(var(--radius)+var(--spacing))] bg-muted p-1 data-[size=sm]:rounded-[min(var(--radius-md),10px)] data-vertical:flex-col data-vertical:items-stretch',
         className,
