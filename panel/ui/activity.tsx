@@ -20,7 +20,7 @@ export function Activity({ activity, now }: ActivityProps) {
 function Fact({ label, value }: { label: string; value: string }) {
   // The value reads first on the page and the label first to a reader.
   return (
-    <div className="flex flex-col-reverse justify-end rounded-[18px] bg-muted px-3.5 py-3">
+    <div className="flex flex-col-reverse justify-end rounded-lg bg-muted px-3.5 py-3">
       <dt className="text-sm text-muted-foreground">{label}</dt>
       <dd className="text-lg font-extrabold">{value}</dd>
     </div>
