@@ -1,0 +1,74 @@
+{
+  // The owner's tasks on the workspace PC, tracked beside the scripts and verbs they run. Run with Ctrl+Shift+P, "Tasks: Run Task".
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "Panel: open",
+      "detail": "Start voice and the bridge and show the panel. The double-click shortcut does the same.",
+      "type": "shell",
+      "command": "lichtrinh panel open",
+      "problemMatcher": []
+    },
+    {
+      "label": "Panel: stop all",
+      "detail": "Stop the panel, voice, and both bridges",
+      "type": "shell",
+      "command": "lichtrinh panel down",
+      "problemMatcher": []
+    },
+    {
+      "label": "Panel: reinstall",
+      "detail": "Rewrite the systemd units and the desktop shortcut.",
+      "type": "shell",
+      "command": "lichtrinh panel install",
+      "problemMatcher": []
+    },
+    {
+      "label": "Try on phone",
+      "detail": "Invented data, shared to your own devices over Tailscale. Ctrl-C stops it and closes the share.",
+      "type": "shell",
+      "command": "bun install --frozen-lockfile && bun run dev:phone ${input:data}",
+      "problemMatcher": []
+    },
+    {
+      "label": "Try on this PC",
+      "detail": "Invented data, on this PC only. Ctrl-C stops it.",
+      "type": "shell",
+      "command": "bun install --frozen-lockfile && bun run dev:full ${input:data}",
+      "problemMatcher": []
+    },
+    {
+      "label": "Phone share: status",
+      "detail": "Shows whether a Tailscale share is open. 'No serve config' means closed.",
+      "type": "shell",
+      "command": "tailscale.exe serve status",
+      "problemMatcher": []
+    },
+    {
+      "label": "Install packages",
+      "detail": "Run after a pull that adds packages",
+      "type": "shell",
+      "command": "bun install --frozen-lockfile",
+      "problemMatcher": []
+    },
+    {
+      "label": "Format and check",
+      "detail": "Fix formatting, then run the checks a push runs",
+      "type": "shell",
+      "command": "bun run format && bun run check:changed",
+      "problemMatcher": []
+    }
+  ],
+  "inputs": [
+    {
+      "id": "data",
+      "type": "pickString",
+      "description": "Which test data?",
+      "options": [
+        { "label": "Keep my test data", "value": "" },
+        { "label": "Fresh data and a trip around today", "value": "--reset" }
+      ],
+      "default": ""
+    }
+  ]
+}
