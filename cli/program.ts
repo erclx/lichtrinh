@@ -4,6 +4,7 @@ import packageJson from '../package.json' with { type: 'json' }
 import { registerAdmin } from './commands/admin'
 import { registerBridge } from './commands/bridge'
 import { registerDb } from './commands/db'
+import { registerDev } from './commands/dev'
 import { registerPanel } from './commands/panel'
 import { registerVoice } from './commands/voice'
 import { type PanelMachine, thisMachine } from './panel/machine'
@@ -65,6 +66,7 @@ export function createProgram(
       writeOut: (text) => io.stdout(text),
       writeErr: (text) => io.stderr(text),
     })
+  registerDev(program, run, root)
   registerDb(program, run)
   registerAdmin(program, run, io)
   registerVoice(program, run, io)

@@ -33,14 +33,15 @@ describe('runCli', () => {
     expect(run.stdout().trim()).toBe(packageJson.version)
   })
 
-  it('lists the db group and no development verb in --help', async () => {
+  it('lists the db group and the dev run, and no other development verb, in --help', async () => {
     const run = capture()
 
     const exitCode = await runCli(['--help'], run.context)
 
     expect(exitCode).toBe(0)
     expect(run.stdout()).toMatch(/^\s+db\b/m)
-    expect(run.stdout()).not.toMatch(/^\s+(dev|preview|test|check)\b/m)
+    expect(run.stdout()).toMatch(/^\s+dev\b/m)
+    expect(run.stdout()).not.toMatch(/^\s+(preview|test|check)\b/m)
   })
 
   it('says which checkout it acts on when it falls back to its own', async () => {
