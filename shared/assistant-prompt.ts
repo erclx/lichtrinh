@@ -95,8 +95,8 @@ function systemText({ language, trip, entries, at, rates = [] }: PromptInput) {
     '',
     `Trip: ${trip.name}, ${trip.startsOn} to ${trip.endsOn}, time zone ${trip.timeZone}, costs in ${trip.currency}`,
     ...homeLine(trip, rates),
-    `Trip days: ${tripDays(trip).join(', ')}`,
-    `Now in the trip time zone: ${now.date} ${weekday(now.date)} ${clock}`,
+    `Trip days: ${tripDays(trip).join('; ')}`,
+    `Now in the trip time zone: ${now.date} ${weekday(now.date)}, ${clock}`,
     ...listed,
   ].join('\n')
 }
@@ -131,6 +131,15 @@ function tripDays(trip: Trip) {
   return days
 }
 
+// Given the English names alone, the model named Vietnamese weekdays a day
+// early, so the prompt hands it both. `Intl` supplies the Vietnamese, which
+// keeps the literals out of this file.
+const VIETNAMESE_WEEKDAY = new Intl.DateTimeFormat('vi', {
+  weekday: 'long',
+  timeZone: 'UTC',
+})
+
 function weekday(date: string) {
-  return WEEKDAYS[new Date(`${date}T00:00:00Z`).getUTCDay()]
+  const day = new Date(`${date}T00:00:00Z`)
+  return `${WEEKDAYS[day.getUTCDay()]}, ${VIETNAMESE_WEEKDAY.format(day)}`
 }

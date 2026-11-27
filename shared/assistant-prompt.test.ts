@@ -64,13 +64,21 @@ function system(prompt: ReturnType<typeof buildPrompt>) {
 describe('buildPrompt, the turn context', () => {
   it('names now in the trip zone, not in UTC', () => {
     expect(system(buildPrompt(input()))).toContain(
-      'Now in the trip time zone: 2031-04-11 Friday 09:05',
+      'Now in the trip time zone: 2031-04-11 Friday, Thứ Sáu, 09:05',
     )
   })
 
-  it('lists every trip day with its weekday', () => {
+  it('lists every trip day with its weekday in English and Vietnamese', () => {
     expect(system(buildPrompt(input()))).toContain(
-      'Trip days: 2031-04-10 Thursday, 2031-04-11 Friday, 2031-04-12 Saturday',
+      'Trip days: 2031-04-10 Thursday, Thứ Năm; 2031-04-11 Friday, Thứ Sáu; 2031-04-12 Saturday, Thứ Bảy',
+    )
+  })
+
+  it('names Sunday as Chủ Nhật rather than a numbered day', () => {
+    const sunday = { ...trip, startsOn: '2031-04-13', endsOn: '2031-04-13' }
+
+    expect(system(buildPrompt(input({ trip: sunday })))).toContain(
+      'Trip days: 2031-04-13 Sunday, Chủ Nhật',
     )
   })
 

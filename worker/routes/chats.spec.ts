@@ -315,6 +315,27 @@ describe('POST /api/chats/:id/messages', () => {
     expect(turn.messages[0].content).toContain(`Reply in ${reply}`)
   })
 
+  it('names each trip day in Vietnamese in the Worker runtime', async () => {
+    const { cookie, chat } = await chatterWithChat()
+    const bridge = await connectBridge()
+    open.push(bridge)
+
+    const res = await sendMessage(cookie, chat.id)
+    const turn = await bridge.next()
+    if (turn.type !== 'turn') throw new Error(`Expected turn, got ${turn.type}`)
+    bridge.send({
+      type: 'final',
+      turnId: turn.turnId,
+      text: 'Invented reply',
+      heldRemoval: false,
+    })
+    await readEvents(res)
+
+    expect(turn.messages[0].content).toContain(
+      '2031-04-10 Thursday, Thứ Năm; 2031-04-11 Friday, Thứ Sáu',
+    )
+  })
+
   it('names the stored rate in the turn it sends', async () => {
     const { cookie, user, chat } = await chatterWithChat()
     const db = createDb(env.DB)
