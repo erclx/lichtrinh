@@ -60,7 +60,7 @@ The run seeds, checks, and stops in the ways below.
 
 ### `cli/`
 
-Holds the `lichtrinh` command for the product's own services, which the owner installs once with `bun link` and runs from any folder. The development loop above stays on `bun run`, apart from `lichtrinh dev` over `dev:full`, at `canon/context/development/dev-command.md`.
+Holds the `lichtrinh` command for the product's own services, which the owner installs once with `bun link` and runs from any folder. The development loop above stays on `bun run`.
 
 - `program.ts` builds the commander program from an injected output, task runner, and checkout lookup, so tests drive it with no process
 - `checkout.ts` picks the git top level of the working folder when it is a lichtrinh checkout, a linked worktree included, else the command's own checkout

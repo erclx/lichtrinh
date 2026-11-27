@@ -1,5 +1,5 @@
 ---
-description: Place each product service and dev run the owner starts by hand behind a lichtrinh verb, and keep the rest of the development loop on bun run
+description: Place each product service the owner runs by hand behind a lichtrinh verb, and keep the development loop on bun run
 paths:
   - 'cli/**/*.ts'
   - 'package.json'
@@ -10,8 +10,7 @@ paths:
 ## Verbs
 
 - Give each product service the owner runs by hand a `lichtrinh` verb, registered from its own file under `cli/commands/`, such as `admin`, `bridge`, or `voice`.
-- Keep `preview`, `test`, and `check` as `bun run` scripts alone, never as `lichtrinh` verbs, since the command is for what the owner runs by hand.
-- Give a dev script the owner runs by hand a verb only as a wrapper, such as `lichtrinh dev` over `dev:full`, that checks first and hands off to `bun run` unchanged.
+- Keep `dev`, `preview`, `test`, and `check` as `bun run` scripts, never as `lichtrinh` verbs, since the command is for product services alone.
 - Settle a group's name in the row that adds it, since a rename reaches every later plan and the owner's muscle memory.
 
 ## Hand-off
