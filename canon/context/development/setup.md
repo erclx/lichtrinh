@@ -118,6 +118,12 @@ Holds the toolkit settings. `config.json` marks the files below customized, so a
 - The `typecheck` script generates the Worker types first, and `screenshot` seeds a temp database
 - In `voice/`, `mypy.ini` and `pytest.ini` keep the project's own settings, and the placeholder smoke test is declined
 
+### Other folders
+
+One folder holds editor settings the owner runs by hand.
+
+- `.vscode/` holds the owner's task list in `tasks.json`, tracked alone, so it changes in the same pull request as any script or verb it names
+
 ## Gotchas
 
 - A push fails on formatting drift until `bun run format` runs, since the `pre-push` hook writes nothing. It skips content that already passed, so run `bun run check:changed --force` after a reinstall.
