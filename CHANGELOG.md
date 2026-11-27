@@ -1,5 +1,23 @@
 # Changelog
 
+## [0.0.9](https://github.com/erclx/lichtrinh/compare/v0.0.8...v0.0.9) (2026-11-27)
+
+
+### Features
+
+* **dev:** share the dev run with the owner's phone over the tailnet ([#56](https://github.com/erclx/lichtrinh/issues/56)) ([e9f2cf4](https://github.com/erclx/lichtrinh/commit/e9f2cf4ba111cee3bad150a5e75f7ed716370d58))
+* **owner:** show the family's messages and activity on the owner panel ([#57](https://github.com/erclx/lichtrinh/issues/57)) ([7e7fa22](https://github.com/erclx/lichtrinh/commit/7e7fa2208829e0990c1ea1295dd1c351ef5fca56))
+* **shell:** put Add beside Today's date and hide the menu from an icon ([#54](https://github.com/erclx/lichtrinh/issues/54)) ([d42d9e7](https://github.com/erclx/lichtrinh/commit/d42d9e7911746021c8e3774b3f49c61aeed64131))
+* **update:** move an open app onto a new release without losing work ([#53](https://github.com/erclx/lichtrinh/issues/53)) ([72c93db](https://github.com/erclx/lichtrinh/commit/72c93db28e886562564625e07cd8c781d56ec866))
+
+
+### Bug Fixes
+
+* **auth:** hash passwords at 10,000 rounds to fit the free CPU cap ([#55](https://github.com/erclx/lichtrinh/issues/55)) ([b4c6683](https://github.com/erclx/lichtrinh/commit/b4c66837de0949211a0fae00010b734761f07d45))
+* **chat:** open a chat on its newest message ([#51](https://github.com/erclx/lichtrinh/issues/51)) ([151ada4](https://github.com/erclx/lichtrinh/commit/151ada4888ab079f3bae594c75fb54ccbf368854))
+* **panel:** give the shortcut its icon and track the task list ([#59](https://github.com/erclx/lichtrinh/issues/59)) ([3e62051](https://github.com/erclx/lichtrinh/commit/3e6205139d74a81b5fdaaa8bd7ccc07ece3a5a7f))
+* **preview:** keep a preview answering through a review rebuild ([#58](https://github.com/erclx/lichtrinh/issues/58)) ([44b3317](https://github.com/erclx/lichtrinh/commit/44b3317bf57c33eab888fc626cdb14f05cb72a45))
+
 ## [0.0.8](https://github.com/erclx/lichtrinh/compare/v0.0.7...v0.0.8) (2026-11-25)
 
 
