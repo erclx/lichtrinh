@@ -4,7 +4,10 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>onboarding/signin 390</title>
-    <link rel="stylesheet" href="../assets/pick-02-redraw-widths/app/app.css" />
+    <link
+      rel="stylesheet"
+      href="../assets/pick-02-redraw-widths/app/look.css"
+    />
     <style>
       .copy {
         display: contents;
@@ -19,15 +22,16 @@
     <div class="copy en" lang="en">
       <div id="root">
         <div
-          class="flex min-h-svh justify-center bg-background text-foreground min-[480px]:items-center min-[480px]:bg-muted min-[480px]:p-8"
+          class="flex min-h-svh flex-col items-center bg-background text-foreground min-[480px]:bg-muted min-[480px]:p-8"
         >
+          <div aria-hidden="true" class="hidden grow min-[480px]:block"></div>
           <main
-            class="flex w-full max-w-[460px] flex-col gap-5 px-4 py-4 min-[480px]:rounded-3xl min-[480px]:bg-background min-[480px]:p-6 min-[480px]:shadow-xl"
+            class="flex w-full max-w-[460px] flex-col gap-5 px-gutter py-4 min-[480px]:rounded-3xl min-[480px]:bg-background min-[480px]:p-6 min-[480px]:shadow-xl"
           >
             <div
               role="group"
               aria-label="Language / Ngôn ngữ"
-              class="flex rounded-full bg-muted p-1 self-end"
+              class="flex rounded-[calc(var(--radius)+var(--spacing))] bg-muted p-1 self-end"
             >
               <button
                 type="button"
@@ -36,7 +40,7 @@
                 lang="vi"
                 aria-pressed="false"
                 aria-label="VI Tiếng Việt"
-                class="group/button inline-flex shrink-0 items-center justify-center border border-transparent bg-clip-padding whitespace-nowrap transition-all outline-none select-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 active:not-aria-[haspopup]:translate-y-px disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20 dark:aria-invalid:border-destructive/50 dark:aria-invalid:ring-destructive/40 [&amp;_svg]:pointer-events-none [&amp;_svg]:shrink-0 hover:text-foreground aria-expanded:bg-muted aria-expanded:text-foreground h-target gap-2 rounded-full font-extrabold has-data-[icon=inline-end]:pr-5 has-data-[icon=inline-start]:pl-5 [&amp;_svg:not([class*='size-'])]:size-6 min-w-16 px-4 text-lg text-muted-foreground hover:bg-transparent not-aria-pressed:hover:text-foreground aria-pressed:bg-primary aria-pressed:text-primary-foreground aria-pressed:hover:bg-primary dark:hover:bg-transparent"
+                class="group/button inline-flex shrink-0 items-center justify-center border border-transparent bg-clip-padding whitespace-nowrap transition-all outline-none select-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 active:not-aria-[haspopup]:translate-y-px disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20 dark:aria-invalid:border-destructive/50 dark:aria-invalid:ring-destructive/40 [&amp;_svg]:pointer-events-none [&amp;_svg]:shrink-0 hover:text-foreground aria-expanded:bg-muted aria-expanded:text-foreground h-target gap-2 rounded-lg font-extrabold has-data-[icon=inline-end]:pr-5 has-data-[icon=inline-start]:pl-5 [&amp;_svg:not([class*='size-'])]:size-6 min-w-16 px-4 text-lg text-muted-foreground hover:bg-transparent not-aria-pressed:hover:text-foreground aria-pressed:bg-primary aria-pressed:text-primary-foreground aria-pressed:hover:bg-primary dark:hover:bg-transparent"
               >
                 VI</button
               ><button
@@ -46,7 +50,7 @@
                 lang="en"
                 aria-pressed="true"
                 aria-label="EN English"
-                class="group/button inline-flex shrink-0 items-center justify-center border border-transparent bg-clip-padding whitespace-nowrap transition-all outline-none select-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 active:not-aria-[haspopup]:translate-y-px disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20 dark:aria-invalid:border-destructive/50 dark:aria-invalid:ring-destructive/40 [&amp;_svg]:pointer-events-none [&amp;_svg]:shrink-0 hover:text-foreground aria-expanded:bg-muted aria-expanded:text-foreground h-target gap-2 rounded-full font-extrabold has-data-[icon=inline-end]:pr-5 has-data-[icon=inline-start]:pl-5 [&amp;_svg:not([class*='size-'])]:size-6 min-w-16 px-4 text-lg text-muted-foreground hover:bg-transparent not-aria-pressed:hover:text-foreground aria-pressed:bg-primary aria-pressed:text-primary-foreground aria-pressed:hover:bg-primary dark:hover:bg-transparent"
+                class="group/button inline-flex shrink-0 items-center justify-center border border-transparent bg-clip-padding whitespace-nowrap transition-all outline-none select-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 active:not-aria-[haspopup]:translate-y-px disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20 dark:aria-invalid:border-destructive/50 dark:aria-invalid:ring-destructive/40 [&amp;_svg]:pointer-events-none [&amp;_svg]:shrink-0 hover:text-foreground aria-expanded:bg-muted aria-expanded:text-foreground h-target gap-2 rounded-lg font-extrabold has-data-[icon=inline-end]:pr-5 has-data-[icon=inline-start]:pl-5 [&amp;_svg:not([class*='size-'])]:size-6 min-w-16 px-4 text-lg text-muted-foreground hover:bg-transparent not-aria-pressed:hover:text-foreground aria-pressed:bg-primary aria-pressed:text-primary-foreground aria-pressed:hover:bg-primary dark:hover:bg-transparent"
               >
                 EN
               </button>
@@ -64,13 +68,13 @@
                   width="48"
                   height="46"
                   rx="14"
-                  fill="#ffffff"
+                  class="fill-card"
                   stroke="currentColor"
                   stroke-width="4"
                 ></rect>
                 <path
                   d="M10 27h44v-3a10 10 0 0 0-10-10H20a10 10 0 0 0-10 10z"
-                  fill="#dcd8ff"
+                  class="fill-rest"
                 ></path>
                 <path
                   d="M8 27h48"
@@ -132,7 +136,7 @@
             <form
               novalidate=""
               class="flex flex-col gap-4"
-              onsubmit="return false"
+              data-safe-when-empty=""
             >
               <div class="flex flex-col gap-2">
                 <label
@@ -191,7 +195,7 @@
                 tabindex="0"
                 data-slot="button"
                 aria-busy="false"
-                class="group/button inline-flex shrink-0 items-center justify-center border border-transparent bg-clip-padding whitespace-nowrap transition-all outline-none select-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 active:not-aria-[haspopup]:translate-y-px disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20 dark:aria-invalid:border-destructive/50 dark:aria-invalid:ring-destructive/40 [&amp;_svg]:pointer-events-none [&amp;_svg]:shrink-0 bg-primary text-primary-foreground hover:bg-primary/80 h-target gap-2 rounded-full px-6 text-base font-extrabold has-data-[icon=inline-end]:pr-5 has-data-[icon=inline-start]:pl-5 [&amp;_svg:not([class*='size-'])]:size-6 mt-2 w-full"
+                class="group/button inline-flex shrink-0 items-center justify-center border border-transparent bg-clip-padding whitespace-nowrap transition-all outline-none select-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 active:not-aria-[haspopup]:translate-y-px disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20 dark:aria-invalid:border-destructive/50 dark:aria-invalid:ring-destructive/40 [&amp;_svg]:pointer-events-none [&amp;_svg]:shrink-0 bg-primary text-primary-foreground hover:bg-primary/80 h-target gap-2 rounded-lg px-6 text-base font-extrabold has-data-[icon=inline-end]:pr-5 has-data-[icon=inline-start]:pl-5 [&amp;_svg:not([class*='size-'])]:size-6 mt-2 w-full"
               >
                 Sign in
               </button>
@@ -200,25 +204,30 @@
               Forgot it? Message the admin.
             </p>
           </main>
+          <div
+            aria-hidden="true"
+            class="hidden grow basis-[20svh] min-[480px]:block"
+          ></div>
         </div>
         <div
           role="status"
-          class="pointer-events-none fixed inset-x-4 bottom-[calc(max(98px,calc(84px+env(safe-area-inset-bottom)))+92px)] z-40 flex justify-center min-[480px]:inset-x-auto min-[480px]:right-6 min-[480px]:bottom-[calc(max(16px,env(safe-area-inset-bottom))+80px)]"
+          class="pointer-events-none fixed inset-x-4 bottom-[calc(max(--spacing(24.5),calc(--spacing(21)+env(safe-area-inset-bottom)))+--spacing(23))] z-40 flex justify-center min-[480px]:inset-x-auto min-[480px]:right-6 min-[480px]:bottom-[calc(max(--spacing(4),env(safe-area-inset-bottom))+--spacing(20))]"
         ></div>
       </div>
     </div>
     <div class="copy vi" lang="vi">
       <div id="root-vi">
         <div
-          class="flex min-h-svh justify-center bg-background text-foreground min-[480px]:items-center min-[480px]:bg-muted min-[480px]:p-8"
+          class="flex min-h-svh flex-col items-center bg-background text-foreground min-[480px]:bg-muted min-[480px]:p-8"
         >
+          <div aria-hidden="true" class="hidden grow min-[480px]:block"></div>
           <main
-            class="flex w-full max-w-[460px] flex-col gap-5 px-4 py-4 min-[480px]:rounded-3xl min-[480px]:bg-background min-[480px]:p-6 min-[480px]:shadow-xl"
+            class="flex w-full max-w-[460px] flex-col gap-5 px-gutter py-4 min-[480px]:rounded-3xl min-[480px]:bg-background min-[480px]:p-6 min-[480px]:shadow-xl"
           >
             <div
               role="group"
               aria-label="Language / Ngôn ngữ"
-              class="flex rounded-full bg-muted p-1 self-end"
+              class="flex rounded-[calc(var(--radius)+var(--spacing))] bg-muted p-1 self-end"
             >
               <button
                 type="button"
@@ -227,7 +236,7 @@
                 lang="vi"
                 aria-pressed="true"
                 aria-label="VI Tiếng Việt"
-                class="group/button inline-flex shrink-0 items-center justify-center border border-transparent bg-clip-padding whitespace-nowrap transition-all outline-none select-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 active:not-aria-[haspopup]:translate-y-px disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20 dark:aria-invalid:border-destructive/50 dark:aria-invalid:ring-destructive/40 [&amp;_svg]:pointer-events-none [&amp;_svg]:shrink-0 hover:text-foreground aria-expanded:bg-muted aria-expanded:text-foreground h-target gap-2 rounded-full font-extrabold has-data-[icon=inline-end]:pr-5 has-data-[icon=inline-start]:pl-5 [&amp;_svg:not([class*='size-'])]:size-6 min-w-16 px-4 text-lg text-muted-foreground hover:bg-transparent not-aria-pressed:hover:text-foreground aria-pressed:bg-primary aria-pressed:text-primary-foreground aria-pressed:hover:bg-primary dark:hover:bg-transparent"
+                class="group/button inline-flex shrink-0 items-center justify-center border border-transparent bg-clip-padding whitespace-nowrap transition-all outline-none select-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 active:not-aria-[haspopup]:translate-y-px disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20 dark:aria-invalid:border-destructive/50 dark:aria-invalid:ring-destructive/40 [&amp;_svg]:pointer-events-none [&amp;_svg]:shrink-0 hover:text-foreground aria-expanded:bg-muted aria-expanded:text-foreground h-target gap-2 rounded-lg font-extrabold has-data-[icon=inline-end]:pr-5 has-data-[icon=inline-start]:pl-5 [&amp;_svg:not([class*='size-'])]:size-6 min-w-16 px-4 text-lg text-muted-foreground hover:bg-transparent not-aria-pressed:hover:text-foreground aria-pressed:bg-primary aria-pressed:text-primary-foreground aria-pressed:hover:bg-primary dark:hover:bg-transparent"
               >
                 VI</button
               ><button
@@ -237,7 +246,7 @@
                 lang="en"
                 aria-pressed="false"
                 aria-label="EN English"
-                class="group/button inline-flex shrink-0 items-center justify-center border border-transparent bg-clip-padding whitespace-nowrap transition-all outline-none select-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 active:not-aria-[haspopup]:translate-y-px disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20 dark:aria-invalid:border-destructive/50 dark:aria-invalid:ring-destructive/40 [&amp;_svg]:pointer-events-none [&amp;_svg]:shrink-0 hover:text-foreground aria-expanded:bg-muted aria-expanded:text-foreground h-target gap-2 rounded-full font-extrabold has-data-[icon=inline-end]:pr-5 has-data-[icon=inline-start]:pl-5 [&amp;_svg:not([class*='size-'])]:size-6 min-w-16 px-4 text-lg text-muted-foreground hover:bg-transparent not-aria-pressed:hover:text-foreground aria-pressed:bg-primary aria-pressed:text-primary-foreground aria-pressed:hover:bg-primary dark:hover:bg-transparent"
+                class="group/button inline-flex shrink-0 items-center justify-center border border-transparent bg-clip-padding whitespace-nowrap transition-all outline-none select-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 active:not-aria-[haspopup]:translate-y-px disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20 dark:aria-invalid:border-destructive/50 dark:aria-invalid:ring-destructive/40 [&amp;_svg]:pointer-events-none [&amp;_svg]:shrink-0 hover:text-foreground aria-expanded:bg-muted aria-expanded:text-foreground h-target gap-2 rounded-lg font-extrabold has-data-[icon=inline-end]:pr-5 has-data-[icon=inline-start]:pl-5 [&amp;_svg:not([class*='size-'])]:size-6 min-w-16 px-4 text-lg text-muted-foreground hover:bg-transparent not-aria-pressed:hover:text-foreground aria-pressed:bg-primary aria-pressed:text-primary-foreground aria-pressed:hover:bg-primary dark:hover:bg-transparent"
               >
                 EN
               </button>
@@ -255,13 +264,13 @@
                   width="48"
                   height="46"
                   rx="14"
-                  fill="#ffffff"
+                  class="fill-card"
                   stroke="currentColor"
                   stroke-width="4"
                 ></rect>
                 <path
                   d="M10 27h44v-3a10 10 0 0 0-10-10H20a10 10 0 0 0-10 10z"
-                  fill="#dcd8ff"
+                  class="fill-rest"
                 ></path>
                 <path
                   d="M8 27h48"
@@ -323,16 +332,16 @@
             <form
               novalidate=""
               class="flex flex-col gap-4"
-              onsubmit="return false"
+              data-safe-when-empty=""
             >
               <div class="flex flex-col gap-2">
                 <label
                   data-slot="label"
                   class="flex items-center gap-2 text-sm leading-none font-extrabold select-none group-data-[disabled=true]:pointer-events-none group-data-[disabled=true]:opacity-50 peer-disabled:cursor-not-allowed peer-disabled:opacity-50"
-                  for="_r_0_-username-vi"
+                  for="_r_0_-username"
                   >Tên đăng nhập</label
                 ><input
-                  id="_r_0_-username-vi"
+                  id="_r_0_-username"
                   data-slot="input"
                   autocomplete="username"
                   autocapitalize="none"
@@ -348,12 +357,12 @@
                 <label
                   data-slot="label"
                   class="flex items-center gap-2 text-sm leading-none font-extrabold select-none group-data-[disabled=true]:pointer-events-none group-data-[disabled=true]:opacity-50 peer-disabled:cursor-not-allowed peer-disabled:opacity-50"
-                  for="_r_0_-password-vi"
+                  for="_r_0_-password"
                   >Mật khẩu</label
                 >
                 <div class="relative">
                   <input
-                    id="_r_0_-password-vi"
+                    id="_r_0_-password"
                     data-slot="input"
                     autocomplete="current-password"
                     autocapitalize="none"
@@ -369,7 +378,7 @@
                     tabindex="0"
                     data-slot="button"
                     aria-pressed="false"
-                    aria-controls="_r_0_-password-vi"
+                    aria-controls="_r_0_-password"
                     aria-label="Hiện mật khẩu"
                     class="group/button inline-flex shrink-0 items-center justify-center border border-transparent bg-clip-padding whitespace-nowrap transition-all outline-none select-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 active:not-aria-[haspopup]:translate-y-px disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20 dark:aria-invalid:border-destructive/50 dark:aria-invalid:ring-destructive/40 [&amp;_svg]:pointer-events-none [&amp;_svg]:shrink-0 hover:text-foreground aria-expanded:bg-muted aria-expanded:text-foreground dark:hover:bg-muted/50 h-target gap-2 font-extrabold has-data-[icon=inline-end]:pr-5 has-data-[icon=inline-start]:pl-5 [&amp;_svg:not([class*='size-'])]:size-6 absolute inset-y-0 right-0 rounded-lg px-4 text-sm text-muted-foreground hover:bg-transparent aria-pressed:text-foreground"
                   >
@@ -382,7 +391,7 @@
                 tabindex="0"
                 data-slot="button"
                 aria-busy="false"
-                class="group/button inline-flex shrink-0 items-center justify-center border border-transparent bg-clip-padding whitespace-nowrap transition-all outline-none select-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 active:not-aria-[haspopup]:translate-y-px disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20 dark:aria-invalid:border-destructive/50 dark:aria-invalid:ring-destructive/40 [&amp;_svg]:pointer-events-none [&amp;_svg]:shrink-0 bg-primary text-primary-foreground hover:bg-primary/80 h-target gap-2 rounded-full px-6 text-base font-extrabold has-data-[icon=inline-end]:pr-5 has-data-[icon=inline-start]:pl-5 [&amp;_svg:not([class*='size-'])]:size-6 mt-2 w-full"
+                class="group/button inline-flex shrink-0 items-center justify-center border border-transparent bg-clip-padding whitespace-nowrap transition-all outline-none select-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 active:not-aria-[haspopup]:translate-y-px disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20 dark:aria-invalid:border-destructive/50 dark:aria-invalid:ring-destructive/40 [&amp;_svg]:pointer-events-none [&amp;_svg]:shrink-0 bg-primary text-primary-foreground hover:bg-primary/80 h-target gap-2 rounded-lg px-6 text-base font-extrabold has-data-[icon=inline-end]:pr-5 has-data-[icon=inline-start]:pl-5 [&amp;_svg:not([class*='size-'])]:size-6 mt-2 w-full"
               >
                 Đăng nhập
               </button>
@@ -391,10 +400,14 @@
               Quên mật khẩu? Nhắn cho quản trị viên.
             </p>
           </main>
+          <div
+            aria-hidden="true"
+            class="hidden grow basis-[20svh] min-[480px]:block"
+          ></div>
         </div>
         <div
           role="status"
-          class="pointer-events-none fixed inset-x-4 bottom-[calc(max(98px,calc(84px+env(safe-area-inset-bottom)))+92px)] z-40 flex justify-center min-[480px]:inset-x-auto min-[480px]:right-6 min-[480px]:bottom-[calc(max(16px,env(safe-area-inset-bottom))+80px)]"
+          class="pointer-events-none fixed inset-x-4 bottom-[calc(max(--spacing(24.5),calc(--spacing(21)+env(safe-area-inset-bottom)))+--spacing(23))] z-40 flex justify-center min-[480px]:inset-x-auto min-[480px]:right-6 min-[480px]:bottom-[calc(max(--spacing(4),env(safe-area-inset-bottom))+--spacing(20))]"
         ></div>
       </div>
     </div>

@@ -203,7 +203,7 @@ export function Composer({
               aria-label={t('chat.messageLabel')}
               placeholder={placeholder}
               className={cn(
-                'field-sizing-content max-h-40 min-h-target min-w-0 flex-1 resize-none rounded-lg border-2 border-input bg-card px-4 py-[15px] text-base text-card-foreground outline-none placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 disabled:opacity-60',
+                'field-sizing-content max-h-40 min-h-target min-w-0 flex-1 resize-none rounded-lg border-2 border-input bg-card px-4 py-3.75 text-base text-card-foreground outline-none placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 disabled:opacity-60',
                 // Keeps the longest reason on one line beside the two buttons.
                 !connected && 'placeholder:text-sm',
               )}

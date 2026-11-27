@@ -179,7 +179,7 @@ function HomeComputerCard({ status }: { status: AssistantStatus }) {
         </h2>
         <span
           className={cn(
-            'inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-sm font-extrabold',
+            'inline-flex items-center gap-2 rounded-xs px-3 py-1.5 text-sm font-extrabold',
             status.online
               ? 'bg-activity text-activity-ink'
               : 'bg-muted text-muted-foreground',

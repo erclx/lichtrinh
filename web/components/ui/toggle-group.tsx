@@ -39,8 +39,9 @@ function ToggleGroup({
       data-spacing={spacing}
       data-orientation={orientation}
       style={{ '--gap': spacing } as React.CSSProperties}
+      // One p-1 out from the items' field radius, so the corners stay concentric.
       className={cn(
-        'group/toggle-group flex w-full flex-row items-center gap-[--spacing(var(--gap))] rounded-full bg-muted p-1 data-[size=sm]:rounded-[min(var(--radius-md),10px)] data-vertical:flex-col data-vertical:items-stretch',
+        'group/toggle-group flex w-full flex-row items-center gap-[--spacing(var(--gap))] rounded-[calc(var(--radius)+var(--spacing))] bg-muted p-1 data-[size=sm]:rounded-[min(var(--radius-md),10px)] data-vertical:flex-col data-vertical:items-stretch',
         className,
       )}
       {...props}
@@ -75,8 +76,8 @@ function ToggleGroupItem({
           variant: context.variant || variant,
           size: context.size || size,
         }),
-        // After the variants, so the 64px pill wins over the kit's sizes.
-        'h-target min-w-0 flex-1 shrink-0 rounded-full px-4 text-base font-extrabold text-muted-foreground hover:bg-transparent not-aria-pressed:hover:text-foreground aria-pressed:bg-primary aria-pressed:text-primary-foreground aria-pressed:hover:bg-primary',
+        // After the variants, so the target and the field radius win over the kit's sizes.
+        'h-target min-w-0 flex-1 shrink-0 rounded-lg px-4 text-base font-extrabold text-muted-foreground hover:bg-transparent not-aria-pressed:hover:text-foreground aria-pressed:bg-primary aria-pressed:text-primary-foreground aria-pressed:hover:bg-primary',
         className,
       )}
       {...props}

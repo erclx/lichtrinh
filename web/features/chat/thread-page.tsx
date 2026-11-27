@@ -32,7 +32,7 @@ function ThreadScreen({ chatId }: { chatId: string }) {
 
   return (
     // Fills the screen under the top bar, keeping the composer at the foot.
-    <div className="flex min-h-[calc(100svh-84px-24px)] flex-col">
+    <div className="flex min-h-[calc(100svh-var(--spacing-target)-var(--spacing)*11)] flex-col">
       <PageHeader
         title={thread.data?.chat.title ?? t('chat.untitled')}
         backTo="/chats"

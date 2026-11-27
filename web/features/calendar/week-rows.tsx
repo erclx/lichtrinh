@@ -76,24 +76,24 @@ export function WeekRows({
           aria-label={label}
           aria-current={isToday ? 'date' : undefined}
           className={cn(
-            'flex min-h-target min-w-0 flex-1 items-center gap-3 rounded-[20px] border-[1.5px] border-border bg-card px-3.5 py-1.5 text-card-foreground',
+            'flex min-h-target min-w-0 flex-1 items-center gap-3 rounded-lg border-[1.5px] border-border bg-card px-3.5 py-1.5 text-card-foreground',
             isToday && 'border-[3px] border-foreground',
             focusRing,
           )}
         >
           <span className="flex w-14 flex-none flex-col text-2xl leading-none font-extrabold">
             {Number(day.date.slice(8))}
-            <small className="mt-0.5 text-[15px] font-bold text-muted-foreground">
+            <small className="mt-0.5 text-sm font-bold text-muted-foreground">
               {formatWeekday(day.date, language)}
             </small>
           </span>
           <span className="flex min-w-0 flex-1 flex-col text-lg leading-snug text-muted-foreground">
-            <span className="flex flex-wrap items-center gap-x-1.5 text-[19px] font-extrabold text-foreground">
+            <span className="flex flex-wrap items-center gap-x-1.5 text-sm font-extrabold text-foreground">
               {dayEntries.length > 0
                 ? t('calendar.entries', { count: dayEntries.length })
                 : t('calendar.free')}
               {isToday && (
-                <span className="rounded-full bg-primary px-2 text-sm text-primary-foreground">
+                <span className="rounded-xs bg-primary px-2 text-sm text-primary-foreground">
                   {t('day.today')}
                 </span>
               )}
@@ -123,7 +123,7 @@ export function WeekRows({
             to={`/entries/new?${new URLSearchParams({ trip: trip.id, date: day.date })}`}
             aria-label={t('day.addOn', { date: longDate })}
             className={cn(
-              'flex w-16 flex-none items-center justify-center rounded-[20px] border-[1.5px] border-border bg-card text-card-foreground',
+              'flex w-16 flex-none items-center justify-center rounded-lg border-[1.5px] border-border bg-card text-card-foreground',
               focusRing,
             )}
           >
@@ -153,8 +153,8 @@ export function WeekRows({
             key={group.days[0].date}
             aria-label={t('calendar.tripSpan', { trip: trip.name, dates })}
             className={cn(
-              'flex flex-col gap-1.5 rounded-[26px] bg-muted px-2 pt-2 pb-1.5',
-              continues && 'rounded-b-[8px]',
+              'flex flex-col gap-1.5 rounded-2xl bg-muted px-2 pt-2 pb-1.5',
+              continues && 'rounded-b-sm',
             )}
           >
             <div className="flex flex-wrap justify-between gap-x-2 px-2.5 pt-0.5 text-base font-bold text-muted-foreground">
@@ -165,7 +165,7 @@ export function WeekRows({
               {group.days.map((day) => row(day, trip))}
             </ul>
             {continues && (
-              <p className="px-2.5 pb-0.5 text-[15px] font-bold text-muted-foreground">
+              <p className="px-2.5 pb-0.5 text-sm font-bold text-muted-foreground">
                 {t('calendar.continues', {
                   date: formatShortDate(trip.endsOn, language),
                 })}

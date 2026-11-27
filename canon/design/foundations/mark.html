@@ -13,11 +13,11 @@
         --line: #dcdcea;
       }
       :root[data-theme='dark'] {
-        --bg: #121220;
-        --surface: #1b1b2c;
-        --text: #f1f0fb;
-        --muted: #b0aecb;
-        --line: #34344f;
+        --bg: #1c1c1e;
+        --surface: #2c2c2e;
+        --text: #f5f5f7;
+        --muted: #aeaeb2;
+        --line: #3a3a3c;
       }
       * {
         box-sizing: border-box;
@@ -59,7 +59,13 @@
         --mk: #1f1d33;
       }
       :root[data-theme='dark'] {
-        --mk: #f1f0fb;
+        --mk: #f5f5f7;
+      }
+      :root[data-theme='dark'] .card .m [fill='#ffffff'] {
+        fill: #2c2c2e;
+      }
+      :root[data-theme='dark'] .card .m [fill='#dcd8ff'] {
+        fill: #3a355e;
       }
       .card .m [stroke='#1f1d33'] {
         stroke: var(--mk);

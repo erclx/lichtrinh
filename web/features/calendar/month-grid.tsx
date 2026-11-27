@@ -56,7 +56,7 @@ export function MonthGrid({
     <div className="flex flex-col gap-3">
       <div
         aria-hidden="true"
-        className="grid grid-cols-7 text-center text-[15px] font-extrabold text-muted-foreground min-[360px]:text-sm"
+        className="grid grid-cols-7 text-center text-sm font-extrabold text-muted-foreground"
       >
         {weekdayLabels(language).map((weekday) => (
           <span key={weekday}>{weekday}</span>
@@ -143,7 +143,7 @@ export function MonthGrid({
           {showAllHref !== undefined && (
             <Link
               to={showAllHref}
-              className="inline-flex min-h-target items-center rounded-full text-base font-bold underline underline-offset-4 outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
+              className="inline-flex min-h-target items-center rounded-lg text-base font-bold underline underline-offset-4 outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
             >
               {t('calendar.showAll')}
             </Link>

@@ -27,7 +27,10 @@ export function LanguageToggle({ className, onChange }: LanguageToggleProps) {
     <div
       role="group"
       aria-label={t('language.groupLabel')}
-      className={cn('flex rounded-full bg-muted p-1', className)}
+      className={cn(
+        'flex rounded-[calc(var(--radius)+var(--spacing))] bg-muted p-1',
+        className,
+      )}
     >
       {options.map(({ language, code, name }) => (
         <Button

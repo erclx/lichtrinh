@@ -124,7 +124,7 @@ export function AppShell() {
           onShowNav={() => toggleNav(false)}
           showRef={showRef}
         />
-        <main className="flex-1 px-4 pb-6 min-[480px]:px-8 lg:px-10">
+        <main className="flex-1 pb-6 px-gutter min-[480px]:px-gutter-tablet lg:px-gutter-desktop">
           <div className="mx-auto w-full max-w-[760px]">
             {!online && <OfflineCard />}
             <Outlet />

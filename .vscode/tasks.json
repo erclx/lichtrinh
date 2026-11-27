@@ -1,5 +1,4 @@
 {
-  // The owner's tasks on the workspace PC, tracked beside the scripts and verbs they run. Run with Ctrl+Shift+P, "Tasks: Run Task".
   "version": "2.0.0",
   "tasks": [
     {

@@ -67,7 +67,7 @@ export function ListeningBar({ state, stream, onStop }: ListeningBarProps) {
           data-testid="level-bar"
           data-still={still}
           style={{ '--level': RESTING } as CSSProperties}
-          className="flex h-10 shrink-0 items-center gap-[5px] px-1"
+          className="flex h-10 shrink-0 items-center gap-1.25 px-1"
         >
           {PROFILE.map((share, index) => (
             <i

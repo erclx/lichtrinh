@@ -134,7 +134,7 @@ export function TripList() {
                     })}
                   </span>
                   <span className="flex flex-wrap items-center justify-between gap-2">
-                    <span className="rounded-full bg-muted px-3 py-0.5 text-sm font-extrabold">
+                    <span className="rounded-xs bg-muted px-3 py-0.5 text-sm font-extrabold">
                       {status.kind === 'under-way'
                         ? t('trips.underWay')
                         : status.kind === 'coming'

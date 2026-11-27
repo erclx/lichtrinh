@@ -112,7 +112,7 @@ function UndoStatus({ notice, onChange }: UndoStatusProps) {
     <div
       role="status"
       // Clears the Talk bar, which shows at any width while the dock is closed.
-      className="pointer-events-none fixed inset-x-4 bottom-[calc(max(98px,calc(84px+env(safe-area-inset-bottom)))+92px)] z-40 flex justify-center min-[480px]:inset-x-auto min-[480px]:right-6 min-[480px]:bottom-[calc(max(16px,env(safe-area-inset-bottom))+80px)]"
+      className="pointer-events-none fixed inset-x-4 bottom-[calc(max(--spacing(24.5),calc(--spacing(21)+env(safe-area-inset-bottom)))+--spacing(23))] z-40 flex justify-center min-[480px]:inset-x-auto min-[480px]:right-6 min-[480px]:bottom-[calc(max(--spacing(4),env(safe-area-inset-bottom))+--spacing(20))]"
     >
       {notice !== null && (
         <div

@@ -20,7 +20,7 @@ export function AppearanceToggle() {
     <div
       role="group"
       aria-label={t('settings.appearance')}
-      className="flex rounded-full bg-muted p-1"
+      className="flex rounded-[calc(var(--radius)+var(--spacing))] bg-muted p-1"
     >
       {options.map(({ appearance, label }) => (
         <Button

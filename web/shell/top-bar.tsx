@@ -29,7 +29,7 @@ export function TopBar({ header, navHidden, onShowNav, showRef }: TopBarProps) {
   const { saveLanguage } = useSession()
 
   return (
-    <header className="flex items-center gap-2 px-4 py-2.5 min-[480px]:px-8 lg:px-10">
+    <header className="flex items-center gap-2 px-gutter py-2.5 min-[480px]:px-gutter-tablet lg:px-gutter-desktop">
       {navHidden && (
         <button
           ref={showRef}
@@ -46,19 +46,21 @@ export function TopBar({ header, navHidden, onShowNav, showRef }: TopBarProps) {
       )}
       <div
         className={cn(
-          'flex min-w-0 items-center gap-2.5',
+          '@container flex min-w-0 flex-1 items-center gap-2.5',
           !navHidden && 'lg:hidden',
         )}
       >
         <BrandMark
           className={cn(
-            'size-[34px] shrink-0 min-[480px]:hidden',
+            'size-8.5 shrink-0 min-[480px]:hidden',
             navHidden && 'lg:block',
           )}
         />
-        {/* Under 360 wide the toggle and Settings leave no room for the name,
-            so the mark stands alone rather than cutting the name short. */}
-        <span className="hidden font-heading text-lg font-extrabold whitespace-nowrap min-[360px]:inline">
+        {/* Where the toggle and Settings leave no room for the name, at a
+            narrow width or a large Text Size, the mark stands alone rather
+            than cutting the name short. The bound is in em, so it grows with
+            the text. */}
+        <span className="hidden font-heading text-lg font-extrabold whitespace-nowrap @min-[7.25em]:inline">
           {t('app.name')}
         </span>
       </div>

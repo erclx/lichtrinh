@@ -102,7 +102,7 @@ export function SheetList({
         icon={
           <ChevronDownIcon
             aria-hidden="true"
-            className="size-[22px]"
+            className="size-5.5"
             strokeWidth={2.4}
           />
         }

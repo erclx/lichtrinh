@@ -102,7 +102,7 @@ function CalendarDayView({
         </p>
         <Link
           to={showAllHref ?? '/trips/new'}
-          className="inline-flex min-h-target items-center rounded-full text-base font-bold underline underline-offset-4 outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
+          className="inline-flex min-h-target items-center rounded-lg text-base font-bold underline underline-offset-4 outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
         >
           {showAllHref === undefined
             ? t('trips.newTrip')
@@ -121,7 +121,7 @@ function CalendarDayView({
             <Link
               to={dayPath}
               aria-label={t('calendar.openDay', { trip: trip.name })}
-              className="inline-flex min-h-target items-center gap-1 self-start rounded-full text-base font-bold underline underline-offset-4 outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
+              className="inline-flex min-h-target items-center gap-1 self-start rounded-lg text-base font-bold underline underline-offset-4 outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
             >
               {trip.name}
               <ChevronIcon className="size-5 shrink-0" />

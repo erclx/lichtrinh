@@ -77,7 +77,7 @@ export function DayList({ rows, currency, addTo }: DayListProps) {
                     to={to}
                     draggable={false}
                     className={cn(
-                      'grid min-h-target grid-cols-[40px_1fr_auto] items-center gap-3 rounded-xl px-2 py-1.5 text-muted-foreground',
+                      'grid min-h-target grid-cols-[--spacing(10)_1fr_auto] items-center gap-3 rounded-xl px-2 py-1.5 text-muted-foreground',
                       rowLink,
                     )}
                   >
@@ -149,7 +149,7 @@ export function DayList({ rows, currency, addTo }: DayListProps) {
                     to={to}
                     draggable={false}
                     className={cn(
-                      'grid min-h-target grid-cols-[48px_1fr_auto] items-center gap-3 rounded-xl px-2 py-2',
+                      'grid min-h-target grid-cols-[--spacing(12)_1fr_auto] items-center gap-3 rounded-xl px-2 py-2',
                       rowLink,
                     )}
                   >

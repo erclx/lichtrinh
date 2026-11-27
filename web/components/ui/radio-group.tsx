@@ -45,7 +45,7 @@ function RadioGroupRow({
     <RadioPrimitive.Root
       data-slot="radio-group-row"
       className={cn(
-        'flex min-h-target w-full shrink-0 items-center justify-between gap-3 rounded-full px-5 text-left text-base outline-none select-none focus-visible:ring-3 focus-visible:ring-ring focus-visible:ring-inset data-checked:bg-primary data-checked:font-extrabold data-checked:text-primary-foreground [@media(hover:hover)]:not-data-checked:hover:bg-muted',
+        'flex min-h-target w-full shrink-0 items-center justify-between gap-3 rounded-lg px-5 text-left text-base outline-none select-none focus-visible:ring-3 focus-visible:ring-ring focus-visible:ring-inset data-checked:bg-primary data-checked:font-extrabold data-checked:text-primary-foreground [@media(hover:hover)]:not-data-checked:hover:bg-muted',
         className,
       )}
       {...props}

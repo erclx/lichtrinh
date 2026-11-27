@@ -112,7 +112,7 @@ export function DayView({
       <div className="flex flex-col gap-1 pb-4">
         <Link
           to={tripPath}
-          className="inline-flex min-h-target items-center gap-1 self-start rounded-full text-base font-bold underline underline-offset-4 outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
+          className="inline-flex min-h-target items-center gap-1 self-start rounded-lg text-base font-bold underline underline-offset-4 outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
         >
           {t('day.tripDay', {
             trip: trip.name,
@@ -137,12 +137,15 @@ export function DayView({
         )}
       </div>
 
-      <nav aria-label={t('day.daysLabel')} className="-mx-4 pb-4">
-        <ul className="flex gap-2 scroll-px-4 overflow-x-auto px-4 py-1 [scrollbar-width:none]">
+      <nav aria-label={t('day.daysLabel')} className="-mx-gutter pb-4">
+        <ul className="flex gap-2 scroll-px-gutter overflow-x-auto px-gutter py-1 [scrollbar-width:none]">
           {days.map((day) => {
             const selected = day === date
             return (
-              <li key={day} className="shrink-0 min-[480px]:flex-[1_0_64px]">
+              <li
+                key={day}
+                className="shrink-0 min-[480px]:flex-[1_0_--spacing(16)]"
+              >
                 <Link
                   ref={selected ? selectedRef : undefined}
                   to={`${tripPath}/days/${day}`}
@@ -156,7 +159,7 @@ export function DayView({
                   }
                   aria-label={formatLongDate(day, language)}
                   className={cn(
-                    'relative flex h-[72px] w-full min-w-16 flex-col items-center justify-center rounded-lg border-[1.5px] border-border bg-secondary text-secondary-foreground outline-none focus-visible:ring-3 focus-visible:ring-ring/50',
+                    'relative flex h-18 w-full min-w-16 flex-col items-center justify-center rounded-lg border-[1.5px] border-border bg-secondary text-secondary-foreground outline-none focus-visible:ring-3 focus-visible:ring-ring/50',
                     selected &&
                       'border-primary bg-primary text-primary-foreground',
                   )}

@@ -129,7 +129,7 @@ export function TripOverview() {
                   <span className="flex flex-wrap items-center gap-2 text-lg font-extrabold">
                     {t('trips.dayNumber', { number: index + 1 })}
                     {date === today && (
-                      <span className="rounded-full bg-primary px-2.5 text-sm text-primary-foreground">
+                      <span className="rounded-xs bg-primary px-2.5 text-sm text-primary-foreground">
                         {t('day.today')}
                       </span>
                     )}

@@ -1,6 +1,6 @@
 import type { ComponentProps } from 'react'
 
-/** The app's mark. Its outline and rings take `currentColor`, so it follows the theme through the text color around it. */
+/** The app's mark. Its outline and rings take `currentColor`, and its page and band take the card and rest fills, so it follows the app's own theme. */
 export function BrandMark(props: ComponentProps<'svg'>) {
   return (
     <svg viewBox="0 0 64 64" fill="none" aria-hidden="true" {...props}>
@@ -10,13 +10,13 @@ export function BrandMark(props: ComponentProps<'svg'>) {
         width="48"
         height="46"
         rx="14"
-        fill="#ffffff"
+        className="fill-card"
         stroke="currentColor"
         strokeWidth="4"
       />
       <path
         d="M10 27h44v-3a10 10 0 0 0-10-10H20a10 10 0 0 0-10 10z"
-        fill="#dcd8ff"
+        className="fill-rest"
       />
       <path d="M8 27h48" stroke="currentColor" strokeWidth="4" />
       <rect x="19.5" y="5" width="6" height="14" rx="3" fill="currentColor" />

@@ -96,7 +96,7 @@ export function ChatDock({ variant, onClose }: ChatDockProps) {
         <Link
           to="/chats"
           className={cn(
-            'inline-flex min-h-target shrink-0 items-center rounded-full px-3 text-sm font-extrabold text-muted-foreground hover:text-foreground',
+            'inline-flex min-h-target shrink-0 items-center rounded-lg px-3 text-sm font-extrabold text-muted-foreground hover:text-foreground',
             focusRing,
           )}
         >

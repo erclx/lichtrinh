@@ -385,7 +385,7 @@ function OnOff({ label, on, busy, describedBy, onTurn }: OnOffProps) {
         aria-labelledby={labelId}
         aria-describedby={describedBy}
         aria-busy={busy}
-        className="flex rounded-full bg-muted p-1"
+        className="flex rounded-[calc(var(--radius)+var(--spacing))] bg-muted p-1"
       >
         {[true, false].map((value) => (
           <Button
