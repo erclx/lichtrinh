@@ -30,7 +30,7 @@ export function PageHeader({
           {backTo !== undefined && (
             <Link
               to={backTo}
-              className="-ml-2 inline-flex min-h-target items-center gap-2.5 rounded-full px-2 text-base font-extrabold outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
+              className="-ml-2 inline-flex min-h-target items-center gap-2.5 rounded-lg px-2 text-base font-extrabold outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
             >
               <BackIcon className="h-4.5 w-2.5" />
               {t('shell.back')}

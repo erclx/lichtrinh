@@ -64,6 +64,7 @@
   --spacing-gutter: 16px;
   --spacing-gutter-tablet: 32px;
   --spacing-gutter-desktop: 40px;
+  --radius-xs: calc(var(--spacing) * 2);
   --radius-sm: calc(var(--spacing) * 2.5);
   --radius-md: calc(var(--spacing) * 3.5);
   --radius-lg: var(--radius);

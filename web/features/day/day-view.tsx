@@ -112,7 +112,7 @@ export function DayView({
       <div className="flex flex-col gap-1 pb-4">
         <Link
           to={tripPath}
-          className="inline-flex min-h-target items-center gap-1 self-start rounded-full text-base font-bold underline underline-offset-4 outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
+          className="inline-flex min-h-target items-center gap-1 self-start rounded-lg text-base font-bold underline underline-offset-4 outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
         >
           {t('day.tripDay', {
             trip: trip.name,

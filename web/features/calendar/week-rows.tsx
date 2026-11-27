@@ -93,7 +93,7 @@ export function WeekRows({
                 ? t('calendar.entries', { count: dayEntries.length })
                 : t('calendar.free')}
               {isToday && (
-                <span className="rounded-full bg-primary px-2 text-sm text-primary-foreground">
+                <span className="rounded-xs bg-primary px-2 text-sm text-primary-foreground">
                   {t('day.today')}
                 </span>
               )}

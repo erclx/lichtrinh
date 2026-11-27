@@ -60,7 +60,7 @@ export function TalkBar({ onOpenPanel, talkRef }: TalkBarProps) {
           aria-disabled={opening || !online}
           aria-describedby={online ? undefined : offlineReasonId}
           className={cn(
-            'flex min-h-target w-full items-center justify-center gap-3 rounded-full bg-primary px-6 text-lg font-extrabold text-primary-foreground outline-none focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:ring-offset-2 focus-visible:ring-offset-background',
+            'flex min-h-target w-full items-center justify-center gap-3 rounded-lg bg-primary px-6 text-lg font-extrabold text-primary-foreground outline-none focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:ring-offset-2 focus-visible:ring-offset-background',
             !online && waitingClass,
           )}
         >

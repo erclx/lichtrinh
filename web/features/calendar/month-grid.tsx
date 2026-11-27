@@ -143,7 +143,7 @@ export function MonthGrid({
           {showAllHref !== undefined && (
             <Link
               to={showAllHref}
-              className="inline-flex min-h-target items-center rounded-full text-base font-bold underline underline-offset-4 outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
+              className="inline-flex min-h-target items-center rounded-lg text-base font-bold underline underline-offset-4 outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
             >
               {t('calendar.showAll')}
             </Link>

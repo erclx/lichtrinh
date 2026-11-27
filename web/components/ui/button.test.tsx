@@ -12,11 +12,11 @@ describe('Button at its default size', () => {
     )
   })
 
-  it('reaches the tap target as a pill', () => {
+  it('reaches the tap target on the field radius', () => {
     render(<Button>Add</Button>)
 
     const button = screen.getByRole('button')
-    expect(button).toHaveClass('h-target', 'rounded-full')
-    expect(button).not.toHaveClass('rounded-lg')
+    expect(button).toHaveClass('h-target', 'rounded-lg')
+    expect(button).not.toHaveClass('rounded-full')
   })
 })

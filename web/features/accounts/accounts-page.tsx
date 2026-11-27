@@ -229,7 +229,7 @@ export function AccountsPage() {
                         setRequested(null)
                         setChosen(account)
                       }}
-                      className="rounded-[18px] bg-muted px-4 text-sm"
+                      className="rounded-lg bg-muted px-4 text-sm"
                     >
                       {t('accounts.reset')}
                     </Button>

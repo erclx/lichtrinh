@@ -262,7 +262,7 @@ function ChangeRow({ change, time, currency, restoredBy }: Row) {
               {byAssistant ? t('history.assistant') : person}
             </span>
             {change.op === 'undo' && (
-              <span className="rounded-full border-[1.5px] border-border px-2.5 text-sm text-muted-foreground">
+              <span className="rounded-xs border-[1.5px] border-border px-2.5 text-sm text-muted-foreground">
                 {t('history.undoTag')}
               </span>
             )}
