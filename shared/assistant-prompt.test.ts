@@ -204,9 +204,29 @@ describe('buildPrompt, the approval rules', () => {
     )
   })
 
-  it('asks for a yes before removing several entries or a whole day', () => {
+  it('removes several entries in one step so the calendar holds them for a yes', () => {
     expect(rules).toContain(
-      'When a message would remove several entries or a whole day, list what would go and ask for a yes before calling any tool.',
+      'When a message would remove several entries or a whole day, call remove_entry for all of them together in one step, never one at a time.',
+    )
+    expect(rules).toContain('list what would go and ask for a yes')
+    expect(rules).not.toContain('before calling any tool')
+  })
+
+  it('reads the listed entries over anything said earlier', () => {
+    expect(rules).toContain(
+      'The entries below are the plan as it stands now. They outrank anything said earlier in the chat, and an entry no longer listed was removed.',
+    )
+  })
+
+  it('adds a start already past today and says so', () => {
+    expect(rules).toContain(
+      'When a start you add falls before now on today, add it and say the time has already passed.',
+    )
+  })
+
+  it('writes in the reply language alone apart from titles and notes', () => {
+    expect(rules).toContain(
+      'Write only in the reply language, apart from entry titles and notes, with no word of any other language.',
     )
   })
 
