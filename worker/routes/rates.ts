@@ -1,22 +1,19 @@
 import { isCurrency } from '@shared/currency.ts'
 import type { Rate, RateList } from '@shared/rates.ts'
 import { setRateRequest } from '@shared/rates.ts'
-import { asc, eq, inArray, like } from 'drizzle-orm'
+import { eq, inArray } from 'drizzle-orm'
 import type { Context } from 'hono'
 import { Hono } from 'hono'
 
 import type { AuthEnv } from '../auth/guard.ts'
+import { listRates, RATE_PREFIX } from '../calendar/rates.ts'
 import { createDb } from '../db/client.ts'
 import { settings } from '../db/schema.ts'
 import { fail, parseBody } from '../envelope.ts'
 import { logOutcome } from '../log.ts'
 
-// Rates share the `settings` table with the contact name, each under its own
-// key, so the contact read, which filters on its one key, never sees them.
-const PREFIX = 'rate:'
-
 function keyOf(from: string, to: string) {
-  return `${PREFIX}${from}:${to}`
+  return `${RATE_PREFIX}${from}:${to}`
 }
 
 /** The path's pair, or null when either code is unknown or both match. */
@@ -35,22 +32,7 @@ function invalidPair(c: Context) {
 // and writing sits under `/admin`, which the app guards with requireAdmin.
 export const rateRoutes = new Hono<AuthEnv>()
   .get('/rates', async (c) => {
-    const rows = await createDb(c.env.DB)
-      .select()
-      .from(settings)
-      .where(like(settings.key, `${PREFIX}%`))
-      .orderBy(asc(settings.key))
-    const body: RateList = {
-      rates: rows.map((row) => {
-        const [from = '', to = ''] = row.key.slice(PREFIX.length).split(':')
-        return {
-          from,
-          to,
-          rate: row.value,
-          updatedAt: row.updatedAt.toISOString(),
-        }
-      }),
-    }
+    const body: RateList = { rates: await listRates(createDb(c.env.DB)) }
     return c.json(body)
   })
   // Setting a pair clears its reverse, so one rate answers both directions
