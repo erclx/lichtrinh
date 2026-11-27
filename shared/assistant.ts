@@ -13,7 +13,8 @@ export const assistantModel = z.enum([
 ])
 export type AssistantModel = z.infer<typeof assistantModel>
 
-export const DEFAULT_ASSISTANT_MODEL: AssistantModel = 'lichtrinh-assistant'
+export const DEFAULT_ASSISTANT_MODEL: AssistantModel =
+  'lichtrinh-assistant-gemma'
 
 /**
  * Keeps the model loaded between the traveler's messages, so a reply does not

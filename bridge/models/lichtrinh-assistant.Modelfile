@@ -1,4 +1,4 @@
-# The default assistant alias, made with `lichtrinh bridge models`. The
+# The Qwen assistant alias, made with `lichtrinh bridge models`. The
 # context fits the instructions, a trip of about 60 entries, and the last
 # 20 messages.
 FROM qwen3.8:27b

@@ -353,7 +353,7 @@ describe('GET /api/owner/summary assistant', () => {
 
     expect(assistant).toMatchObject({
       online: false,
-      model: 'lichtrinh-assistant',
+      model: 'lichtrinh-assistant-gemma',
     })
   })
 

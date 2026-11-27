@@ -65,7 +65,12 @@ describe('lichtrinh bridge', () => {
 
     expect(run.tasks).toEqual([
       {
-        command: ['bun', 'bridge/eval.ts', '--model', 'lichtrinh-assistant'],
+        command: [
+          'bun',
+          'bridge/eval.ts',
+          '--model',
+          'lichtrinh-assistant-gemma',
+        ],
         cwd: '/work/lichtrinh',
       },
     ])

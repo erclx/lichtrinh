@@ -110,7 +110,7 @@ async function write(
         tripId: context.tripId,
         title: args.title,
         notes: args.notes ?? null,
-        kind: null,
+        kind: args.kind ?? null,
         startsOn: args.date,
         startTime: start,
         endsOn: ends.date,
@@ -186,6 +186,7 @@ async function write(
       version,
       title: args.title,
       notes: args.notes,
+      kind: args.kind,
       costMinor:
         args.cost === undefined || args.cost === null
           ? args.cost

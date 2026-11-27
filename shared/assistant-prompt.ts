@@ -4,6 +4,7 @@ import type { TurnMessage } from './bridge-frames.ts'
 import type { ChatRole } from './chats.ts'
 import { minorDigits } from './currency.ts'
 import type { Entry } from './entries.ts'
+import type { Rate } from './rates.ts'
 import { nowInZone, shiftClock } from './trip-time.ts'
 import type { Trip } from './trips.ts'
 
@@ -23,16 +24,19 @@ Reply in English, in a few short sentences, whatever language earlier messages u
 
 const RULES = `What you answer:
 - Answer questions about the plan from the trip and entries below, without calling a tool.
+- The entries below are the plan as it stands now. They outrank anything said earlier in the chat, and an entry no longer listed was removed.
 - Answer general travel questions, such as food, customs, and useful phrases, from your own knowledge.
 - You have no internet access and what you know may be out of date. Say so plainly when it matters, and never invent live details such as prices, opening hours, or weather.
 - When a request drifts far from the trip, answer politely in one sentence and steer back to the trip.
+- Write only in the reply language, apart from entry titles and notes, with no word of any other language.
 
 How you change the calendar:
 - Change the calendar only through the tools, and only the entries listed below.
 - Make a single change right away without asking for confirmation, since the traveler can undo it from the change card.
 - Fill a missing detail with a sensible default and say in the reply what you chose. Leave start and end out when the traveler named no time, and the calendar takes the first free hour after the day's last entry.
 - When the entry or the action is unclear, ask one short question and call no tool.
-- When a message would remove several entries or a whole day, list what would go and ask for a yes before calling any tool.
+- When a start you add falls before now on today, add it and say the time has already passed.
+- When a message would remove several entries or a whole day, call remove_entry for all of them together in one step, never one at a time. The calendar holds them until the traveler agrees, so then list what would go and ask for a yes.
 - Keep proper names as the traveler wrote them, unless they match an entry, and then use the entry's title.
 - After a change, confirm it in one short sentence.
 - When a tool refuses, tell the traveler plainly and do not repeat the same call.`
@@ -56,6 +60,8 @@ export interface PromptInput {
   history: { role: ChatRole; text: string }[]
   text: string
   at: Date
+  // The admin's stored rates. Left out, the prompt says none is set.
+  rates?: readonly Pick<Rate, 'from' | 'to' | 'rate'>[]
 }
 
 /**
@@ -74,7 +80,7 @@ export function buildPrompt(input: PromptInput): TurnMessage[] {
   ]
 }
 
-function systemText({ language, trip, entries, at }: PromptInput) {
+function systemText({ language, trip, entries, at, rates = [] }: PromptInput) {
   const digits = minorDigits(trip.currency)
   const now = nowInZone(at, trip.timeZone)
   const clock = `${String(Math.floor(now.minute / 60)).padStart(2, '0')}:${String(now.minute % 60).padStart(2, '0')}`
@@ -91,10 +97,31 @@ function systemText({ language, trip, entries, at }: PromptInput) {
     RULES,
     '',
     `Trip: ${trip.name}, ${trip.startsOn} to ${trip.endsOn}, time zone ${trip.timeZone}, costs in ${trip.currency}`,
-    `Trip days: ${tripDays(trip).join(', ')}`,
-    `Now in the trip time zone: ${now.date} ${weekday(now.date)} ${clock}`,
+    ...homeLine(trip, rates),
+    `Trip days: ${tripDays(trip).join('; ')}`,
+    `Now in the trip time zone: ${now.date} ${weekday(now.date)}, ${clock}`,
     ...listed,
   ].join('\n')
+}
+
+// The pair prints as the admin typed it, never inverted, since the inverse
+// of a rate such as 25500 is a long decimal the model copies wrong.
+function homeLine(trip: Trip, rates: NonNullable<PromptInput['rates']>) {
+  const home = trip.homeCurrency
+  if (home === trip.currency) return []
+  const stored = rates.find(
+    (each) =>
+      (each.from === trip.currency && each.to === home) ||
+      (each.from === home && each.to === trip.currency),
+  )
+  if (stored === undefined) {
+    return [
+      `Home currency ${home}, no rate set by the admin, so give no home total`,
+    ]
+  }
+  return [
+    `Home currency ${home}, rate set by the admin: 1 ${stored.from} = ${stored.rate} ${stored.to}, so home totals are approximate`,
+  ]
 }
 
 function tripDays(trip: Trip) {
@@ -107,6 +134,15 @@ function tripDays(trip: Trip) {
   return days
 }
 
+// Given the English names alone, the model named Vietnamese weekdays a day
+// early, so the prompt hands it both. `Intl` supplies the Vietnamese, which
+// keeps the literals out of this file.
+const VIETNAMESE_WEEKDAY = new Intl.DateTimeFormat('vi', {
+  weekday: 'long',
+  timeZone: 'UTC',
+})
+
 function weekday(date: string) {
-  return WEEKDAYS[new Date(`${date}T00:00:00Z`).getUTCDay()]
+  const day = new Date(`${date}T00:00:00Z`)
+  return `${WEEKDAYS[day.getUTCDay()]}, ${VIETNAMESE_WEEKDAY.format(day)}`
 }

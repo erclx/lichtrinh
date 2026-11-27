@@ -430,15 +430,15 @@ describe('the bridge as the app sees it', () => {
 
 describe('loadModelOf', () => {
   it('takes the admin’s pick once the app said it', () => {
-    expect(
-      loadModelOf(appRead(5, { model: 'lichtrinh-assistant-gemma' })),
-    ).toBe('lichtrinh-assistant-gemma')
+    expect(loadModelOf(appRead(5, { model: 'lichtrinh-assistant' }))).toBe(
+      'lichtrinh-assistant',
+    )
   })
 
   it.each([
     ['unreachable', { reach: 'unreachable' } as const],
     ['unset', null],
   ])('takes the default while the app is %s', (_, app) => {
-    expect(loadModelOf(app)).toBe('lichtrinh-assistant')
+    expect(loadModelOf(app)).toBe('lichtrinh-assistant-gemma')
   })
 })

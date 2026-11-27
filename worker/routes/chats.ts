@@ -24,6 +24,7 @@ import { relayOf } from '../assistant/relay.ts'
 import type { AuthEnv } from '../auth/guard.ts'
 import { requireChat } from '../auth/guard.ts'
 import { entriesOfTrip } from '../calendar/entries.ts'
+import { listRates } from '../calendar/rates.ts'
 import { liveTrip, toTrip } from '../calendar/trips.ts'
 import { createDb } from '../db/client.ts'
 import { parseBody, refuse } from '../envelope.ts'
@@ -90,10 +91,11 @@ export const chatRoutes = new Hono<AuthEnv>()
     }
     const trip = await liveTrip(db, chat.tripId)
     if (trip === undefined) return refuse(c, 'no_trip')
-    const [entries, recent, model] = await Promise.all([
+    const [entries, recent, model, rates] = await Promise.all([
       entriesOfTrip(db, trip.id),
       recentMessages(db, chat.id, HISTORY_LENGTH + 1),
       readModel(db),
+      listRates(db),
     ])
     const history = recent.filter((message) => message.id !== request.id)
     const input: TurnInput = {
@@ -110,6 +112,7 @@ export const chatRoutes = new Hono<AuthEnv>()
         history,
         text: request.text,
         at: new Date(),
+        rates,
       }),
       versions: Object.fromEntries(entries.map((e) => [e.id, e.version])),
       removalAsked: history.at(-1)?.heldRemoval ?? false,

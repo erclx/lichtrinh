@@ -6,7 +6,13 @@ import { afterEach, describe, expect, it } from 'vitest'
 
 import { app } from '../app.ts'
 import { createDb } from '../db/client.ts'
-import { chatMessages, transcriptions, trips, users } from '../db/schema.ts'
+import {
+  chatMessages,
+  settings,
+  transcriptions,
+  trips,
+  users,
+} from '../db/schema.ts'
 import type { FakeBridge } from '../test/bridge.ts'
 import { connectBridge } from '../test/bridge.ts'
 import { chatterWithChat, readEvents, sendMessage } from '../test/chats.ts'
@@ -307,6 +313,54 @@ describe('POST /api/chats/:id/messages', () => {
     await readEvents(res)
 
     expect(turn.messages[0].content).toContain(`Reply in ${reply}`)
+  })
+
+  it('names each trip day in Vietnamese in the Worker runtime', async () => {
+    const { cookie, chat } = await chatterWithChat()
+    const bridge = await connectBridge()
+    open.push(bridge)
+
+    const res = await sendMessage(cookie, chat.id)
+    const turn = await bridge.next()
+    if (turn.type !== 'turn') throw new Error(`Expected turn, got ${turn.type}`)
+    bridge.send({
+      type: 'final',
+      turnId: turn.turnId,
+      text: 'Invented reply',
+      heldRemoval: false,
+    })
+    await readEvents(res)
+
+    expect(turn.messages[0].content).toContain(
+      '2031-04-10 Thursday, Thứ Năm; 2031-04-11 Friday, Thứ Sáu',
+    )
+  })
+
+  it('names the stored rate in the turn it sends', async () => {
+    const { cookie, user, chat } = await chatterWithChat()
+    const db = createDb(env.DB)
+    await db.insert(settings).values({
+      key: 'rate:USD:VND',
+      value: '25500',
+      updatedAt: new Date(),
+      updatedBy: user.id,
+    })
+    const bridge = await connectBridge()
+    open.push(bridge)
+
+    const res = await sendMessage(cookie, chat.id)
+    const turn = await bridge.next()
+    if (turn.type !== 'turn') throw new Error(`Expected turn, got ${turn.type}`)
+    bridge.send({
+      type: 'final',
+      turnId: turn.turnId,
+      text: 'Invented reply',
+      heldRemoval: false,
+    })
+    await readEvents(res)
+    await db.delete(settings)
+
+    expect(turn.messages[0].content).toContain('1 USD = 25500 VND')
   })
 
   it('answers a retried send with the saved reply and runs no second turn', async () => {

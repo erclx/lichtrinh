@@ -64,20 +64,60 @@ function system(prompt: ReturnType<typeof buildPrompt>) {
 describe('buildPrompt, the turn context', () => {
   it('names now in the trip zone, not in UTC', () => {
     expect(system(buildPrompt(input()))).toContain(
-      'Now in the trip time zone: 2031-04-11 Friday 09:05',
+      'Now in the trip time zone: 2031-04-11 Friday, Thứ Sáu, 09:05',
     )
   })
 
-  it('lists every trip day with its weekday', () => {
+  it('lists every trip day with its weekday in English and Vietnamese', () => {
     expect(system(buildPrompt(input()))).toContain(
-      'Trip days: 2031-04-10 Thursday, 2031-04-11 Friday, 2031-04-12 Saturday',
+      'Trip days: 2031-04-10 Thursday, Thứ Năm; 2031-04-11 Friday, Thứ Sáu; 2031-04-12 Saturday, Thứ Bảy',
+    )
+  })
+
+  it('names Sunday as Chủ Nhật rather than a numbered day', () => {
+    const sunday = { ...trip, startsOn: '2031-04-13', endsOn: '2031-04-13' }
+
+    expect(system(buildPrompt(input({ trip: sunday })))).toContain(
+      'Trip days: 2031-04-13 Sunday, Chủ Nhật',
     )
   })
 
   it('lists each entry with its id and its cost in the trip currency', () => {
     expect(system(buildPrompt(input()))).toContain(
-      '{"id":"entry-1","title":"Invented Harbor Walk","date":"2031-04-11","start":"09:00","end":"10:30","cost":12.5,"notes":null}',
+      '{"id":"entry-1","title":"Invented Harbor Walk","date":"2031-04-11","start":"09:00","end":"10:30","cost":12.5,"notes":null,"kind":null}',
     )
+  })
+
+  it('names the stored rate from the trip currency to home', () => {
+    const rates = [{ from: 'USD', to: 'VND', rate: '25500' }]
+
+    expect(system(buildPrompt(input({ rates })))).toContain(
+      'Home currency VND, rate set by the admin: 1 USD = 25500 VND, so home totals are approximate',
+    )
+  })
+
+  it('names a rate stored the other way round as the admin typed it', () => {
+    const rates = [{ from: 'VND', to: 'USD', rate: '0.0000392' }]
+
+    expect(system(buildPrompt(input({ rates })))).toContain(
+      'rate set by the admin: 1 VND = 0.0000392 USD,',
+    )
+  })
+
+  it('says no rate is set when no stored pair matches the trip', () => {
+    const rates = [{ from: 'EUR', to: 'VND', rate: '27000' }]
+
+    expect(system(buildPrompt(input({ rates })))).toContain(
+      'Home currency VND, no rate set by the admin, so give no home total',
+    )
+  })
+
+  it('names no home currency when the trip already costs in it', () => {
+    const sameCurrency = { ...trip, homeCurrency: 'USD' }
+
+    expect(
+      system(buildPrompt(input({ trip: sameCurrency, rates: [] }))),
+    ).not.toContain('Home currency')
   })
 
   it('says so when the trip has no entries yet', () => {
@@ -164,9 +204,29 @@ describe('buildPrompt, the approval rules', () => {
     )
   })
 
-  it('asks for a yes before removing several entries or a whole day', () => {
+  it('removes several entries in one step so the calendar holds them for a yes', () => {
     expect(rules).toContain(
-      'When a message would remove several entries or a whole day, list what would go and ask for a yes before calling any tool.',
+      'When a message would remove several entries or a whole day, call remove_entry for all of them together in one step, never one at a time.',
+    )
+    expect(rules).toContain('list what would go and ask for a yes')
+    expect(rules).not.toContain('before calling any tool')
+  })
+
+  it('reads the listed entries over anything said earlier', () => {
+    expect(rules).toContain(
+      'The entries below are the plan as it stands now. They outrank anything said earlier in the chat, and an entry no longer listed was removed.',
+    )
+  })
+
+  it('adds a start already past today and says so', () => {
+    expect(rules).toContain(
+      'When a start you add falls before now on today, add it and say the time has already passed.',
+    )
+  })
+
+  it('writes in the reply language alone apart from titles and notes', () => {
+    expect(rules).toContain(
+      'Write only in the reply language, apart from entry titles and notes, with no word of any other language.',
     )
   })
 

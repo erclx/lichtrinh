@@ -17,6 +17,16 @@ describe('assistantTools', () => {
 
     expect(add.required).toEqual(['title', 'date'])
   })
+
+  it('offers the five kinds on an add and a change', () => {
+    const kindOf = (index: number) =>
+      assistantTools[index].function.parameters.properties?.kind
+
+    expect(kindOf(0)).toMatchObject({
+      enum: ['food', 'sights', 'rest', 'transport', 'activity'],
+    })
+    expect(JSON.stringify(kindOf(2))).toContain('transport')
+  })
 })
 
 describe('parseToolCall', () => {
@@ -80,6 +90,47 @@ describe('parseToolCall', () => {
     const parsed = parseToolCall('update_entry', { entry_id: 'e1' })
 
     expect(parsed).toEqual({ ok: false, error: 'invalid_arguments' })
+  })
+
+  it('parses an add with a kind', () => {
+    const parsed = parseToolCall('add_entry', {
+      title: 'Invented Pier Lunch',
+      date: '2031-04-11',
+      kind: 'food',
+    })
+
+    expect(parsed).toMatchObject({ ok: true, call: { args: { kind: 'food' } } })
+  })
+
+  it('refuses a kind outside the five', () => {
+    const parsed = parseToolCall('add_entry', {
+      title: 'Invented Pier Lunch',
+      date: '2031-04-11',
+      kind: 'shopping',
+    })
+
+    expect(parsed).toEqual({ ok: false, error: 'invalid_arguments' })
+  })
+
+  it('takes an update naming only a kind', () => {
+    const parsed = parseToolCall('update_entry', {
+      entry_id: 'e1',
+      kind: 'transport',
+    })
+
+    expect(parsed).toEqual({
+      ok: true,
+      call: {
+        name: 'update_entry',
+        args: { entry_id: 'e1', kind: 'transport' },
+      },
+    })
+  })
+
+  it('takes a null kind on an update as clearing it', () => {
+    const parsed = parseToolCall('update_entry', { entry_id: 'e1', kind: null })
+
+    expect(parsed).toMatchObject({ ok: true, call: { args: { kind: null } } })
   })
 
   it('takes a null cost on an update as clearing it', () => {

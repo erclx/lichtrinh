@@ -4,7 +4,7 @@
 import { parseArgs } from 'node:util'
 
 import type { AssistantModel } from '@shared/assistant.ts'
-import { assistantModel } from '@shared/assistant.ts'
+import { assistantModel, DEFAULT_ASSISTANT_MODEL } from '@shared/assistant.ts'
 import { buildPrompt } from '@shared/assistant-prompt.ts'
 import type { Language } from '@shared/auth.ts'
 import { language } from '@shared/auth.ts'
@@ -194,7 +194,7 @@ function spellings(spoken: Language, text: string) {
 
 async function main() {
   const { values } = parseArgs({ options: { model: { type: 'string' } } })
-  const model = assistantModel.parse(values.model ?? 'lichtrinh-assistant')
+  const model = assistantModel.parse(values.model ?? DEFAULT_ASSISTANT_MODEL)
   const host = readOllamaUrl(process.env)
   const passed: Record<Language, number> = { vi: 0, en: 0 }
   const total: Record<Language, number> = { vi: 0, en: 0 }

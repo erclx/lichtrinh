@@ -26,13 +26,19 @@ The web app the traveler and the family open in a browser.
 
 ### Server and tooling
 
-The API behind the app, the shapes both sides share, the owner's command, and the voice tooling.
+The API behind the app, the shapes both sides share, and the owner's command.
 
 - `worker/`: the Cloudflare Worker serving the app and the Hono API under `/api`, with its D1 schema, migrations, and rollbacks in `worker/db/`
 - `shared/`: zod schemas the app, the API, and the assistant's tools all parse with, imported as `@shared/*`
 - `cli/`: the `lichtrinh` command the owner runs by hand for product services, one file per verb group under `cli/commands/`, installed once with `bun link`
-- `panel/`: the owner panel on the workspace PC, being the status server in `panel/server/` and its page in `panel/ui/`
-- `voice/`: the Python speech recognition server behind `lichtrinh voice`, run on the workspace PC
+
+### Workspace PC
+
+What runs on the owner's computer, being the assistant, the voice server, and the panel watching both.
+
+- `bridge/`: the assistant's link to the Worker's relay, running each turn's tool loop on the local model, with the Modelfiles in `bridge/models/` and the scored eval in `eval.ts`
+- `panel/`: the owner panel, being the status server in `panel/server/` and its page in `panel/ui/`
+- `voice/`: the Python speech recognition server behind `lichtrinh voice`
 
 ### Content
 
