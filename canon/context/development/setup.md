@@ -60,12 +60,12 @@ The run seeds, checks, and stops in the ways below.
 
 ### `cli/`
 
-Holds the `lichtrinh` command for the product's own services, which the owner installs once with `bun link` and runs from any folder. The development loop above stays on `bun run`.
+Holds the `lichtrinh` command for the product's own services, which the owner installs once with `bun link` and runs from any folder. The development loop above stays on `bun run`, apart from `lichtrinh dev` over `dev:full`, at `canon/context/development/dev-command.md`.
 
 - `program.ts` builds the commander program from an injected output, task runner, and checkout lookup, so tests drive it with no process
 - `checkout.ts` picks the git top level of the working folder when it is a lichtrinh checkout, a linked worktree included, else the command's own checkout
 - `task.ts` prints `› <command>`, runs it with inherited output, and returns its exit code
-- `commands/` holds one file per verb group, being `db`, `admin`, whose remote flags ask before writing, `voice`, `bridge`, below, `panel`, at `canon/context/development/panel.md`, and `dev`, at `canon/context/development/dev-command.md`
+- `commands/` holds one file per verb group, being `db`, `admin`, whose remote flags ask before writing, `voice`, `bridge`, below, and `panel`, at `canon/context/development/panel.md`
 - `admin/` makes the first admin, as `lichtrinh admin create <username> --local` after `bun run db:migrate`. It prints the password once, and the operator's own account passes `--language en`.
 
 ### `bridge/`
