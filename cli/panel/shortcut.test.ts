@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import { shortcutCommand, shortcutScript } from './shortcut'
+import { isPlainDistro, shortcutCommand, shortcutScript } from './shortcut'
 
 const SETTINGS = {
   distro: 'Ubuntu-24.04',
@@ -19,7 +19,7 @@ describe('shortcutScript', () => {
       "$link.TargetPath = Join-Path $env:ProgramFiles 'WSL\\wslg.exe'",
     )
     expect(lineOf(script, 'Arguments')).toBe(
-      `$link.Arguments = '-d "Ubuntu-24.04" --cd "/home/owner/lichtrinh" -- ''/home/owner/.bun/bin/bun'' cli/index.ts panel open'`,
+      `$link.Arguments = '-d Ubuntu-24.04 --cd "/home/owner/lichtrinh" -- ''/home/owner/.bun/bin/bun'' cli/index.ts panel open'`,
     )
   })
 
@@ -41,8 +41,21 @@ describe('shortcutScript', () => {
     })
 
     expect(lineOf(script, 'Arguments')).toBe(
-      `$link.Arguments = '-d "Ubuntu-24.04" --cd "/home/the owner/lichtrinh" -- ''/opt/the owner''\\''''s/bun'' cli/index.ts panel open'`,
+      `$link.Arguments = '-d Ubuntu-24.04 --cd "/home/the owner/lichtrinh" -- ''/opt/the owner''\\''''s/bun'' cli/index.ts panel open'`,
     )
+  })
+})
+
+describe('isPlainDistro', () => {
+  it('takes the names WSL gives a distribution', () => {
+    expect(isPlainDistro('Ubuntu-24.04')).toBe(true)
+    expect(isPlainDistro('my_distro.2')).toBe(true)
+  })
+
+  it('refuses a name a Windows command line would split or quote', () => {
+    expect(isPlainDistro('My Distro')).toBe(false)
+    expect(isPlainDistro('Ubuntu"')).toBe(false)
+    expect(isPlainDistro('')).toBe(false)
   })
 })
 

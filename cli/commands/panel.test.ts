@@ -164,6 +164,17 @@ describe('lichtrinh panel install', () => {
     expect(run.commands()).toEqual([])
   })
 
+  it('refuses a distribution name the launcher would split, writing nothing', async () => {
+    const run = fakeRunner({ distro: 'My "Distro"' })
+
+    const exitCode = await runCli(['panel', 'install'], run.context)
+
+    expect(exitCode).toBe(1)
+    expect(run.output()).toContain('My "Distro"')
+    expect(run.commands()).toEqual([])
+    expect(existsSync(unitFolder())).toBe(false)
+  })
+
   it('writes no shortcut over units systemd refused to read', async () => {
     const run = fakeRunner({ exitCode: () => 4 })
 

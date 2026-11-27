@@ -36,10 +36,19 @@ export function shortcutScript(settings: ShortcutSettings): string {
   ].join('\n')
 }
 
+/**
+ * Whether a distribution name can go on the command line bare. `wslg.exe`
+ * keeps any quotes around it as part of the name, so it cannot take a quoted
+ * one, and WSL gives a distribution no characters past these.
+ */
+export function isPlainDistro(name: string): boolean {
+  return /^[A-Za-z0-9._-]+$/.test(name)
+}
+
 function shortcutArguments({ distro, root, bun }: ShortcutSettings): string {
   return [
     '-d',
-    windows(distro),
+    distro,
     '--cd',
     windows(root),
     '--',

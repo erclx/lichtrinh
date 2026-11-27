@@ -11,7 +11,7 @@ import {
 } from '../../panel/services'
 import { isLinkedWorktree, type PanelMachine } from '../panel/machine'
 import { sharedHost } from '../panel/settings-files'
-import { shortcutCommand } from '../panel/shortcut'
+import { isPlainDistro, shortcutCommand } from '../panel/shortcut'
 import { renderUnits, UNITS } from '../panel/units'
 import type { CliIo, RunInCheckout } from '../program'
 
@@ -51,6 +51,11 @@ export function registerPanel(
       if (distro === undefined) {
         command.error(
           'error: the shortcut opens WSL, so install from inside it',
+        )
+      }
+      if (!isPlainDistro(distro)) {
+        command.error(
+          `error: the shortcut cannot name the distribution ${distro}, since the WSL launcher takes letters, digits, dots, dashes, and underscores alone.`,
         )
       }
       const found = TOOLS.map((tool) => ({ tool, path: machine.find(tool) }))
