@@ -111,6 +111,32 @@ describe('add_entry', () => {
     expect(outcome.result).toMatchObject({ entry: { cost: 12.5 } })
   })
 
+  it('stores the kind it names', async () => {
+    const { context } = await turnOn()
+
+    const outcome = await runTool(await context(), 'add_entry', {
+      title: 'Invented Pier Lunch',
+      date: '2031-04-11',
+      start: '12:00',
+      kind: 'food',
+    })
+
+    expect((await getEntry(db, addedId(outcome)))?.kind).toBe('food')
+    expect(outcome.result).toMatchObject({ entry: { kind: 'food' } })
+  })
+
+  it('stores no kind when it names none', async () => {
+    const { context } = await turnOn()
+
+    const outcome = await runTool(await context(), 'add_entry', {
+      title: 'Invented Pier Lunch',
+      date: '2031-04-11',
+      start: '12:00',
+    })
+
+    expect((await getEntry(db, addedId(outcome)))?.kind).toBeNull()
+  })
+
   it('refuses a date outside the trip and writes nothing', async () => {
     const { trip, context } = await turnOn()
 
@@ -241,6 +267,36 @@ describe('update_entry', () => {
       costMinor: null,
     })
     expect(outcome.step?.kind).toBe('update')
+  })
+
+  it('changes the kind and keeps the title', async () => {
+    const { cookie, trip, context } = await turnOn()
+    const { entry } = await addEntry(cookie, trip.id, {
+      title: 'Invented Ferry',
+      kind: 'sights',
+    })
+
+    await runTool(await context(), 'update_entry', {
+      entry_id: entry.id,
+      kind: 'transport',
+    })
+
+    expect(await getEntry(db, entry.id)).toMatchObject({
+      title: 'Invented Ferry',
+      kind: 'transport',
+    })
+  })
+
+  it('clears the kind on a null', async () => {
+    const { cookie, trip, context } = await turnOn()
+    const { entry } = await addEntry(cookie, trip.id, { kind: 'rest' })
+
+    await runTool(await context(), 'update_entry', {
+      entry_id: entry.id,
+      kind: null,
+    })
+
+    expect((await getEntry(db, entry.id))?.kind).toBeNull()
   })
 })
 

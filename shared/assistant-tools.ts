@@ -1,5 +1,7 @@
 import { z } from 'zod'
 
+import type { EntryKind } from './changes.ts'
+import { entryKind } from './changes.ts'
 import type { Entry } from './entries.ts'
 import { clockTime, localDate } from './trip-time.ts'
 
@@ -25,6 +27,9 @@ const cost = z
   .max(1e12)
   .describe('Estimated cost in the trip currency, as a plain number')
 const notes = z.string().trim().max(2000).describe('A short description')
+const kind = entryKind.describe(
+  'What the entry is: food, sights, rest, transport, or activity',
+)
 
 export const addEntryArgs = z.strictObject({
   title,
@@ -39,6 +44,7 @@ export const addEntryArgs = z.strictObject({
     .describe('HH:MM, 24-hour. Leave out when the traveler named no end'),
   cost: cost.optional(),
   notes: notes.optional(),
+  kind: kind.optional(),
 })
 
 export const moveEntryArgs = z
@@ -59,10 +65,14 @@ export const updateEntryArgs = z
     title: title.optional(),
     cost: cost.nullable().optional(),
     notes: notes.nullable().optional(),
+    kind: kind.nullable().optional(),
   })
   .refine(
-    (args) => [args.title, args.cost, args.notes].some((v) => v !== undefined),
-    { message: 'Name a title, cost, or notes to change' },
+    (args) =>
+      [args.title, args.cost, args.notes, args.kind].some(
+        (v) => v !== undefined,
+      ),
+    { message: 'Name a title, cost, notes, or kind to change' },
   )
 
 export const removeEntryArgs = z.strictObject({ entry_id: entryId })
@@ -79,7 +89,7 @@ const TOOLS = {
   },
   update_entry: {
     description:
-      'Change the title, cost, or notes of an existing entry. A null cost or notes clears it.',
+      'Change the title, cost, notes, or kind of an existing entry. A null cost, notes, or kind clears it.',
     args: updateEntryArgs,
   },
   remove_entry: {
@@ -150,6 +160,7 @@ export type ToolEntry = {
   end: string
   cost: number | null
   notes: string | null
+  kind: EntryKind | null
 }
 
 export function toolEntry(entry: Entry, digits: number): ToolEntry {
@@ -161,5 +172,6 @@ export function toolEntry(entry: Entry, digits: number): ToolEntry {
     end: entry.endTime,
     cost: entry.costMinor === null ? null : entry.costMinor / 10 ** digits,
     notes: entry.notes,
+    kind: entry.kind,
   }
 }

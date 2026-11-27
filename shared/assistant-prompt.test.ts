@@ -76,7 +76,7 @@ describe('buildPrompt, the turn context', () => {
 
   it('lists each entry with its id and its cost in the trip currency', () => {
     expect(system(buildPrompt(input()))).toContain(
-      '{"id":"entry-1","title":"Invented Harbor Walk","date":"2031-04-11","start":"09:00","end":"10:30","cost":12.5,"notes":null}',
+      '{"id":"entry-1","title":"Invented Harbor Walk","date":"2031-04-11","start":"09:00","end":"10:30","cost":12.5,"notes":null,"kind":null}',
     )
   })
 
