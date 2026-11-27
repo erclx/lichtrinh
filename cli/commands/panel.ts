@@ -117,7 +117,11 @@ function writeUnits(
   }
 }
 
-/** Windows reads the script out of the distribution by its network path. */
+/**
+ * Windows reads the script out of the distribution by its network path. The
+ * address is the panel's own, since Windows tries `localhost` as `::1` first
+ * and waits out a timeout on each poll before it reaches the panel.
+ */
 function windowCommand({ distro }: PanelMachine, root: string): string[] {
   const script = join(root, 'cli/panel/open-window.ps1')
   return [
@@ -128,7 +132,7 @@ function windowCommand({ distro }: PanelMachine, root: string): string[] {
     '-File',
     `\\\\wsl.localhost\\${distro ?? ''}${script.replaceAll('/', '\\')}`,
     '-Url',
-    `http://localhost:${PANEL_PORT}`,
+    `http://127.0.0.1:${PANEL_PORT}`,
     '-Title',
     PANEL_TITLE,
   ]

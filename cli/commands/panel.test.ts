@@ -199,7 +199,7 @@ describe('lichtrinh panel open', () => {
       'systemctl --user reset-failed lichtrinh-panel.service',
       'systemctl --user start lichtrinh-panel.service',
       `${HELD} systemctl --user start lichtrinh.target`,
-      `flock /run/user/1000/lichtrinh-panel-window.lock powershell.exe -NoProfile -ExecutionPolicy Bypass -File \\\\wsl.localhost\\Ubuntu-24.04${root.replaceAll('/', '\\')}\\cli\\panel\\open-window.ps1 -Url http://localhost:4180 -Title Lichtrinh owner panel`,
+      `flock /run/user/1000/lichtrinh-panel-window.lock powershell.exe -NoProfile -ExecutionPolicy Bypass -File \\\\wsl.localhost\\Ubuntu-24.04${root.replaceAll('/', '\\')}\\cli\\panel\\open-window.ps1 -Url http://127.0.0.1:4180 -Title Lichtrinh owner panel`,
       `${HELD} bash cli/panel/hold.sh lichtrinh-panel.service`,
     ])
   })
