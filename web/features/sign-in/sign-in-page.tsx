@@ -76,7 +76,7 @@ export function SignInPage() {
 
   return (
     <div className="flex min-h-svh justify-center bg-background text-foreground min-[480px]:items-center min-[480px]:bg-muted min-[480px]:p-8">
-      <main className="flex w-full max-w-[460px] flex-col gap-5 px-4 py-4 min-[480px]:rounded-3xl min-[480px]:bg-background min-[480px]:p-6 min-[480px]:shadow-xl">
+      <main className="flex w-full max-w-[460px] flex-col gap-5 px-gutter py-4 min-[480px]:rounded-3xl min-[480px]:bg-background min-[480px]:p-6 min-[480px]:shadow-xl">
         <LanguageToggle className="self-end" />
         <div className="flex flex-col items-center gap-2 pt-4 text-center">
           <BrandMark className="size-24" />

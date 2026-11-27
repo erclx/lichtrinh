@@ -28,7 +28,7 @@ export function Sidebar({ destinations, onHide, hideRef }: SidebarProps) {
       className="sticky top-0 hidden h-svh w-62 shrink-0 flex-col gap-2 border-r-[1.5px] border-border p-3 lg:flex"
     >
       <div className="flex min-h-target items-center gap-2.5 pl-2 pb-3">
-        <BrandMark className="size-[34px] shrink-0" />
+        <BrandMark className="size-8.5 shrink-0" />
         <span className="font-heading text-lg font-extrabold whitespace-nowrap">
           {t('app.name')}
         </span>
@@ -51,7 +51,7 @@ export function Sidebar({ destinations, onHide, hideRef }: SidebarProps) {
           to={path}
           end={path === '/'}
           className={cn(
-            'flex min-h-target items-center gap-3.5 rounded-[22px] px-4.5 text-base font-extrabold text-muted-foreground hover:text-foreground',
+            'flex min-h-target items-center gap-3.5 rounded-[--spacing(5.5)] px-4.5 text-base font-extrabold text-muted-foreground hover:text-foreground',
             current,
             focus,
           )}
@@ -74,7 +74,7 @@ export function Rail({ destinations }: { destinations: Destination[] }) {
       className="sticky top-0 hidden h-svh w-28 shrink-0 flex-col items-stretch gap-2 border-r-[1.5px] border-border px-2 py-3 min-[480px]:flex lg:hidden"
     >
       <div className="flex min-h-14 items-center justify-center pb-3">
-        <BrandMark className="size-[34px]" />
+        <BrandMark className="size-8.5" />
       </div>
       {destinations.map(({ path, labelKey, icon: Icon }) => (
         <NavLink
@@ -82,7 +82,7 @@ export function Rail({ destinations }: { destinations: Destination[] }) {
           to={path}
           end={path === '/'}
           className={cn(
-            'flex min-h-19 flex-col items-center justify-center gap-1 rounded-[22px] px-1 py-2 text-center text-sm leading-tight font-extrabold text-muted-foreground hover:text-foreground',
+            'flex min-h-19 flex-col items-center justify-center gap-1 rounded-[--spacing(5.5)] px-1 py-2 text-center text-sm leading-tight font-extrabold text-muted-foreground hover:text-foreground',
             current,
             focus,
           )}
@@ -102,7 +102,7 @@ export function Tabs({ destinations }: { destinations: Destination[] }) {
   return (
     <nav
       aria-label={t('nav.label')}
-      className="sticky bottom-0 flex gap-2 bg-background px-3 pt-2 pb-[max(14px,env(safe-area-inset-bottom))] min-[480px]:hidden"
+      className="sticky bottom-0 flex gap-2 bg-background px-3 pt-2 pb-[max(--spacing(3.5),env(safe-area-inset-bottom))] min-[480px]:hidden"
     >
       {destinations.map(({ path, labelKey, icon: Icon }) => (
         <NavLink
@@ -110,7 +110,7 @@ export function Tabs({ destinations }: { destinations: Destination[] }) {
           to={path}
           end={path === '/'}
           className={cn(
-            'flex h-19 min-w-0 flex-1 flex-col items-center justify-center gap-1 rounded-[22px] text-sm leading-tight font-extrabold text-muted-foreground',
+            'flex h-19 min-w-0 flex-1 flex-col items-center justify-center gap-1 rounded-[--spacing(5.5)] text-sm leading-tight font-extrabold text-muted-foreground',
             current,
             focus,
           )}

@@ -17,7 +17,7 @@ export function TripFilter({ trips, selected, onSelect }: TripFilterProps) {
   const { t } = useTranslation()
 
   return (
-    <div className="-mx-4">
+    <div className="-mx-gutter">
       <ToggleGroup
         aria-label={t('calendar.tripsLabel')}
         value={[selected ?? all]}
@@ -27,7 +27,7 @@ export function TripFilter({ trips, selected, onSelect }: TripFilterProps) {
           onSelect(trips.find((trip) => trip.id === next) ?? null)
         }}
         spacing={2}
-        className="scroll-px-4 overflow-x-auto rounded-none bg-transparent px-4 py-1 [scrollbar-width:none]"
+        className="scroll-px-gutter overflow-x-auto rounded-none bg-transparent px-gutter py-1 [scrollbar-width:none]"
       >
         {[{ id: all, name: t('calendar.allTrips') }, ...trips].map((chip) => (
           <ToggleGroupItem

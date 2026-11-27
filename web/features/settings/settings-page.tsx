@@ -25,7 +25,7 @@ import { AppearanceToggle } from './appearance-toggle'
 const divider = 'border-b-[1.5px] border-border'
 const row = 'flex min-h-target items-center gap-4 py-3'
 const rowIcon =
-  'flex size-12 shrink-0 items-center justify-center rounded-[14px] bg-muted'
+  'flex size-12 shrink-0 items-center justify-center rounded-md bg-muted'
 const pressable =
   'w-full rounded-xl text-left outline-none focus-visible:ring-3 focus-visible:ring-ring/50'
 

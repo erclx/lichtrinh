@@ -27,7 +27,7 @@ export function SessionGate() {
   if (status === 'signed-out') return <SignInPage />
   if (status === 'unreachable') {
     return (
-      <div className="flex min-h-svh justify-center bg-background px-4 py-4 text-foreground">
+      <div className="flex min-h-svh justify-center bg-background px-gutter py-4 text-foreground">
         <main className="flex w-full max-w-[460px] flex-col gap-5">
           <LanguageToggle className="self-end" />
           <h1 className="pt-8 font-heading text-2xl font-extrabold">

@@ -56,7 +56,7 @@ export function MonthGrid({
     <div className="flex flex-col gap-3">
       <div
         aria-hidden="true"
-        className="grid grid-cols-7 text-center text-[15px] font-extrabold text-muted-foreground min-[360px]:text-sm"
+        className="grid grid-cols-7 text-center text-sm font-extrabold text-muted-foreground"
       >
         {weekdayLabels(language).map((weekday) => (
           <span key={weekday}>{weekday}</span>

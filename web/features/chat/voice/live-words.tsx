@@ -25,7 +25,7 @@ export function LiveWords({ text, layout }: LiveWordsProps) {
       className={cn(
         'pointer-events-none absolute inset-x-0 bottom-full text-xl/[1.4] font-bold wrap-anywhere text-foreground',
         // Past the composer's own padding and border, to the same clear line.
-        layout === 'panel' ? 'pb-[33.5px]' : 'pb-6',
+        layout === 'panel' ? 'pb-[--spacing(8.375)]' : 'pb-6',
       )}
     >
       {older !== '' && (
@@ -52,7 +52,7 @@ export function LiveFade() {
       aria-hidden="true"
       className="pointer-events-none sticky top-0 z-10 h-0"
     >
-      <div className="h-[110px] bg-linear-to-b from-background to-transparent" />
+      <div className="h-27.5 bg-linear-to-b from-background to-transparent" />
     </div>
   )
 }

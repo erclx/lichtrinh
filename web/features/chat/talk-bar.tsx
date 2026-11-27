@@ -50,7 +50,7 @@ export function TalkBar({ onOpenPanel, talkRef }: TalkBarProps) {
   }
 
   return (
-    <div className="sticky bottom-[max(98px,calc(84px+env(safe-area-inset-bottom)))] z-10 bg-background px-4 pt-2 pb-3 min-[480px]:bottom-0 min-[480px]:px-8 min-[480px]:pb-[max(16px,env(safe-area-inset-bottom))] lg:px-10">
+    <div className="sticky bottom-[max(--spacing(24.5),calc(--spacing(21)+env(safe-area-inset-bottom)))] z-10 bg-background px-gutter pt-2 pb-3 min-[480px]:bottom-0 min-[480px]:px-gutter-tablet min-[480px]:pb-[max(--spacing(4),env(safe-area-inset-bottom))] lg:px-gutter-desktop">
       <div className="mx-auto flex w-full max-w-[760px] flex-col gap-2">
         {error !== null && <StartFailed error={error} />}
         <button
