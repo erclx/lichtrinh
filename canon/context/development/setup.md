@@ -65,7 +65,7 @@ Holds the `lichtrinh` command for the product's own services, which the owner in
 - `program.ts` builds the commander program from an injected output, task runner, and checkout lookup, so tests drive it with no process
 - `checkout.ts` picks the git top level of the working folder when it is a lichtrinh checkout, a linked worktree included, else the command's own checkout
 - `task.ts` prints `› <command>`, runs it with inherited output, and returns its exit code
-- `commands/` holds one file per verb group, being `db`, `admin`, whose remote flags ask before writing, `voice`, `bridge`, below, and `panel`, at `canon/context/development/panel.md`
+- `commands/` holds one file per verb group, being `db`, `admin`, whose remote flags ask before writing, `voice`, `bridge`, below, `panel`, at `canon/context/development/panel.md`, and `dev`, at `canon/context/development/dev-command.md`
 - `admin/` makes the first admin, as `lichtrinh admin create <username> --local` after `bun run db:migrate`. It prints the password once, and the operator's own account passes `--language en`.
 
 ### `bridge/`

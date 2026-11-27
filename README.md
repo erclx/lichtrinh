@@ -37,7 +37,7 @@ bun run dev
 
 The seed migrates the local database and adds two invented accounts to sign in with, whose passwords sit in `scripts/seed.ts`, plus two invented trips in 2031 with their entries, costs, and chats, and an exchange rate for the home-currency estimate. `bun run check` runs the same checks as the pre-push hook. `CONTRIBUTING.md` covers the rest.
 
-On the workspace PC, `bun run dev:full` runs the whole app at once. It seeds a database of its own with a trip around today, starts the app, voice, and the assistant bridge, prints the link and the sign-ins, and stops all three on Ctrl-C. Pass `--reset` for fresh data.
+On the workspace PC, `lichtrinh dev` runs the whole app on a database of its own, with a trip around today. It names any package that needs a `bun install` first, then starts the app, voice, and the bridge until Ctrl-C. Pass `--reset` for fresh data, and `--phone` to share the run with the owner's phone.
 
 ## Usage
 
