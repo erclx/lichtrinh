@@ -75,7 +75,11 @@ export function SignInPage() {
   const alertId = `${ids}-alert`
 
   return (
-    <div className="flex min-h-svh justify-center bg-background text-foreground min-[480px]:items-center min-[480px]:bg-muted min-[480px]:p-8">
+    <div className="flex min-h-svh flex-col items-center bg-background text-foreground min-[480px]:bg-muted min-[480px]:p-8">
+      {/* From 480 up, two growing spacers set the card's middle at 40 percent
+          of the height, the lower one starting a fifth of it taller, and both
+          give way on a short screen. A phone starts the form at the top. */}
+      <div aria-hidden="true" className="hidden grow min-[480px]:block" />
       <main className="flex w-full max-w-[460px] flex-col gap-5 px-gutter py-4 min-[480px]:rounded-3xl min-[480px]:bg-background min-[480px]:p-6 min-[480px]:shadow-xl">
         <LanguageToggle className="self-end" />
         <div className="flex flex-col items-center gap-2 pt-4 text-center">
@@ -209,6 +213,10 @@ export function SignInPage() {
           {t('signIn.forgot')}
         </p>
       </main>
+      <div
+        aria-hidden="true"
+        className="hidden grow basis-[20svh] min-[480px]:block"
+      />
     </div>
   )
 }
