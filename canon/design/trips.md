@@ -9,7 +9,9 @@ Row v01.3 builds these screens. These frames are a reference, and where that row
 
 ## Code
 
-- `web/features/trips/trip-list.tsx`: the trips list, each card with its span, its status, and its trip-currency total
+- `web/features/trips/trip-list.tsx`: the trips list, each card with its span, its status, and its trip-currency total, shown as a grid or a list through the Grid and List switch, List under 480px and Grid from 480px until the device remembers a choice
+- `web/components/view-switch.tsx`: the Grid and List switch, each option an icon and its label
+- `web/lib/device-choice.ts`: the layout this device remembers
 - `web/features/trips/trip-form.tsx`: the new trip form, its name, dates, local time, and both currencies
 - `web/features/trips/trip-overview.tsx`: the overview card and each day with its kind dots and cost
 - `web/components/no-trips.tsx`: the empty calendar the list shows with no trip, drawn in `onboarding/`
