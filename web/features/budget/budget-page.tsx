@@ -1,33 +1,24 @@
 import { tripBudget } from '@shared/budget.ts'
-import type { EntryKind } from '@shared/changes.ts'
 import { useTranslation } from 'react-i18next'
 import { Link, useParams } from 'react-router'
 
 import { useTrip } from '@/calendar-data/queries'
 import { HomeEstimate } from '@/components/home-estimate'
-import { kindTone } from '@/components/kinds'
 import { LoadFailed } from '@/components/load-failed'
 import { RefreshFailed } from '@/components/refresh-failed'
 import { buttonVariants } from '@/components/ui/button'
+import { ViewSwitch } from '@/components/view-switch'
 import { formatMoney, formatShortDate, formatWeekday } from '@/i18n/format'
 import { useLanguage } from '@/i18n/use-language'
 import { ApiFailure } from '@/lib/api'
+import { useDeviceChoice } from '@/lib/device-choice'
 import { cn } from '@/lib/utils'
+import { BarsIcon, RingIcon } from '@/shell/icons'
 import { PageHeader } from '@/shell/page-header'
 
-const kindLabel = {
-  food: 'budget.food',
-  sights: 'budget.sights',
-  activity: 'budget.activity',
-  transport: 'budget.transport',
-  rest: 'budget.rest',
-} as const satisfies Record<EntryKind, string>
+import { KindSplit } from './kind-split'
 
-// A pastel names a kind and nothing else, so an entry of no kind takes the
-// muted ink rather than a pastel of its own.
-function swatchOf(kind: EntryKind | null) {
-  return kind === null ? 'bg-muted-foreground' : kindTone[kind]
-}
+const chartViews = ['ring', 'bars'] as const
 
 /** A trip's estimated cost: the total with its home figure, each kind, and each day. */
 export function BudgetPage() {
@@ -35,6 +26,11 @@ export function BudgetPage() {
   const language = useLanguage()
   const { tripId } = useParams()
   const query = useTrip(tripId)
+  const [chart, chooseChart] = useDeviceChoice(
+    'budget-chart',
+    chartViews,
+    'ring',
+  )
   const tripPath = `/trips/${encodeURIComponent(tripId ?? '')}`
 
   if (query.isPending) {
@@ -101,42 +97,23 @@ export function BudgetPage() {
               className="text-base text-muted-foreground"
             />
             {budget.totalMinor > 0 && (
-              <div
-                aria-hidden="true"
-                className="mt-3 flex h-4 gap-0.5 overflow-hidden rounded-full"
-              >
-                {budget.byKind.map(({ kind, totalMinor }) => (
-                  <span
-                    key={kind ?? 'none'}
-                    className={swatchOf(kind)}
-                    style={{ flexGrow: totalMinor }}
-                  />
-                ))}
-              </div>
+              <ViewSwitch
+                label={t('budget.view')}
+                options={[
+                  { value: 'ring', label: t('budget.ring'), icon: RingIcon },
+                  { value: 'bars', label: t('budget.bars'), icon: BarsIcon },
+                ]}
+                value={chart}
+                onChange={chooseChart}
+                className="mt-3 self-start"
+              />
             )}
-            <ul
-              aria-label={t('budget.byKind')}
-              className="mt-3 flex flex-col gap-1.5 min-[480px]:flex-row min-[480px]:flex-wrap min-[480px]:gap-x-5"
-            >
-              {budget.byKind.map(({ kind, totalMinor }) => (
-                <li
-                  key={kind ?? 'none'}
-                  className="flex items-center gap-2 text-base"
-                >
-                  <span
-                    aria-hidden="true"
-                    className={cn(
-                      'size-3.5 shrink-0 rounded-sm',
-                      swatchOf(kind),
-                    )}
-                  />
-                  {kind === null
-                    ? t('budget.uncategorized')
-                    : t(kindLabel[kind])}{' '}
-                  {money(totalMinor)}
-                </li>
-              ))}
-            </ul>
+            <KindSplit
+              byKind={budget.byKind}
+              totalMinor={budget.totalMinor}
+              view={chart}
+              money={money}
+            />
           </>
         ) : (
           <p className="pt-1 text-base">{t('budget.noCosts')}</p>
@@ -151,13 +128,15 @@ export function BudgetPage() {
       <h2 className="pt-6 pb-1 font-heading text-lg font-extrabold">
         {t('budget.byDay')}
       </h2>
-      <ul>
+      {/* One grid for every row, so each column sizes to its widest cell and
+          every track starts and ends at the same place. */}
+      <ul className="grid grid-cols-[auto_minmax(0,1fr)_auto] gap-x-3">
         {budget.byDay.map(({ date, totalMinor }) => (
           <li
             key={date}
-            className="flex min-h-target items-center gap-3 border-b-[1.5px] border-border py-2"
+            className="col-span-full grid min-h-target grid-cols-subgrid items-center border-b-[1.5px] border-border py-2"
           >
-            <span className="flex w-14 shrink-0 flex-col leading-tight">
+            <span className="flex flex-col leading-tight">
               <span className="text-lg font-extrabold">
                 {formatShortDate(date, language)}
               </span>
@@ -167,7 +146,8 @@ export function BudgetPage() {
             </span>
             <span
               aria-hidden="true"
-              className="h-3 min-w-0 flex-1 overflow-hidden rounded-full bg-muted"
+              data-testid="day-track"
+              className="h-3 overflow-hidden rounded-full bg-muted"
             >
               <span
                 className="block h-full rounded-full bg-foreground"
@@ -178,7 +158,7 @@ export function BudgetPage() {
             </span>
             <span
               className={cn(
-                'shrink-0 text-base font-extrabold whitespace-nowrap',
+                'text-right text-base font-extrabold whitespace-nowrap',
                 totalMinor === 0 && 'font-normal text-muted-foreground',
               )}
             >

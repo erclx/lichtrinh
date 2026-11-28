@@ -3,6 +3,7 @@ import '@/i18n/setup'
 import type { Entry } from '@shared/entries.ts'
 import type { Rate } from '@shared/rates.ts'
 import { screen, within } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
 
 import { applyLanguage } from '@/i18n/setup'
 import { anEntry, aTrip } from '@/test/calendar'
@@ -40,6 +41,13 @@ const costedTrip = [
   anEntry({ id: 'e3', kind: null, startsOn: '2031-05-15', costMinor: 840_000 }),
 ]
 
+async function kindRows(name = 'Cost by kind') {
+  const kinds = await screen.findByRole('list', { name })
+  return within(kinds)
+    .getAllByRole('listitem')
+    .map((item) => item.textContent.replace(/\s+/g, ' '))
+}
+
 beforeEach(async () => {
   localStorage.clear()
   await applyLanguage('en')
@@ -59,21 +67,94 @@ describe('BudgetPage', () => {
     expect(await screen.findByText('about 268 USD')).toBeInTheDocument()
   })
 
-  it('lists each kind with an Uncategorized row for entries of no kind', async () => {
+  it('lists each kind with its share and an Uncategorized row for entries of no kind', async () => {
     serve(costedTrip)
 
     renderRoute('/trips/trip-river/budget')
 
-    const kinds = await screen.findByRole('list', { name: 'Cost by kind' })
-    expect(
-      within(kinds)
-        .getAllByRole('listitem')
-        .map((item) => item.textContent),
-    ).toEqual([
-      'Food ₫4,000,000',
-      'Sights ₫2,000,000',
-      'Uncategorized ₫840,000',
+    expect(await kindRows()).toEqual([
+      'Food ₫4,000,000 58%',
+      'Sights ₫2,000,000 29%',
+      'Uncategorized ₫840,000 12%',
     ])
+  })
+
+  it('lists the kinds largest first, ties in the fixed kind order', async () => {
+    serve([
+      anEntry({ id: 'e1', kind: 'food', costMinor: 1_000_000 }),
+      anEntry({ id: 'e2', kind: 'transport', costMinor: 3_000_000 }),
+      anEntry({ id: 'e3', kind: 'rest', costMinor: 1_000_000 }),
+    ])
+
+    renderRoute('/trips/trip-river/budget')
+
+    expect(await kindRows()).toEqual([
+      'Transport ₫3,000,000 60%',
+      'Food ₫1,000,000 20%',
+      'Rest ₫1,000,000 20%',
+    ])
+  })
+
+  it('reads a share under one percent as under one percent, not zero', async () => {
+    serve([
+      anEntry({ id: 'e1', kind: 'food', costMinor: 4_000_000 }),
+      anEntry({ id: 'e2', kind: 'sights', costMinor: 20_000 }),
+    ])
+
+    renderRoute('/trips/trip-river/budget')
+
+    expect(await kindRows()).toEqual([
+      'Food ₫4,000,000 100%',
+      'Sights ₫20,000 <1%',
+    ])
+  })
+
+  it('opens on the ring and switches to the bars, remembering the choice', async () => {
+    serve(costedTrip)
+    renderRoute('/trips/trip-river/budget')
+
+    const chart = await screen.findByRole('group', { name: 'Chart type' })
+    expect(within(chart).getByRole('button', { name: 'Ring' })).toHaveAttribute(
+      'aria-pressed',
+      'true',
+    )
+    expect(screen.getByTestId('kind-split')).toHaveAttribute(
+      'data-view',
+      'ring',
+    )
+
+    await userEvent.click(within(chart).getByRole('button', { name: 'Bars' }))
+
+    expect(screen.getByTestId('kind-split')).toHaveAttribute(
+      'data-view',
+      'bars',
+    )
+    expect(localStorage.getItem('lichtrinh.budget-chart')).toBe('bars')
+    expect(await kindRows()).toHaveLength(3)
+  })
+
+  it('opens on a stored Bars', async () => {
+    localStorage.setItem('lichtrinh.budget-chart', 'bars')
+    serve(costedTrip)
+
+    renderRoute('/trips/trip-river/budget')
+
+    expect(await screen.findByTestId('kind-split')).toHaveAttribute(
+      'data-view',
+      'bars',
+    )
+  })
+
+  it('opens on the ring when the stored chart is not an option', async () => {
+    localStorage.setItem('lichtrinh.budget-chart', 'pie')
+    serve(costedTrip)
+
+    renderRoute('/trips/trip-river/budget')
+
+    expect(await screen.findByTestId('kind-split')).toHaveAttribute(
+      'data-view',
+      'ring',
+    )
   })
 
   it('lists every trip day, an empty day at zero', async () => {
@@ -123,6 +204,9 @@ describe('BudgetPage', () => {
     expect(
       screen.queryByRole('list', { name: 'Cost by kind' }),
     ).not.toBeInTheDocument()
+    expect(
+      screen.queryByRole('group', { name: 'Chart type' }),
+    ).not.toBeInTheDocument()
   })
 
   it('reads in Vietnamese', async () => {
@@ -136,7 +220,14 @@ describe('BudgetPage', () => {
     ).toBeInTheDocument()
     expect(await screen.findByText('6.840.000 ₫')).toBeInTheDocument()
     expect(await screen.findByText('khoảng 268 USD')).toBeInTheDocument()
-    expect(screen.getByText('Chưa phân loại 840.000 ₫')).toBeInTheDocument()
+    expect(
+      await screen.findByRole('group', { name: 'Kiểu biểu đồ' }),
+    ).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Tròn' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Cột' })).toBeInTheDocument()
+    expect(await kindRows('Chi phí theo loại')).toContain(
+      'Chưa phân loại 840.000 ₫ 12%',
+    )
   })
 })
 

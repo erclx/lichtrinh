@@ -16,4 +16,7 @@ export const budget = {
   uncosted_other: '{{count}} hoạt động chưa có chi phí',
   noCosts:
     'Chưa có chi phí nào. Thêm chi phí cho một hoạt động thì sẽ hiện ở đây.',
+  view: 'Kiểu biểu đồ',
+  ring: 'Tròn',
+  bars: 'Cột',
 } satisfies Messages['budget']

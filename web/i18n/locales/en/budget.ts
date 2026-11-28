@@ -13,4 +13,7 @@ export const budget = {
   uncosted_one: '{{count}} activity has no cost yet',
   uncosted_other: '{{count}} activities have no cost yet',
   noCosts: 'No costs yet. Add a cost to an activity and it shows here.',
+  view: 'Chart type',
+  ring: 'Ring',
+  bars: 'Bars',
 } as const
