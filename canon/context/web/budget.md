@@ -29,7 +29,9 @@ Holds the rates under `rate:<FROM>:<TO>` keys of the `settings` table, beside th
 
 Holds the trip's Budget page at `/trips/:tripId/budget`, built against `canon/design/budget/`'s trip frames.
 
-- An entry of no kind takes the muted ink in the bar and the legend, since a pastel names a kind and nothing else
+- The kind split draws as a ring or as bars in each kind's ink, largest first, the choice remembered per device, and an entry of no kind takes the muted ink
+- The ring and the bars are hidden from a screen reader, so the `Cost by kind` list carries every amount and percent in both views
+- By day is one grid whose rows are subgrids, so every track spans the same width whatever its amount
 - The figure beside a total is `web/components/home-estimate.tsx`, which renders nothing with no rate or when both currencies match
 
 ### `web/features/rates/`

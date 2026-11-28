@@ -161,3 +161,40 @@ export function SignOutIcon(props: IconProps) {
     </Icon>
   )
 }
+
+export function GridIcon(props: IconProps) {
+  return (
+    <Icon {...props}>
+      <rect x="4" y="4" width="6.5" height="6.5" rx="1.5" />
+      <rect x="13.5" y="4" width="6.5" height="6.5" rx="1.5" />
+      <rect x="4" y="13.5" width="6.5" height="6.5" rx="1.5" />
+      <rect x="13.5" y="13.5" width="6.5" height="6.5" rx="1.5" />
+    </Icon>
+  )
+}
+
+export function ListIcon(props: IconProps) {
+  return (
+    <Icon {...props}>
+      <path d="M9 6h11M9 12h11M9 18h11M4.5 6h.01M4.5 12h.01M4.5 18h.01" />
+    </Icon>
+  )
+}
+
+export function RingIcon(props: IconProps) {
+  return (
+    <Icon {...props}>
+      <circle cx="12" cy="12" r="8" />
+      <circle cx="12" cy="12" r="3.5" />
+      <path d="M12 4v4.5M18.9 16l-3.9-2.2" />
+    </Icon>
+  )
+}
+
+export function BarsIcon(props: IconProps) {
+  return (
+    <Icon {...props}>
+      <path d="M4 6h10M4 12h16M4 18h6" />
+    </Icon>
+  )
+}

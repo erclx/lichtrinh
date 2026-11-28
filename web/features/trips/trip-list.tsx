@@ -8,11 +8,15 @@ import { useEntries, useTrips } from '@/calendar-data/queries'
 import { LoadFailed } from '@/components/load-failed'
 import { NoTrips } from '@/components/no-trips'
 import { RefreshFailed } from '@/components/refresh-failed'
+import { ViewSwitch } from '@/components/view-switch'
+import { useMediaQuery } from '@/hooks/use-media-query'
 import { useNow } from '@/hooks/use-now'
 import { formatDateSpan, formatMoney } from '@/i18n/format'
 import { useLanguage } from '@/i18n/use-language'
+import { useDeviceChoice } from '@/lib/device-choice'
 import { daysIn, daysUntil } from '@/lib/trip-days'
-import { PlusIcon } from '@/shell/icons'
+import { cn } from '@/lib/utils'
+import { GridIcon, ListIcon, PlusIcon } from '@/shell/icons'
 import { PageHeader } from '@/shell/page-header'
 
 type Status =
@@ -28,6 +32,8 @@ function statusOf(trip: Trip, at: Date): Status {
   }
   return { kind: 'under-way' }
 }
+
+const layouts = ['grid', 'list'] as const
 
 const rank = { 'under-way': 0, coming: 1, past: 2 } as const
 
@@ -72,6 +78,13 @@ export function TripList() {
   // One range read across every trip gives each card its total.
   const entries = useEntries(spanOf(trips.data ?? []))
   const totals = totalsByTrip(entries.data ?? [])
+  // A phone opens on the list and a wider screen on the grid, until picked.
+  const wide = useMediaQuery('(min-width: 480px)')
+  const [layout, chooseLayout] = useDeviceChoice(
+    'trips-layout',
+    layouts,
+    wide ? 'grid' : 'list',
+  )
 
   return (
     <>
@@ -109,49 +122,71 @@ export function TripList() {
       )}
 
       {trips.data !== undefined && trips.data.length > 0 && (
-        <ul className="flex flex-col gap-3">
-          {inListOrder(trips.data, now).map(({ trip, status }) => {
-            const total = totals.get(trip.id)
-            return (
-              <li key={trip.id}>
-                <Link
-                  to={`/trips/${encodeURIComponent(trip.id)}`}
-                  className="flex flex-col gap-2 rounded-xl border-[1.5px] border-border bg-card p-4 text-card-foreground outline-none focus-visible:ring-3 focus-visible:ring-ring/50 [@media(hover:hover)]:hover:border-foreground"
-                >
-                  <span className="text-lg font-extrabold break-words">
-                    {trip.name}
-                  </span>
-                  <span className="text-base text-muted-foreground">
-                    {t('trips.span', {
-                      dates: formatDateSpan(
-                        trip.startsOn,
-                        trip.endsOn,
-                        language,
-                      ),
-                      days: t('controls.dayCount', {
-                        count: daysIn(trip.startsOn, trip.endsOn),
-                      }),
-                    })}
-                  </span>
-                  <span className="flex flex-wrap items-center justify-between gap-2">
-                    <span className="rounded-xs bg-muted px-3 py-0.5 text-sm font-extrabold">
-                      {status.kind === 'under-way'
-                        ? t('trips.underWay')
-                        : status.kind === 'coming'
-                          ? t('trips.inDays', { count: status.inDays })
-                          : t('trips.past')}
+        <>
+          <div className="mb-3 flex justify-end">
+            <ViewSwitch
+              label={t('trips.layout')}
+              options={[
+                { value: 'grid', label: t('trips.grid'), icon: GridIcon },
+                { value: 'list', label: t('trips.list'), icon: ListIcon },
+              ]}
+              value={layout}
+              onChange={chooseLayout}
+            />
+          </div>
+          <ul
+            aria-label={t('nav.trips')}
+            data-layout={layout}
+            className={cn(
+              'gap-3',
+              layout === 'grid'
+                ? 'grid grid-cols-[repeat(auto-fill,minmax(min(100%,calc(var(--spacing-target)*3.5)),1fr))]'
+                : 'flex flex-col',
+            )}
+          >
+            {inListOrder(trips.data, now).map(({ trip, status }) => {
+              const total = totals.get(trip.id)
+              return (
+                <li key={trip.id}>
+                  <Link
+                    to={`/trips/${encodeURIComponent(trip.id)}`}
+                    className="flex h-full min-w-0 flex-col gap-2 rounded-xl border-[1.5px] border-border bg-card p-4 text-card-foreground outline-none focus-visible:ring-3 focus-visible:ring-ring/50 [@media(hover:hover)]:hover:border-foreground"
+                  >
+                    <span className="text-lg font-extrabold break-words">
+                      {trip.name}
                     </span>
-                    {total !== undefined && (
-                      <span className="text-base font-extrabold">
-                        {formatMoney(total, trip.currency, language)}
+                    <span className="text-base text-muted-foreground">
+                      {t('trips.span', {
+                        dates: formatDateSpan(
+                          trip.startsOn,
+                          trip.endsOn,
+                          language,
+                        ),
+                        days: t('controls.dayCount', {
+                          count: daysIn(trip.startsOn, trip.endsOn),
+                        }),
+                      })}
+                    </span>
+                    <span className="flex flex-wrap items-center justify-between gap-2">
+                      <span className="rounded-xs bg-muted px-3 py-0.5 text-sm font-extrabold">
+                        {status.kind === 'under-way'
+                          ? t('trips.underWay')
+                          : status.kind === 'coming'
+                            ? t('trips.inDays', { count: status.inDays })
+                            : t('trips.past')}
                       </span>
-                    )}
-                  </span>
-                </Link>
-              </li>
-            )
-          })}
-        </ul>
+                      {total !== undefined && (
+                        <span className="text-base font-extrabold">
+                          {formatMoney(total, trip.currency, language)}
+                        </span>
+                      )}
+                    </span>
+                  </Link>
+                </li>
+              )
+            })}
+          </ul>
+        </>
       )}
     </>
   )
