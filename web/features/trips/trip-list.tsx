@@ -78,8 +78,7 @@ export function TripList() {
   // One range read across every trip gives each card its total.
   const entries = useEntries(spanOf(trips.data ?? []))
   const totals = totalsByTrip(entries.data ?? [])
-  // A phone opens on the list and a wider screen on the grid, until the
-  // traveler picks one on this device.
+  // A phone opens on the list and a wider screen on the grid, until picked.
   const wide = useMediaQuery('(min-width: 480px)')
   const [layout, chooseLayout] = useDeviceChoice(
     'trips-layout',
