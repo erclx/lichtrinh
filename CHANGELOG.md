@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.0.10](https://github.com/erclx/lichtrinh/compare/v0.0.9...v0.0.10) (2026-11-28)
+
+
+### Features
+
+* **theme:** scale the app from a Text Size root with square controls ([#61](https://github.com/erclx/lichtrinh/issues/61)) ([36a5b36](https://github.com/erclx/lichtrinh/commit/36a5b369ef2d2f97d062ef4cee7b8811416b0f99))
+
+
+### Bug Fixes
+
+* **assistant:** get weekdays, bulk removals, kinds, and rates right ([#60](https://github.com/erclx/lichtrinh/issues/60)) ([6f0632e](https://github.com/erclx/lichtrinh/commit/6f0632e1c2deb3d940f687a40ea9551996fe38d0))
+
 ## [0.0.9](https://github.com/erclx/lichtrinh/compare/v0.0.8...v0.0.9) (2026-11-27)
 
 
