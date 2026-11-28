@@ -1,37 +1,46 @@
 #!/usr/bin/env sh
 
-# Runs the post-merge steps through `canon hooks post-merge`: archive the task a
-# merged pull request closed, push the records, retire the fan-in members a
-# merged integrator named, reclaim merged worktrees and branches, reinstall the
-# CLI, and update the plugin cache. The verb owns the order and each line it
-# prints.
-#
-# CANON_SKIP_RECLAIM=1 turns off the member retirement, the worktree reclaim,
-# and the merged branch deletes, since all three remove what git cannot undo.
-# CANON_SKIP_UPGRADE=1 turns off the CLI reinstall.
-# CANON_SKIP_PLUGIN_UPDATE=1 turns off the plugin cache update.
-#
-# Both read merge state through `gh`, so a machine without it on PATH retires
-# and reclaims nothing and says nothing. Install `gh` to turn them on.
-#
-# Husky runs this as `sh -e`, and `post-rewrite` sources it on a rebase, so
-# every test sits inside an `if` or an `||` and nothing here exits non-zero.
+# CANON_SKIP_RECLAIM=1, CANON_SKIP_UPGRADE=1, and CANON_SKIP_PLUGIN_UPDATE=1 turn off what
+# `canon hooks post-merge` removes or reinstalls. Without `gh` on PATH it retires nothing, silently.
+
+# Husky runs this as `sh -e`, and post-rewrite sources it, so no test here may exit non-zero.
 
 root=$(git worktree list --porcelain 2>/dev/null | grep -m 1 '^worktree ' | cut -d' ' -f2-) || root=''
 [ -n "$root" ] || exit 0
 
-# The board is shared scratch at the main worktree root, and `git worktree
-# list` puts that root first. A checkout with no board runs none of the steps.
+# Runs ahead of the board and `canon` checks so a checkout with neither still gets it.
+if git rev-parse --verify -q ORIG_HEAD >/dev/null 2>&1; then
+  seen=
+  for lock in bun.lock bun.lockb package-lock.json pnpm-lock.yaml yarn.lock uv.lock; do
+    case "$lock" in
+    bun.lock | bun.lockb) install='bun install --frozen-lockfile' ;;
+    package-lock.json) install='npm ci' ;;
+    pnpm-lock.yaml) install='pnpm install --frozen-lockfile' ;;
+    yarn.lock)
+      if [ -f .yarnrc.yml ]; then install='yarn install --immutable'; else install='yarn install --frozen-lockfile'; fi
+      ;;
+    uv.lock) install='uv sync --frozen' ;;
+    esac
+    if ! git diff --quiet ORIG_HEAD HEAD -- "$lock" 2>/dev/null; then
+      case "$seen" in
+      *"|$install|"*) ;;
+      *)
+        echo "$lock changed in this merge. Run $install."
+        seen="$seen|$install|"
+        ;;
+      esac
+    fi
+  done
+fi
+
 [ -d "$root/.canon/tasks" ] || exit 0
 
 if ! command -v canon >/dev/null 2>&1; then
   exit 0
 fi
 
-# A global binary older than the verb cannot run it, and its owner upgrades it
-# by hand. The probe reads the verb's own usage line rather than the exit,
-# since an older binary answers an unknown command's `--help` with its root
-# help and exits zero.
+# The probe reads the usage line, since an older binary answers an unknown command's
+# `--help` with its root help and exits zero.
 has_verb() {
   canon hooks post-merge --help 2>/dev/null | grep -q '^Usage: canon hooks post-merge'
 }

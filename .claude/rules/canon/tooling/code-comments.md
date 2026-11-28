@@ -1,5 +1,5 @@
 ---
-description: Decide when a code comment should exist and what it may claim
+description: Route a code comment to the code-craft skill, and ban the degradation vocabulary the comment scan reads
 paths:
   - '**/*.ts'
   - '**/*.tsx'
@@ -14,29 +14,9 @@ paths:
 
 # Code comment standards
 
-## When a comment should exist
-
-- Write a comment only when it records a fact the reader cannot recover from the code: an external contract, a rejected alternative, or the reason a surprising line is correct.
-- Do not restate in prose what the line beside it already says.
-- Do not comment a self-contained function whose signature and body already carry its behavior.
-- Hold a file of 50 or more non-blank lines to 15% comment text, counted in text lines so delimiters cost no reason.
-
-## What a comment may claim
-
-- Keep each comment true of the code as written, and update or delete one a change invalidates in that same change.
-- Describe a function's contract and its constraints, never its steps line by line.
-- Do not name a person, a ticket, or a date in place of the fact itself.
-
-## What never goes in a comment
-
-- Delete commented-out code. Do not park it beside the live path.
-- Do not record the edit that produced the code. Version control holds the change history.
-- Do not carry a date, a commit hash, or an issue number. The pull request holds them, and `canon comments scan` flags each one.
-- Do not defer work into a comment. Deferred work belongs in the tracker.
-
 ## Practice
 
-- Load the `canon:code-craft` skill before writing a comment, for what one says and where it sits, and report it rather than proceeding silently when it does not resolve.
+- Load the `canon:code-craft` skill before writing or keeping a comment, and run `canon comments scan` after.
 
 ## Degradation vocabulary
 

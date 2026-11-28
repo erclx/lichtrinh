@@ -1,5 +1,5 @@
 ---
-description: Route edits under .canon/tasks/ to the task-board skill for task shape, the board, and a declined task, and keep a session handoff apart from a task
+description: Route edits under .canon/tasks/ to the task-create skill, and keep a session handoff apart from a task
 paths:
   - '.canon/tasks/**'
 ---
@@ -8,11 +8,5 @@ paths:
 
 ## Task files
 
-- Load the `canon:task-board` skill before a hand edit under `.canon/tasks/`, since it carries the layout, filenames, format, origin lines, and archiving of a task file.
-- Report it rather than proceeding silently when `canon:task-board` does not resolve.
-- Follow the board shape the `canon:task-board` skill carries for `priority.md` and `backlog.md`, their readiness groups, and row order.
-- Follow the decline shape the `canon:task-board` skill carries for a task decided against.
-
-## Session handoffs
-
-- Treat a `.canon/tasks/session-*.md` file as a handoff governed by the `canon:session-map` skill. It is not a task and carries neither `## Outcomes` nor `## Findings`.
+- Load the `canon:task-create` skill before a hand edit under `.canon/tasks/`, for a task file, the board, and a declined task.
+- Treat a `.canon/tasks/session-*.md` file as a `canon:session-map` handoff, not a task.
