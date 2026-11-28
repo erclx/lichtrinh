@@ -26,4 +26,7 @@ export const trips = {
   nothingYet: 'Nothing yet',
   notFound: "This trip isn't here. It may have been deleted.",
   allTrips: 'All trips',
+  layout: 'Layout',
+  grid: 'Grid',
+  list: 'List',
 } as const

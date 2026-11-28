@@ -28,4 +28,7 @@ export const trips = {
   nothingYet: 'Chưa có gì',
   notFound: 'Không tìm thấy chuyến đi này. Có thể đã bị xoá.',
   allTrips: 'Tất cả chuyến đi',
+  layout: 'Bố cục',
+  grid: 'Lưới',
+  list: 'Danh sách',
 } satisfies Messages['trips']
