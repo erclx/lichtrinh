@@ -6,15 +6,15 @@ description: Routes code placement, shape, and interface decisions to the skills
 
 ## Placement
 
-- Load the `canon:codebase-layout` skill before placing a new file, and report it rather than proceeding silently when it does not resolve.
+- Load the `canon:codebase-layout` skill before placing a new file.
 
 ## Shape
 
-- Load the `canon:code-craft` skill before deciding the shape of a new function, class, or module, and report it rather than proceeding silently when it does not resolve.
+- Load the `canon:code-craft` skill before deciding the shape of a new function, class, or module.
 
 ## Interfaces
 
-- Load `canon:api-design` before shaping a public function, flag or output, record format, endpoint, or caller-handled error, and report it rather than proceeding silently when it does not resolve.
+- Load `canon:api-design` before shaping a public function, flag or output, record format, endpoint, or caller-handled error.
 
 ## Libraries
 
